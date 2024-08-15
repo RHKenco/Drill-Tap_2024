@@ -18,7 +18,7 @@ Begin VB.Form frmMain
       Visible         =   0   'False
       Width           =   735
    End
-   Begin VB.CommandButton Command6 
+   Begin VB.CommandButton cmdOpenUI 
       Caption         =   "Drill && Tap"
       BeginProperty Font 
          Name            =   "MS Sans Serif"
@@ -76,7 +76,7 @@ Begin VB.Form frmMain
       Left            =   225
       Top             =   975
    End
-   Begin VB.CommandButton Command2 
+   Begin VB.CommandButton cmdConnect 
       Caption         =   "Connect"
       BeginProperty Font 
          Name            =   "MS Sans Serif"
@@ -148,11 +148,11 @@ cmd1err:
 End Sub
 
 
-Private Sub Command2_Click()
+Private Sub cmdConnect_Click()
+
 On Error GoTo cmd2err
     Dim fh As Long      'file handle
 Dim i
-
 
 
 Shell ("C:\6K.BAT")
@@ -240,11 +240,11 @@ Next i
     End If
     
     If connected Then
-        Command2.Caption = "Disconnect"
+        cmdConnect.Caption = "Disconnect"
         Option1.Enabled = False
         Option2.Enabled = False
     Else
-        Command2.Caption = "Connect"
+        cmdConnect.Caption = "Connect"
         Option1.Enabled = True
         Option2.Enabled = True
         Set c6k = Nothing           'release the comm server
@@ -296,12 +296,11 @@ Private Sub Command5_Click()
 
 End Sub
 
-Private Sub Command6_Click()
+Private Sub cmdOpenUI_Click()
     If (Timer1.Enabled And Option1.Value) Then
         Me.Hide
-       Form10.Show
+        frmUI.Show
        
-       ' frmFastStatus.Show
     Else
         MsgBox "An ethernet connection is needed for Fast Staus display.", 0, "Display Unavailable"
     End If

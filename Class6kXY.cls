@@ -27,11 +27,17 @@ Option Explicit
 
 '--------------------------- Class Enumerations & Constants -----------------------------------------------------------
 
+    Const myDriveScale = 5000   'Steps per Revolution - Check Dip Switches on Drives
+    Const myScaleX = 50000  'Steps per Inch - Ball screw & 1"/Rev + 10:1 transmission -> DriveScale * 10
+    Const myScaleY = 50000
+    
+    Enum myMotors
+        mNull
+        m1
+        m2
+    End Enum
 
-     
-'--------------------------- Class Variables --------------------------------------------------------------------------
-
-
+    'enumerations for the input to the moveTo command
     Enum moveType
         movNone
         movLine
@@ -41,6 +47,9 @@ Option Explicit
         movYX
         movY0XY
     End Enum
+      
+'--------------------------- Class Variables --------------------------------------------------------------------------
+
 
     'Write-only Variables
     
@@ -78,15 +87,48 @@ Option Explicit
 '---===---===---===---===--- Basic Functions - Initialize, Read-Only, Etc. ---===---===---===---===---===---===---===--
 
 '--------------------------- Init & Clear Functions -------------------------------------------------------------------
-    Public Sub init6k(myMotorX As Integer, myMotorY As Integer, movAcknInpt As Integer)
+    Public Sub init6k(myMotorX As myMotors, myMotorY As myMotors, movAcknInpt As Integer)
+        
+        'Initialize 6k:
+        
+        'Enable FastStatus
+            c5k.fsenabled = True
+        
+        'Enable input-selected programs
+            c6k.Write "INSELP1,50:"
+        
+        'Set up axes
+            'Set axes to behave as steppers
+            c6k.Write "AXSDEF00:"
+            
+            'Set Scaling Factors to correct motors
+            Dim strDriveScale As String
+            Dim strResScale As String
+            
+            strDriveScale = Str(myDriveScale) & "," & Str(myDriveScale)
+            
+            If myMotorX = m1 Then
+                strResScale = Str(myScaleX) & "," & Str(myScaleY)
+            Else
+                strResScale = Str(myScaleY) & "," & Str(myScaleX)
+            End If
+                
+            c6k.Write "DRES" & strDriveScale & ":SCLD" & strResScale & ":SCLV" & strResScale & ":SCLA" & strResScale & ":"
+            
+            'Enable Scaling
+            c6k.Write "SCALE1:"
+            
+            'Enable EOT Limit for negative Y-Axis
+            Dim strEOT As String
+            
+            If myMotorY = m1 Then strEOT = "0,1" Else strEOT = "1,0"
+            
+            c6k.Write "LH" & strEOT & ":LHAD100,100:"
+            
         
         'Initialize the 6k's motion parameters
         c6kReset
         
-        
-        
-        'Enable input-selected programs
-        c6k.Write "INSELP1,50:"
         
         'Set initialized internal variables
         motorX = myMotorX
@@ -101,7 +143,7 @@ Option Explicit
     Public Sub reset6k()
     
         'Initialize 6k motion parameters
-        c6k.Write "DRIVE11:"
+        c6k.Write "DRIVE1,1:"
         
     
     End Sub
