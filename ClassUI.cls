@@ -228,6 +228,9 @@ Public Sub btnState(newState As btnState)
 
 End Sub
 
+
+
+
 Public Sub updStatus(myStatus As uiStatus, strInput As String)
 
     Dim myMsg As String

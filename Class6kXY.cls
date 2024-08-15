@@ -362,6 +362,18 @@ Option Explicit
     
     End Function
     
+    'chkOut - Function to check the status of an output.
+    Public Function chkOut(myOutput As Integer) As Boolean
+    
+        'Convert the input from an integer identifier to a binary long
+        Dim outBin As Long
+        outBin = 2 ^ (myOutput - 1)
+        
+        'Compare the binary input identifier to the c6k Input register. Return the result
+        chkOut = fsinfo.Output(1) & inBin
+    
+    End Function
+    
     
     'setIn - Function to enable or disable a virtual input.
     Public Sub setIn(myInput As Integer, myAction As Integer)

@@ -38,8 +38,8 @@ Option Explicit
     Const In_Joy_Y1 = 11
     Const In_Joy_Y2 = 12
     Const In_TravelLim = 13
-    Const In_UNK = 15
     Const In_Clamp_On = 14
+    Const In_ESTOP = 15
     Const In_Clamp_Off = 16
     
     
@@ -154,11 +154,15 @@ Option Explicit
         
         
     ''' getPos - Gets the current position of the X-axis motor
-    Public Function getPos() As myCoordinate
+    Public Function getCoords() As myCoordinate
         
         getPos.X = myXY.getPosX()
         getPos.Y = myXY.getPosY()
         
+    End Function
+    
+    Public Function getPos() As atPosition
+        getPos = myPosition
     End Function
     
     ''' getLastZero - Gets the last zero-set for the indicated motor. Used to determine setzero variance
@@ -221,7 +225,7 @@ Option Explicit
     
     Public Function checkClamp() As Boolean
     
-        checkClamp = myXY.checkIn(Out_Clamp_Sol)
+        checkClamp = myXY.checkOut(Out_Clamp_Sol)
     
     End Function
     
@@ -375,6 +379,9 @@ Public Function goToDrill() As Boolean
     'Move to the drill position
     myXY.moveTo goDrill, movY0XY
 
+
+    myPosition = atDrill
+    
     goToDrill = True
 
 End Function
@@ -396,7 +403,9 @@ Public Function goToTap() As Boolean
 End Function
 
 Public Function runDrill(drillDeep As Double, currentCycle As Integer, totalCycles As Integer, dryRun As Boolean) As Integer
-
+    
+    runDrill = currentCycle
+    
     If joyOn Then Exit Function
     
     'On the prep cycle, initialize the drill and coolant if it is not a dry run. Delay 1 second

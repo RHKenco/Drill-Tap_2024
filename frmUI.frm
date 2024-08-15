@@ -2,14 +2,14 @@ VERSION 5.00
 Begin VB.Form frmUI 
    BackColor       =   &H00400000&
    Caption         =   "Drill & Tap"
-   ClientHeight    =   10515
+   ClientHeight    =   10440
    ClientLeft      =   165
    ClientTop       =   810
-   ClientWidth     =   11910
+   ClientWidth     =   11880
    ForeColor       =   &H8000000E&
    LinkTopic       =   "Form1"
-   ScaleHeight     =   10515
-   ScaleWidth      =   11910
+   ScaleHeight     =   10440
+   ScaleWidth      =   11880
    StartUpPosition =   3  'Windows Default
    Begin VB.Frame Frame1 
       BackColor       =   &H00400000&
@@ -433,6 +433,7 @@ Begin VB.Form frmUI
          Width           =   1935
       End
       Begin VB.Timer tmrFSM 
+         Interval        =   50
          Left            =   120
          Top             =   360
       End
@@ -683,6 +684,10 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+Private Sub cmdGoToDrillTap_Click(Index As Integer)
+
+End Sub
+
 Private Sub Form_Load()
 
 

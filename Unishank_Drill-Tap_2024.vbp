@@ -7,6 +7,7 @@ Class=Class6kXY; Class6kXY.cls
 Form=frmUI.frm
 Class=ClassFSMDrillTap; FSMDrillTap.cls
 Class=ClassUI; ClassUI.cls
+Form=frmMaintenance.frm
 Startup="Sub Main"
 Command32=""
 Name="Unishank_Drill_Tap"

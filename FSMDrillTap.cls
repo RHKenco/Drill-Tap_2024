@@ -71,6 +71,14 @@ Public Sub initializeFSM()
     
 End Sub
 
+Private Sub setState(state As fsmStates)
+
+    fsmState = state
+    counter = 0
+    stateInner = 0
+
+End Sub
+
 'When Possible, toggle run state
 Public Sub setGoStop()
 
@@ -205,7 +213,7 @@ End Sub
 Private Sub runState6()
 
     'Run State - Runs Drill & Tap Cycles As Requested
-        
+            
     Dim runCycles As Integer
     
     Select Case innerState
@@ -306,19 +314,29 @@ Private Sub runState6()
                 End If
             End If
             
-        Case 5  'Wait for Clamp
+        Case 5  'Wait for Clamp, then start new cycle
             counter = 0
+            
+            Select Case counter
+                Case 0  'Wait for clamp to be disengaged
+                    If Not myDrillTap.checkClamp Then counter = 1
+                    Exit Sub
+                Case 1 'Wait for clamp to be reengaged
+                    If myDrillTap.checkClamp Then
+                        counter = 0
+                        stateInner = 1
+                    End If
+                    Exit Sub
+            End Select
+                
             
         Case 6  'Exit State
             
             'When any pending moves have been completed, exit to standby state
             If myDrillTap.waitForMove() Then
-                'clear inner state variables
-                counter = 0
-                innerState = 0
-                
+            
                 'Go to standby state
-                fsmState = s1_Stby
+                setState s1_Stby
             End If
             
         

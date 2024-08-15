@@ -2,13 +2,12 @@ VERSION 5.00
 Begin VB.Form frmMain 
    Caption         =   "6k Drill & Tap Program 2024"
    ClientHeight    =   2055
-   ClientLeft      =   1260
-   ClientTop       =   2130
+   ClientLeft      =   5550
+   ClientTop       =   3930
    ClientWidth     =   10725
    LinkTopic       =   "Form1"
    ScaleHeight     =   2055
    ScaleWidth      =   10725
-   StartUpPosition =   2  'CenterScreen
    Begin VB.CommandButton Command5 
       Caption         =   "Command5"
       Height          =   255
