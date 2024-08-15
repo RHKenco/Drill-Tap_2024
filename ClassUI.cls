@@ -81,7 +81,55 @@ Public uiKeyLeft As Boolean
 '---------------------------- Read-Only Set & Returns -----------------------------------------------------------------
         
 
+Public Function getDir() As joyDirection
+    
+    Dim keyDir As Integer
+    Dim upDown As Integer
+    Dim leftRight As Integer
+    
+    keyDir = 0
+    upDown = 0
+    leftRight = 0
+    
+    'Establish directional integers
+    If uiKeyUp Xor uiKeyDown Then
 
+        If uiKeyUp Then upDown = 3
+        If uiKeyUp Then upDown = 6
+        
+    End If
+    
+    If uiKeyRight Xor uiKeyLeft Then
+    
+        If uiKeyRight Then leftRight = 1
+        If uiKeyRight Then leftRight = 2
+        
+    End If
+    
+    keyDir = upDown + leftRight
+    
+    Select Case keyDir
+        Case 3
+            getDir = joyUp
+        Case 4
+            getDir = joyUpRight
+        Case 2
+            getDir = joyRight
+        Case 8
+            getDir = joyDownRight
+        Case 6
+            getDir = joyDown
+        Case 7
+            getDir = joyDownLeft
+        Case 1
+            getDir = joyLeft
+        Case 4
+            getDir = joyUpLeft
+        Case Else
+            getDir = joyNeutral
+    End Select
+    
+End Function
 
 
 '---===---===---===---===--- Basic Functions - Initialize, Read-Only, Etc. ---===---===---===---===---===---===---===--

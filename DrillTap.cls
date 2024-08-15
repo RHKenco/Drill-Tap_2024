@@ -37,8 +37,10 @@ Option Explicit
     Const In_Joy_X2 = 10
     Const In_Joy_Y1 = 11
     Const In_Joy_Y2 = 12
-    Const In_Clamp_On = 17
-    Const In_Clamp_Off = 18
+    Const In_TravelLim = 13
+    Const In_UNK = 15
+    Const In_Clamp_On = 14
+    Const In_Clamp_Off = 16
     
     
     Const Axis_X = 2

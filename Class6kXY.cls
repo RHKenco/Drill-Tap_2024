@@ -31,6 +31,8 @@ Option Explicit
     Const myScaleX = 50000  'Steps per Inch - Ball screw & 1"/Rev + 10:1 transmission -> DriveScale * 10
     Const myScaleY = 50000
     
+    Const YlimitInput = 13      'Input Pin for Y-Travel Limit Switch
+    
     Enum myMotors
         mNull
         m1
@@ -118,6 +120,14 @@ Option Explicit
             'Enable Scaling
             c6k.Write "SCALE1:"
             
+        'Set up IO
+            Dim strLimitSwitch As String
+            
+            If myMotorY = m1 Then
+                strLimitSwitch = Str(YlimitInput) & "-1S:"
+            
+            c6k.Write "1INFNC" & strLimitSwitch
+            
             'Enable EOT Limit for negative Y-Axis
             Dim strEOT As String
             
@@ -125,7 +135,6 @@ Option Explicit
             
             c6k.Write "LH" & strEOT & ":LHAD100,100:"
             
-        
         'Initialize the 6k's motion parameters
         c6kReset
         
@@ -144,6 +153,12 @@ Option Explicit
     
         'Initialize 6k motion parameters
         c6k.Write "DRIVE1,1:"
+        
+        'Ensure Continuous Command Execution is Disabled
+        c6k.Write "COMEXC0:"
+        
+        'Set default velocity to 0, Set initial values for Acceleration, Tie Decell to accel
+        c6k.Write "V0,0:A10,10:AD0,0:"
         
     
     End Sub
@@ -170,7 +185,16 @@ Option Explicit
         c6k.Write "1INFNC" & Str(myOnInput) & "P2:"
     
     End Sub
- 
+    
+    
+    'Estop - disable all outputs
+    Public Sub ESTOP()
+    
+        'Imediate stop command, imediate shut down all outputs, disable motors
+        c6k.Write "!AD100,100:!S:!OUTALL1,32,0:DRIVE00:"
+    
+    End Sub
+    
 
 '---------------------------- Internal Functions ----------------------------------------------------------------------
     
@@ -334,7 +358,7 @@ Option Explicit
         inBin = 2 ^ (myInput - 1)
         
         'Compare the binary input identifier to the c6k Input register. Return the result
-        chkIn = fsinfo.input(1) & inBin
+        chkIn = fsinfo.Input(1) & inBin
     
     End Function
     

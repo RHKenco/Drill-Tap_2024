@@ -27,6 +27,8 @@ Option Explicit
 
 '--------------------------- Class Enumerations & Constants -----------------------------------------------------------
 
+
+
 Public Enum fsmStates
     s0_Init
     s1_Stby
@@ -41,11 +43,18 @@ End Enum
 'State Variable
 Private fsmState As fsmStates
 
+'Inner Variables for controlling State loops
+Private innerState As Integer
+Private counter As Integer
+
+
 
 'State request variables
 Private joystickMode As Boolean
 Private maintenanceMode As Boolean
 Private runMode As Boolean
+
+
 
 
 
@@ -165,6 +174,12 @@ End Sub
 Private Sub runState2()
 
     'Joystick State - Operates the virtual joystick via the keyboard
+    
+    'Run Joystick
+    myDrillTap.joy myUI.getDir
+
+
+    innerState = 0
 
 End Sub
 
@@ -183,12 +198,133 @@ End Sub
 Private Sub runState5()
 
     'Prep State - Verifies that the clamp is set
+    
 
 End Sub
 
 Private Sub runState6()
 
     'Run State - Runs Drill & Tap Cycles As Requested
+        
+    Dim runCycles As Integer
+    
+    Select Case innerState
+        Case 0  'Initialise Function
+            counter = 0
+            
+            'If the system is set to tap-only, then go to tap. Otherwise, go to drill
+            If frmUI.optDrillTapAuto(1) Then
+                innerState = 3
+            Else
+                innerState = 1
+            End If
+            
+        Case 1  'Move-To-Drill - if necessary
+        
+            'If not at drill position, move to tap position
+            If myDrillTap.getPos() <> atDrill Then
+                myDrillTap.goToDrill
+                Exit Sub
+            End If
+                    
+            'If the counter has not been reset, exit the run state
+            If counter > runCycles Then
+            
+                'but only if it isn't set to auto cycle
+                If frmUI.optDrillTapAuto(3).Value Then
+                    innerState = 5
+                    Exit Sub
+                End If
+                
+                innerState = 6
+            
+            'Otherwise, go to drill cycle
+            Else
+                innerState = 2
+                runCycles = 8
+            End If
+            
+        Case 2  'Run Drill
+            
+            'While the cycle counter is less than the desired number of cycles, run the tap
+            If counter <= runCycles Then
+                
+                counter = myDrillTap.runTap(CDbl(frmUI.txtDeep(0)), counter, runCycles, frmUI.chkDryRun.Value)
+            
+            'When the cycle counter exceeds the number of desired cycles, wait for current move to finish
+            Else
+                'If the move has been completed, determine next step
+                If myDrillTap.waitForMove Then
+                    'If run drill only has been selected, move to drill then exit state
+                    If frmUI.optDrillTapAuto(0).Value Then
+                        innerState = 1
+                    'If run Cycle or run Auto has been selected, proceed to tap cycle
+                    ElseIf frmUI.optDrillTapAuto(2).Value Or frmUI.optDrillTapAuto(3).Value Then
+                        innerState = 4
+                        counter = 0
+                    End If
+                End If
+            End If
+            
+            
+        Case 3  'Move-To-Tap - if necessary
+        
+            'If not at tap position, move to tap position
+            If myDrillTap.getPos() <> atTap Then
+                myDrillTap.goToTap
+                Exit Sub
+            End If
+                    
+            'If the last state was the Run Tap state, and the counter has not been reset, exit the run state
+            If counter > runCycles Then
+                innerState = 6
+            
+            'Otherwise, go to tap cycle
+            Else
+                innerState = 4
+                runCycles = 3
+            End If
+                
+        Case 4  'Run Tap
+            
+            'While the cycle counter is less than the desired number of cycles, run the tap
+            If counter <= runCycles Then
+                
+                counter = myDrillTap.runTap(CDbl(frmUI.txtDeep(1)), counter, runCycles, frmUI.chkDryRun.Value)
+            
+            'When the cycle counter exceeds the number of desired cycles, wait for current move to finish
+            Else
+                'If the move has been completed, determine next step
+                If myDrillTap.waitForMove Then
+                    'If run tap only has been selected, move to tap then exit state
+                    If frmUI.optDrillTapAuto(1).Value Then
+                        innerState = 3
+                    'If run cycle or run auto was selected, move to drill
+                    ElseIf frmUI.optDrillTapAuto(2).Value Or frmUI.optDrillTapAuto(3).Value Then
+                        innerState = 1
+                    End If
+                End If
+            End If
+            
+        Case 5  'Wait for Clamp
+            counter = 0
+            
+        Case 6  'Exit State
+            
+            'When any pending moves have been completed, exit to standby state
+            If myDrillTap.waitForMove() Then
+                'clear inner state variables
+                counter = 0
+                innerState = 0
+                
+                'Go to standby state
+                fsmState = s1_Stby
+            End If
+            
+        
+    End Select
+    
+    
 
 End Sub
 
