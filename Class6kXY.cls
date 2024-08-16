@@ -188,12 +188,19 @@ Option Explicit
     
     
     'Estop - disable all outputs
-    Public Sub ESTOP()
+    Public Function chkESTOP(In_ESTOP As Integer) As Boolean
     
+        'Return false by default
+        chkESTOP = False
+    
+        'If ESTOP pin is not raised, exit
+        If Not myXY.chkIn(In_ESTOP) Then Exit Function
+        
         'Imediate stop command, imediate shut down all outputs, disable motors
         c6k.Write "!AD100,100:!S:!OUTALL1,32,0:DRIVE00:"
+        chkESTOP = True
     
-    End Sub
+    End Function
     
 
 '---------------------------- Internal Functions ----------------------------------------------------------------------
@@ -462,14 +469,6 @@ Option Explicit
         End If
     
     End Function
- 
-    'Estop - disable all outputs
-    Public Sub ESTOP()
-    
-        'Imediate stop command, imediate shut down all outputs, disable motors
-        c6k.Write "!S:!OUTALL1,32,0:DRIVE00:"
-    
-    End Sub
 
 
 '---===---===---===---===--- Basic Functions - Initialize, Read-Only, Etc. ---===---===---===---===---===---===---===--

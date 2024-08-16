@@ -293,7 +293,7 @@ Begin VB.Form frmUI
             Index           =   1
             Left            =   1200
             TabIndex        =   27
-            Text            =   "1.625"
+            Text            =   "80"
             Top             =   2400
             Width           =   1335
          End
@@ -317,7 +317,7 @@ Begin VB.Form frmUI
          End
          Begin VB.Label lblDeep 
             BackStyle       =   0  'Transparent
-            Caption         =   "in"
+            Caption         =   "%"
             BeginProperty Font 
                Name            =   "MS Sans Serif"
                Size            =   13.5
@@ -774,4 +774,39 @@ Private Sub topbarSet0_Click()
     
     If userReturn = vbOK Then myDrillTap.setHome
 
+End Sub
+
+Private Sub txtDeep_Change(Index As Integer)
+
+    'Ensure textbox entry is valid numeric value
+    Dim txtbx As uiTxtbxs
+    Select Case Index
+        Case 0
+            txtbx = txtDrillTo
+        Case 1
+            txtbx = txtTapTo
+    End Select
+    
+    myUI.validate txtbx, txtDeep(Index).Text
+
+End Sub
+
+Private Sub txtSpeeds_Change(Index As Integer)
+    
+    'Ensure textbox entry is valid numeric value
+    Dim txtbx As uiTxtbxs
+    Select Case Index
+        Case 0
+            txtbx = txtDrillSpeed
+        Case 1
+            txtbx = txtTapSpeed
+        Case 2
+            txtbx = txtJogSpeed
+    End Select
+    
+    myUI.validate txtbx, txtSpeeds(Index).Text
+    
+    'Ensure that entries are not less than zero
+    If txtSpeeds(Index).Text < 0 Then txtSpeeds(Index).Text = "0"
+            
 End Sub

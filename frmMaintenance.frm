@@ -147,3 +147,17 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+Private Sub txtMaintPos_Change(Index As Integer)
+    
+    'Ensure textbox entry is valid numeric value
+    Dim txtbx As uiTxtbxs
+    Select Case Index
+        Case 0
+            txtbx = txtMaintX
+        Case 1
+            txtbx = txtMaintY
+    End Select
+    
+    myUI.validate txtbx, txtMaintPos(Index).Text
+    
+End Sub

@@ -35,7 +35,7 @@ Public Enum uiStatus
     uiWaiting
     uiJoystick
     uiClampON
-    uiClampOFF
+    uiClampOff
     uiESTOP
     uiRunningDrill
     uiRunningTap
@@ -49,11 +49,34 @@ Public Enum btnState
     btnESTOP
 End Enum
 
+Public Enum uiTxtbxs
+    txtDrillSpeed
+    txtTapSpeed
+    txtJogSpeed
+    txtDrillTo
+    txtTapTo
+    txtMaintX
+    txtMaintY
+End Enum
+
 'Keypress booleans to track the state of multiple keys
 Public uiKeyUp As Boolean
 Public uiKeyRight As Boolean
 Public uiKeyDown As Boolean
 Public uiKeyLeft As Boolean
+
+'Store Drill & Tap Cycles
+Private drillCycles As Integer
+Private tapCycles As Integer
+
+'Validation strings for textbox numeric entry
+Private txtbxDrillSpeedCHK As String
+Private txtbxTapSpeedCHK As String
+Private txtbxJogSpeedCHK As String
+Private txtbxDrillToCHK As String
+Private txtbxTapToChk As String
+Private txtbxMaintXCHK As String
+Private txtbxMaintYCHK As String
      
 '--------------------------- Class Variables --------------------------------------------------------------------------
 
@@ -75,6 +98,16 @@ Public uiKeyLeft As Boolean
 
 '--------------------------- Init & Clear Functions -------------------------------------------------------------------
     Public Sub initUI()
+            
+                
+        txtbxDrillSpeedCHK = frmUI.txtSpeeds(0).Text
+        txtbxTapSpeedCHK = frmUI.txtSpeeds(1).Text
+        txtbxJogSpeedCHK = frmUI.txtSpeeds(2).Text
+        txtbxDrillToCHK = frmUI.txtDeep(0).Text
+        txtbxTapToChk = frmUI.txtDeep(1).Text
+        txtbxMaintXCHK = frmMaint.txtMaintPos(0).Text
+        txtbxMaintYCHK = frmMaint.txtMaintPos(1).Text
+            
             
     End Sub
 
@@ -131,6 +164,18 @@ Public Function getDir() As joyDirection
     
 End Function
 
+Public Function getCoords() As myCoordinate
+
+    'Convert strings in maintenance form to position doubles.
+    Dim tempXY As myCoordinate
+    
+    tempXY.X = CDbl(frmMaintenance.txtMaintPos(0))
+    tempXY.Y = CDbl(frmMaintenance.txtMaintPos(1))
+    
+    getCoords = tempXY
+
+End Function
+
 
 '---===---===---===---===--- Basic Functions - Initialize, Read-Only, Etc. ---===---===---===---===---===---===---===--
 '---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---=
@@ -149,6 +194,46 @@ End Function
 
 '---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---=
 '---===---===---=== Advanced Functions - Status Message,  ---===---===---===---===---===---===---==
+
+Public Sub validate(textbox As uiTxtbxs, inputText As String)
+    
+    'Check if the input value is numeric
+    Dim tmpChk As Boolean
+    tmpChk = False
+    
+    If IsNumeric(inpuText) Then tmpChk = True
+
+    'Determine which textbox is being validated. If the text is numeric, save current state. Else reset to previous
+    Select Case textbox
+        Case txtDrillSpeed
+            If tmpChk Then txtbxDrillSpeedCHK = inputText Else frmUI.txtSpeeds(0).Text = txtbxDrillSpeedCHK
+        Case txtTapSpeed
+            If tmpChk Then txtbxTapSpeedCHK = inputText Else frmUI.txtSpeeds(1).Text = txtbxTapSpeedCHK
+        Case txtJogSpeed
+            If tmpChk Then txtbxJogSpeedCHK = inputText Else frmUI.txtSpeeds(2).Text = txtbxJogSpeedCHK
+        Case txtDrillTo
+            If tmpChk Then txtbxDrillToCHK = inputText Else frmUI.txtDeep(0).Text = txtbxDrillToCHK
+        Case txtTapTo
+            If tmpChk Then txtbxTapToChk = inputText Else frmUI.txtDeep(1).Text = txtbxTapToChk
+        Case txtMaintX
+            If tmpChk Then txtbxMaintXCHK = inputText Else frmUI.txtMaintPos(0).Text = txtbxMaintXCHK
+        Case txtMaintY
+            If tmpChk Then txtbxMaintXCHK = inputText Else frmUI.txtMaintPos(1).Text = txtbxMaintXCHK
+    End Select
+
+End Sub
+
+Public Function reformat(inputText As String)
+
+    Dim outputText As String
+
+    If Abs(CDbl(inputText)) < 10 Then outputText = Format(inputText, "###0.000")
+    If Abs(CDbl(inputText)) >= 10 Then outputText = Format(inputText, "###0.00")
+
+    reformat = outputText
+
+End Function
+
 
 Public Sub go()
 
@@ -244,10 +329,10 @@ Public Sub updStatus(myStatus As uiStatus, strInput As String)
             myMsg = "Motion in Progress, Please Wait"
         Case uiJoystick
             myMsg = "Joystick Enabled"
-        Case uiClampON
-            myMsg = "Clamp On, Waiting for Input"
-        Case uiClampOFF
-            myMsg = "Clamp Off - Remove Shank"
+        Case uiClampOff
+            myMsg = "Clamp Off - Load Shank before pressing GO"
+        Case uiClampOFFcycle
+            myMsg = "Clamp Off - Remove Shank and Reload"
         Case uiESTOP
             myMsg = "ESTOP Triggered - Check Machine before Clearing"
         Case uiRunningDrill

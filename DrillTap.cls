@@ -191,13 +191,13 @@ Option Explicit
 
 
     Public Function checkESTOP() As Boolean
+            
+        'Return false by default
+        checkESTOP = False
         
-        If myXY.chkIn(In_ESTOP) Then
-            myXY.ESTOP
+        'Check estop; raise flag if true
+        If myXY.chkESTOP(In_ESTOP) Then
             checkESTOP = True
-            Exit Function
-        Else
-            checkESTOP = False
         End If
         
     End Function
