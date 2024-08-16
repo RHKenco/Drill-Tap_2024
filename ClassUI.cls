@@ -39,6 +39,8 @@ Public Enum uiStatus
     uiESTOP
     uiRunningDrill
     uiRunningTap
+    uiMaintIdle
+    uiMaintEnabled
     uiError
 End Enum
 
@@ -46,7 +48,9 @@ Public Enum btnState
     btnInit
     btnStby
     btnRunning
+    btnJoystick
     btnESTOP
+    btnMaintOn
 End Enum
 
 Public Enum uiTxtbxs
@@ -99,7 +103,10 @@ Private txtbxMaintYCHK As String
 '--------------------------- Init & Clear Functions -------------------------------------------------------------------
     Public Sub initUI()
             
+        'Set initial UI status
+        updStatus uiLoading, ""
                 
+        'Load text variable defaults
         txtbxDrillSpeedCHK = frmUI.txtSpeeds(0).Text
         txtbxTapSpeedCHK = frmUI.txtSpeeds(1).Text
         txtbxJogSpeedCHK = frmUI.txtSpeeds(2).Text
@@ -261,7 +268,7 @@ Public Sub go()
 End Sub
 
 
-Public Sub btnState(newState As btnState)
+Private Sub btnState(newState As btnState)
 
     Select Case btnState
         Case btnInit
@@ -269,44 +276,96 @@ Public Sub btnState(newState As btnState)
             frmUI.cmdGO.Caption = "GO"
             frmUI.cmdGO.Enabled = False
             
-            frmUI.cmdGoToDrillTap(0).Enabled = False
-            frmUI.cmdGoToDrillTap(1).Enabled = False
+            frmUI.frameSetup.Enabled = False
+            frmUI.frameDRO.Enabled = False
+            frmUI.frameToolCount.Enabled = False
+            frmMaintenance.frameMaintIO.Enabled = False
+            frmMaintenance.frameMaintPos.Enabled = False
             
-            frmUI.cmdResetCount(0).Enabled = False
-            frmUI.cmdResetCount(0).Enabled = False
+            frmUI.topbarJoy.Enabled = False
+            frmUI.topbarMaint.Enabled = False
+            frmUI.topbarSet0.Enabled = False
+            frmMaintenance.topbarEnIO.Enabled = True
             
         Case btnStby
         
             frmUI.cmdGO.Caption = "GO"
             frmUI.cmdGO.Enabled = True
             
-            frmUI.cmdGoToDrillTap(0).Enabled = True
-            frmUI.cmdGoToDrillTap(1).Enabled = True
-            
-            frmUI.cmdResetCount(0).Enabled = True
-            frmUI.cmdResetCount(0).Enabled = True
+            frmUI.frameSetup.Enabled = True
+            frmUI.frameDRO.Enabled = True
+            frmUI.frameToolCount.Enabled = True
+            frmMaintenance.frameMaintIO.Enabled = False
+            frmMaintenance.frameMaintPos.Enabled = False
+
+            frmUI.topbarJoy.Enabled = True
+            frmUI.topbarMaint.Enabled = True
+            frmUI.topbarSet0.Enabled = True
+            frmMaintenance.topbarEnIO.Enabled = True
             
         Case btnRunning
         
             frmUI.cmdGO.Caption = "STOP"
             frmUI.cmdGO.Enabled = True
             
-            frmUI.cmdGoToDrillTap(0).Enabled = False
-            frmUI.cmdGoToDrillTap(1).Enabled = False
+            frmUI.frameSetup.Enabled = False
+            frmUI.frameDRO.Enabled = False
+            frmUI.frameToolCount.Enabled = False
+            frmMaintenance.frameMaintIO.Enabled = False
+            frmMaintenance.frameMaintPos.Enabled = False
             
-            frmUI.cmdResetCount(0).Enabled = False
-            frmUI.cmdResetCount(0).Enabled = False
+            frmUI.topbarJoy.Enabled = False
+            frmUI.topbarMaint.Enabled = False
+            frmUI.topbarSet0.Enabled = False
+            frmMaintenance.topbarEnIO.Enabled = True
+            
+        Case btnJoystick
+        
+            frmUI.cmdGO.Caption = "STOP JOYSTICK"
+            frmUI.cmdGO.Enabled = True
+            
+            frmUI.frameSetup.Enabled = False
+            frmUI.frameDRO.Enabled = False
+            frmUI.frameToolCount.Enabled = False
+            frmMaintenance.frameMaintIO.Enabled = False
+            frmMaintenance.frameMaintPos.Enabled = False
+            
+            frmUI.topbarJoy.Enabled = False
+            frmUI.topbarMaint.Enabled = True
+            frmUI.topbarSet0.Enabled = True
+            frmMaintenance.topbarEnIO.Enabled = True
             
         Case btnESTOP
 
             frmUI.cmdGO.Caption = "CLEAR ESTOP"
             frmUI.cmdGO.Enabled = True
             
-            frmUI.cmdGoToDrillTap(0).Enabled = False
-            frmUI.cmdGoToDrillTap(1).Enabled = False
+            frmUI.frameSetup.Enabled = False
+            frmUI.frameDRO.Enabled = False
+            frmUI.frameToolCount.Enabled = False
+            frmMaintenance.frameMaintIO.Enabled = False
+            frmMaintenance.frameMaintPos.Enabled = False
             
-            frmUI.cmdResetCount(0).Enabled = False
-            frmUI.cmdResetCount(0).Enabled = False
+            frmUI.topbarJoy.Enabled = False
+            frmUI.topbarMaint.Enabled = False
+            frmUI.topbarSet0.Enabled = False
+            frmMaintenance.topbarEnIO.Enabled = True
+            
+        Case btnMaintOn
+
+            frmUI.cmdGO.Caption = "DISABLE I/O"
+            frmUI.cmdGO.Enabled = True
+            
+            frmUI.frameSetup.Enabled = False
+            frmUI.frameDRO.Enabled = False
+            frmUI.frameToolCount.Enabled = False
+            frmMaintenance.frameMaintIO.Enabled = True
+            frmMaintenance.frameMaintPos.Enabled = True
+            
+            frmUI.topbarJoy.Enabled = True
+            frmUI.topbarMaint.Enabled = False
+            frmUI.topbarSet0.Enabled = True
+            frmMaintenance.topbarEnIO.Enabled = False
             
         Case Else
     End Select
@@ -322,29 +381,80 @@ Public Sub updStatus(myStatus As uiStatus, strInput As String)
 
     Select Case myStatus
         Case uiLoading
+        
             myMsg = "System Loading, Please Wait"
+            
+            btnState btnInit
+            
         Case uiStandby
+        
             myMsg = "Waiting for Input"
+            
+            btnState btnStby
+            
         Case uiWaiting
+        
             myMsg = "Motion in Progress, Please Wait"
+            
+            btnState btnRunning
+            
         Case uiJoystick
+        
             myMsg = "Joystick Enabled"
+        
+            btnState btnJoystick
+            
         Case uiClampOff
+        
             myMsg = "Clamp Off - Load Shank before pressing GO"
+        
+            btnState btnStby
+        
         Case uiClampOFFcycle
+            
             myMsg = "Clamp Off - Remove Shank and Reload"
+        
+            btnState btnRunning
+            
         Case uiESTOP
+        
             myMsg = "ESTOP Triggered - Check Machine before Clearing"
+            
+            btnState btnESTOP
+            
         Case uiRunningDrill
+        
             myMsg = "Running Drill Cycle"
+            
+            btnState btnRunning
+            
         Case uiRunningTap
+        
             myMsg = "Running Tap Cycle"
+            
+            btnState btnRunning
+            
+        Case uiMaintIdle
+            myMsg = "Maintenance Window Activated - Press Enable I/O or Run As Normal"
+            
+            btnState btnStby
+            
+        Case uiMaintEnabled
+            myMsg = "Maintenance Window Activated - Normal Functions Disabled"
+            
+            btnState btnMaintOn
+            
         Case uiError
+        
             myMsg = "ERROR: " & strInput
+            
+            btnState btnStby
+            
     End Select
 
     frmUI.lblSystemStatus.Caption = myMsg
-    frmUI.lblSystemStatus.Refresh
+    frmUI.Refresh
+    frmMaintenance.Refresh
 
 End Sub
 

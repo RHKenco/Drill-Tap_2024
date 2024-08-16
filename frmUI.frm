@@ -11,7 +11,7 @@ Begin VB.Form frmUI
    ScaleHeight     =   10440
    ScaleWidth      =   11880
    StartUpPosition =   3  'Windows Default
-   Begin VB.Frame Frame1 
+   Begin VB.Frame frameToolCount 
       BackColor       =   &H00400000&
       Caption         =   "Tool Count"
       BeginProperty Font 
@@ -280,6 +280,7 @@ Begin VB.Form frmUI
          Top             =   3240
          Width           =   3495
          Begin VB.TextBox txtDeep 
+            Alignment       =   1  'Right Justify
             BeginProperty Font 
                Name            =   "MS Sans Serif"
                Size            =   13.5
@@ -298,6 +299,7 @@ Begin VB.Form frmUI
             Width           =   1335
          End
          Begin VB.TextBox txtDeep 
+            Alignment       =   1  'Right Justify
             BeginProperty Font 
                Name            =   "MS Sans Serif"
                Size            =   13.5
@@ -330,7 +332,7 @@ Begin VB.Form frmUI
             ForeColor       =   &H00FFFFFF&
             Height          =   375
             Index           =   3
-            Left            =   2760
+            Left            =   2640
             TabIndex        =   30
             Top             =   2400
             Width           =   495
@@ -350,7 +352,7 @@ Begin VB.Form frmUI
             ForeColor       =   &H00FFFFFF&
             Height          =   375
             Index           =   2
-            Left            =   2760
+            Left            =   2640
             TabIndex        =   29
             Top             =   1200
             Width           =   495
@@ -456,6 +458,7 @@ Begin VB.Form frmUI
          Top             =   4080
          Width           =   3975
          Begin VB.TextBox txtSpeeds 
+            Alignment       =   1  'Right Justify
             BeginProperty Font 
                Name            =   "MS Sans Serif"
                Size            =   13.5
@@ -469,11 +472,12 @@ Begin VB.Form frmUI
             Index           =   2
             Left            =   2280
             TabIndex        =   12
-            Text            =   "30"
+            Text            =   "30.00"
             Top             =   1560
-            Width           =   1335
+            Width           =   1095
          End
          Begin VB.TextBox txtSpeeds 
+            Alignment       =   1  'Right Justify
             BeginProperty Font 
                Name            =   "MS Sans Serif"
                Size            =   13.5
@@ -487,11 +491,12 @@ Begin VB.Form frmUI
             Index           =   1
             Left            =   2280
             TabIndex        =   11
-            Text            =   "15"
+            Text            =   "15.00"
             Top             =   1080
-            Width           =   1335
+            Width           =   1095
          End
          Begin VB.TextBox txtSpeeds 
+            Alignment       =   1  'Right Justify
             BeginProperty Font 
                Name            =   "MS Sans Serif"
                Size            =   13.5
@@ -507,11 +512,11 @@ Begin VB.Form frmUI
             TabIndex        =   10
             Text            =   "0.625"
             Top             =   600
-            Width           =   1335
+            Width           =   1095
          End
          Begin VB.Label lblSpeeds 
             BackStyle       =   0  'Transparent
-            Caption         =   "Drill Speed:"
+            Caption         =   "Drill Speed:                 ips"
             BeginProperty Font 
                Name            =   "MS Sans Serif"
                Size            =   13.5
@@ -527,11 +532,11 @@ Begin VB.Form frmUI
             Left            =   240
             TabIndex        =   9
             Top             =   600
-            Width           =   2055
+            Width           =   3735
          End
          Begin VB.Label lblSpeeds 
             BackStyle       =   0  'Transparent
-            Caption         =   "Tap Speed:"
+            Caption         =   "Tap Speed:                 ips"
             BeginProperty Font 
                Name            =   "MS Sans Serif"
                Size            =   13.5
@@ -547,11 +552,11 @@ Begin VB.Form frmUI
             Left            =   240
             TabIndex        =   8
             Top             =   1080
-            Width           =   2055
+            Width           =   3735
          End
          Begin VB.Label lblSpeeds 
             BackStyle       =   0  'Transparent
-            Caption         =   "Jog Speed:"
+            Caption         =   "Jog Speed:                 ips"
             BeginProperty Font 
                Name            =   "MS Sans Serif"
                Size            =   13.5
@@ -567,7 +572,7 @@ Begin VB.Form frmUI
             Left            =   240
             TabIndex        =   7
             Top             =   1560
-            Width           =   2535
+            Width           =   3735
          End
       End
       Begin VB.OptionButton optDrillTapAuto 
@@ -690,42 +695,43 @@ End Sub
 
 Private Sub Form_Load()
 
-
-Me.KeyPreview = True
+    myUI.initUI
+    
+    Me.KeyPreview = True
 
 
 End Sub
 
 Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
 
-Select Case KeyCode
-    Case vbKeyUp
-        myUI.uiKeyUp = True
-    Case vbKeyRight
-        myUI.uiKeyRight = True
-    Case vbKeyDown
-        myUI.uiKeyDown = True
-    Case vbKeyLeft
-        myUI.uiKeyLeft = True
-    Case Else
-End Select
+    Select Case KeyCode
+        Case vbKeyUp
+            myUI.uiKeyUp = True
+        Case vbKeyRight
+            myUI.uiKeyRight = True
+        Case vbKeyDown
+            myUI.uiKeyDown = True
+        Case vbKeyLeft
+            myUI.uiKeyLeft = True
+        Case Else
+    End Select
 
 End Sub
 
 
 Private Sub Form_KeyUp(KeyCode As Integer, Shift As Integer)
 
-Select Case KeyCode
-    Case vbKeyUp
-        myUI.uiKeyUp = False
-    Case vbKeyRight
-        myUI.uiKeyRight = False
-    Case vbKeyDown
-        myUI.uiKeyDown = False
-    Case vbKeyLeft
-        myUI.uiKeyLeft = False
-    Case Else
-End Select
+    Select Case KeyCode
+        Case vbKeyUp
+            myUI.uiKeyUp = False
+        Case vbKeyRight
+            myUI.uiKeyRight = False
+        Case vbKeyDown
+            myUI.uiKeyDown = False
+        Case vbKeyLeft
+            myUI.uiKeyLeft = False
+        Case Else
+    End Select
 
 End Sub
 
@@ -788,6 +794,23 @@ Private Sub txtDeep_Change(Index As Integer)
     End Select
     
     myUI.validate txtbx, txtDeep(Index).Text
+    
+    'Ensure entry is not out of bounds
+    Select Case Index
+        Case 0
+            If CDbl(txtDeep(Index).Text) > 3 Then txtDeep(Index).Text = "3.00"
+        Case 1
+    End Select
+
+End Sub
+
+Private Sub txtDeep_LostFocus(Index As Integer)
+    
+    'Format the text in the textbox
+    Dim tmpTxt As String
+    tmpTxt = txtDeep(Index).Text
+    
+    If Index = 0 Then txtDeep(Index).Text = myUI.reformat(tmpTxt) Else txtDeep(Index).Text = Format(txtDeep(Index), "###0.0")
 
 End Sub
 
@@ -809,4 +832,14 @@ Private Sub txtSpeeds_Change(Index As Integer)
     'Ensure that entries are not less than zero
     If txtSpeeds(Index).Text < 0 Then txtSpeeds(Index).Text = "0"
             
+End Sub
+
+Private Sub txtSpeeds_LostFocus(Index As Integer)
+    
+    'Format the text in the textbox
+    Dim tmpTxt As String
+    tmpTxt = txtSpeeds(Index).Text
+    
+    txtSpeeds(Index).Text = myUI.reformat(tmpTxt)
+
 End Sub

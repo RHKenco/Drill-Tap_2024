@@ -4,13 +4,13 @@ Begin VB.Form frmMaintenance
    Caption         =   "Maintenance"
    ClientHeight    =   10740
    ClientLeft      =   17895
-   ClientTop       =   3165
+   ClientTop       =   3465
    ClientWidth     =   5880
    ForeColor       =   &H8000000E&
    LinkTopic       =   "Form1"
    ScaleHeight     =   10740
    ScaleWidth      =   5880
-   Begin VB.Frame frmMaintPos 
+   Begin VB.Frame frameMaintPos 
       BackColor       =   &H00400000&
       Caption         =   "Manual Position"
       BeginProperty Font 
@@ -46,6 +46,7 @@ Begin VB.Form frmMaintenance
          Width           =   1455
       End
       Begin VB.TextBox txtMaintPos 
+         Alignment       =   1  'Right Justify
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   13.5
@@ -59,11 +60,12 @@ Begin VB.Form frmMaintenance
          Index           =   1
          Left            =   1200
          TabIndex        =   3
-         Text            =   "0"
+         Text            =   "0.000"
          Top             =   2040
          Width           =   1335
       End
       Begin VB.TextBox txtMaintPos 
+         Alignment       =   1  'Right Justify
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   13.5
@@ -77,7 +79,7 @@ Begin VB.Form frmMaintenance
          Index           =   0
          Left            =   1200
          TabIndex        =   2
-         Text            =   "0"
+         Text            =   "0.000"
          Top             =   1080
          Width           =   1335
       End
@@ -122,7 +124,7 @@ Begin VB.Form frmMaintenance
          Width           =   2775
       End
    End
-   Begin VB.Frame frmMaintIO 
+   Begin VB.Frame frameMaintIO 
       BackColor       =   &H00400000&
       Caption         =   "I/O"
       BeginProperty Font 
@@ -141,12 +143,19 @@ Begin VB.Form frmMaintenance
       Top             =   240
       Width           =   5415
    End
+   Begin VB.Menu topbarEnIO 
+      Caption         =   "Enable I/O"
+   End
 End
 Attribute VB_Name = "frmMaintenance"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+Private Sub topbarEnIO_Click()
+
+End Sub
+
 Private Sub txtMaintPos_Change(Index As Integer)
     
     'Ensure textbox entry is valid numeric value
@@ -160,4 +169,14 @@ Private Sub txtMaintPos_Change(Index As Integer)
     
     myUI.validate txtbx, txtMaintPos(Index).Text
     
+End Sub
+
+Private Sub txtMaintPos_LostFocus(Index As Integer)
+    
+    'Format the text in the textbox
+    Dim tmpTxt As String
+    tmpTxt = txtMaintPos(Index).Text
+    
+    txtMaintPos(Index).Text = myUI.reformat(tmpTxt)
+
 End Sub

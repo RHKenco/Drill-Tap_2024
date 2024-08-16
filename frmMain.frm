@@ -51,7 +51,7 @@ Begin VB.Form frmMain
       Value           =   -1  'True
       Width           =   1095
    End
-   Begin VB.CommandButton Command4 
+   Begin VB.CommandButton cmdUploadFile 
       Caption         =   "Upload File"
       Height          =   420
       Left            =   2160
@@ -92,7 +92,7 @@ Begin VB.Form frmMain
       Top             =   210
       Width           =   1830
    End
-   Begin VB.CommandButton Command1 
+   Begin VB.CommandButton cmdDownloadFile 
       Caption         =   "Download File"
       Height          =   420
       Left            =   120
@@ -129,7 +129,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
-Private Sub Command1_Click()
+Private Sub cmdDownloadFile_Click()
 On Error GoTo cmd1err
 
     If (Not connected) Then Exit Sub    'exit if not connected
@@ -274,7 +274,7 @@ cmd3err:
     Disconnect
 End Sub
 
-Private Sub Command4_Click()
+Private Sub cmdUploadFile_Click()
 On Error GoTo cmd4err
 
     If (Not connected) Then Exit Sub    'exit if not connected
