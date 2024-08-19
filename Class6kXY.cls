@@ -287,12 +287,13 @@ Option Explicit
         
     
     'setZero - Function to set the zero location of the 6k
-    Public Sub setZero(offset As myCoordinate)
+    Public Sub setZero(offsetX As Double, offsetY As Double)
     
-        zeroOffset = offset
+        zeroOffset.X = offsetX
+        zeroOffset.Y = offsetY
     
         'Sets zero to the offset location
-        c6k.Write "PSET" + Str(offset.X) + "," + Str(offset.Y) + ":"
+        c6k.Write "PSET" + Str(offsetX) + "," + Str(offsetY) + ":"
     
     End Sub
     
@@ -613,7 +614,7 @@ Option Explicit
         
     End Sub
     
-    Public Sub moveTo(newPos As myCoordinate, moveOption As moveType)
+    Public Sub moveTo(newPosX As Double, newPosY As Double, moveOption As moveType)
         
         'If there is either a currently pending movement or a completed-not-acknowledged movement, abort
         If checkMov Then Exit Sub
@@ -625,21 +626,21 @@ Option Explicit
                 Case movNone
                     'Do Nothing
                 Case movLine  'Move line
-                    moveLine newPos.X, newPos.Y
+                    moveLine newPosX, newPosY
                 Case movX
-                    moveX newPos.X
+                    moveX newPosX
                 Case movXY  'Move X first
-                    moveX newPos.X
-                    moveY newPos.Y
+                    moveX newPosX
+                    moveY newPosY
                 Case movY
-                    moveY newPos.Y
+                    moveY newPosY
                 Case movYX  'Move Y first
-                    moveY newPos.Y
-                    moveX newPos.X
+                    moveY newPosY
+                    moveX newPosX
                 Case movY0XY  'Back-Over-Front
                     moveY -1000
-                    moveX newPos.X
-                    moveY newPos.Y
+                    moveX newPosX
+                    moveY newPosY
             End Select
         
         'Clear moving flag and set completion flag
