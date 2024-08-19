@@ -150,7 +150,7 @@ End Sub
 
 Public Sub runFSM()
 
-    runAlwaysFirst
+    runAlways
     
     Select Case fsmState
         Case s0_Init
@@ -171,8 +171,6 @@ Public Sub runFSM()
             runState7
     End Select
 
-    runAlwaysLast
-
 End Sub
 
 
@@ -186,22 +184,13 @@ Private Sub runState0()
 
 End Sub
 
-Private Sub runAlwaysFirst()
+Private Sub runAlways()
     
     'Update faststatus
     myDrillTap.update
     
     'Operations that should run every loop, regardless of state (i.e. ESTOP check)
     myDrillTap.checkESTOP
-
-End Sub
-
-Private Sub runAlwaysLast()
-    
-    'Update faststatus
-    myDrillTap.update
-    
-    'At the end of every loop, the DRO should be updated
     myUI.updDRO
 
 End Sub
@@ -210,10 +199,28 @@ Private Sub runState1()
     
     'Standby State - Waits for USER to tell the machine to go
     
+    'Check each move-mode boolean and set state according to order of priority
     
-    
-    
-    
+        If joystickMode Then
+            
+            setState s2_Joy
+        
+        ElseIf maintenanceMode Then
+            
+            setState s3_Maint
+        
+        ElseIf moveMode Then
+            
+            setState s4_Move
+        
+        ElseIf runMode Then
+        
+            setState s5_Prep
+            
+        Else
+            'If the state does not change, exit sub
+            Exit Sub
+        End If
     
         'Update system speeds before locking down user control of those boxes
         myXY.setVel frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
