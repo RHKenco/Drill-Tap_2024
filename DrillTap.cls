@@ -73,6 +73,14 @@ Option Explicit
         atTap
     End Enum
     
+    Private Enum maintOption
+        mActiveOn
+        mActiveOff
+        mEnable
+        mDisable
+        mToggle
+    End Enum
+    
     Private myPosition As atPosition
     Private ESTOP_SET As Boolean
      
@@ -262,7 +270,31 @@ Option Explicit
     
     End Sub
     
-    Public Sub maintActive(inputPin As Integer, enable As Boolean)
+    Public Sub maintActive(inputPin As Integer, myAction As maintOption)
+        
+        Dim enable As Boolean
+        
+        'Determine what action should be taken
+        Select Case myAction
+        
+            Case mActiveOff
+                inputPin = 0
+                enable = False
+            Case mActoveOn
+                inputPin = 0
+                enable = True
+            Case mEnable
+                enable = True
+                maintIO(inputPin) = True
+            Case mDisable
+                enable = False
+                maintIO(inputPin) = True
+            Case mToggle
+                enable = Not maintIO(inputPin)
+                maintIO(inputPin) = enable
+            Case Else
+        End Select
+        
         
         'If the input is 0, this is a call to enable or disable active maintenance mode
         If inputPin = 0 Then
@@ -275,7 +307,16 @@ Option Explicit
             Next i
             
             'Enable or disable the maintenance frame according to the enable input
-            frmMaintenance.frameMaintIO.enable = enable
+            If enable Then
+                frmMaintenance.frameMaintIO.enable = True
+                myFSM.setMaintenance True
+                myUI.updStatus uiMaintEnabled, ""
+            Else
+                frmMaintenance.frameMaintIO.enable = False
+                myFSM.setMaintenance False
+                myUI.updStatus uiStandby, ""
+            End If
+                
             
         'Any other input, assuming the mode is active, should be set and cleared manually
         Else
@@ -283,7 +324,7 @@ Option Explicit
             If frmMaintenance.frameIO.enable Then
                 
                 'The boolean array should be updated accordingly
-                maintIO(inputPin - 1) = enable
+                maintIO(inputPin) = enable
                 
                 
                 'If 1-8, output pins. If 9-16, input pins.

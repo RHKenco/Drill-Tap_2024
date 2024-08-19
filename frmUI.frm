@@ -3,15 +3,14 @@ Begin VB.Form frmUI
    BackColor       =   &H00400000&
    Caption         =   "Drill & Tap"
    ClientHeight    =   9630
-   ClientLeft      =   225
-   ClientTop       =   855
+   ClientLeft      =   60
+   ClientTop       =   705
    ClientWidth     =   11880
    ForeColor       =   &H8000000E&
    LinkTopic       =   "Form1"
    ScaleHeight     =   9630
    ScaleMode       =   0  'User
    ScaleWidth      =   11880
-   StartUpPosition =   3  'Windows Default
    Begin VB.Frame frameToolCount 
       BackColor       =   &H00400000&
       Caption         =   "Tool Count"
@@ -719,6 +718,8 @@ Private Sub Form_Load()
     'Initialize UI
     myUI.initUI
     
+    'Clear maintenance Form Open flag
+    maintenanceOpen = False
     
     'Initialize 6k
     Dim toolOffsetCoordinate As myCoordinate

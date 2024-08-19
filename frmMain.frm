@@ -2,8 +2,8 @@ VERSION 5.00
 Begin VB.Form frmMain 
    Caption         =   "6k Drill & Tap Program 2024"
    ClientHeight    =   2055
-   ClientLeft      =   5550
-   ClientTop       =   3930
+   ClientLeft      =   3870
+   ClientTop       =   4395
    ClientWidth     =   10725
    LinkTopic       =   "Form1"
    ScaleHeight     =   2055

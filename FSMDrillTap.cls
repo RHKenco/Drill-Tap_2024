@@ -118,9 +118,9 @@ Public Sub setJoystick()
 End Sub
 
 'When possible, go to Maintenance State
-Public Sub setMaintenance()
+Public Sub setMaintenance(enable As Boolean)
 
-    maintenanceMode = Not maintenanceMode
+    maintenanceMode = enable
 
 End Sub
 
@@ -128,9 +128,9 @@ End Sub
 'Immediately go to ESTOP State
 Public Sub setESTOP()
 
-    myUI.updStatus uiESTOP, ""
+    'myUI.updStatus uiESTOP, ""
 
-    setState s7_ESTOP
+    'setState s7_ESTOP
     
 End Sub
 
@@ -189,6 +189,9 @@ Private Sub runAlways()
     
     'Update faststatus
     myDrillTap.update
+    
+    'Update maintenance when necessary
+    If maintenanceOpen Then myDrillTap.maintPassive
     
     'Operations that should run every loop, regardless of state (i.e. ESTOP check)
     myDrillTap.checkESTOP
@@ -285,10 +288,6 @@ Private Sub runState3()
     End If
 
     If maintenanceMode Then
-
-
-
-
 
         'If joystick is also enabled, cycle to joystick state
         If joystickMode Then fsmState = s2_Joy

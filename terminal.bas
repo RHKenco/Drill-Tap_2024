@@ -93,6 +93,8 @@ Public Input23Mask
 Public Pump As Boolean
 Public Last_Pcut_State As Integer
 
+Public maintenanceOpen As Boolean
+
 Public Type myCoordinate
     X As Double
     Y As Double

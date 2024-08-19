@@ -3,8 +3,8 @@ Begin VB.Form frmMaintenance
    BackColor       =   &H00400000&
    Caption         =   "Maintenance"
    ClientHeight    =   9630
-   ClientLeft      =   17895
-   ClientTop       =   3465
+   ClientLeft      =   12105
+   ClientTop       =   705
    ClientWidth     =   5880
    ForeColor       =   &H8000000E&
    LinkTopic       =   "Form1"
@@ -456,6 +456,35 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+Private Sub cmdMaintIO_Click(Index As Integer)
+
+    myDrillTap.maintActive (Index + 1), mToggle
+
+End Sub
+
+Private Sub Form_Load()
+
+    maintenanceOpen = True
+
+End Sub
+
+Private Sub Form_Unload()
+
+    maintenanceOpen = False
+    
+    'Ensure active maintenance mode is disabled
+    myDrillTap.maintActive 0, mActiveOff
+    
+End Sub
+
+Private Sub topbarEnIO_Click()
+
+    'Enable active maintenance mode
+    myDrillTap.maintActive 0, mActiveOn
+    
+
+End Sub
+
 Private Sub txtMaintPos_Change(Index As Integer)
     
     'Ensure textbox entry is valid numeric value
