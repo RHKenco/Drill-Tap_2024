@@ -65,9 +65,12 @@ Global c6k As Object            ' comm server object (RS232 or Ethernet)
 Global fsinfo As FastStatusInfo 'fast status information
 Global connected As Boolean     ' flag to indicate connection state - could also use the state of timer1.enabled for this
 Global alarms As Long 'alarm status
+
+'Control Classes
 Global myDrillTap As New ClassDrillTap
 Global myUI As New ClassUI
 Global myFSM As New ClassFSMDrillTap
+
 Public Const Input9 As Long = (2 ^ (9 - 1))
 Public Const Input10 As Long = (2 ^ (10 - 1))
 Public Const Input11 As Long = (2 ^ (11 - 1))

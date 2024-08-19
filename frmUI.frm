@@ -2,13 +2,14 @@ VERSION 5.00
 Begin VB.Form frmUI 
    BackColor       =   &H00400000&
    Caption         =   "Drill & Tap"
-   ClientHeight    =   10440
+   ClientHeight    =   9630
    ClientLeft      =   165
    ClientTop       =   810
    ClientWidth     =   11880
    ForeColor       =   &H8000000E&
    LinkTopic       =   "Form1"
-   ScaleHeight     =   10440
+   ScaleHeight     =   9630
+   ScaleMode       =   0  'User
    ScaleWidth      =   11880
    StartUpPosition =   3  'Windows Default
    Begin VB.Frame frameToolCount 
@@ -27,7 +28,7 @@ Begin VB.Form frmUI
       Height          =   3975
       Left            =   8880
       TabIndex        =   16
-      Top             =   3000
+      Top             =   2880
       Width           =   2655
       Begin VB.CommandButton cmdResetCount 
          Caption         =   "Reset Tap"
@@ -142,7 +143,7 @@ Begin VB.Form frmUI
       Height          =   2415
       Left            =   8880
       TabIndex        =   13
-      Top             =   360
+      Top             =   240
       Width           =   2655
       Begin VB.Label lblDRO 
          BackColor       =   &H00400000&
@@ -201,7 +202,7 @@ Begin VB.Form frmUI
       Height          =   6615
       Left            =   360
       TabIndex        =   1
-      Top             =   360
+      Top             =   240
       Width           =   8295
       Begin VB.CheckBox chkDryRun 
          BackColor       =   &H00400000&
@@ -669,10 +670,10 @@ Begin VB.Form frmUI
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Height          =   2895
+      Height          =   2295
       Left            =   360
       TabIndex        =   0
-      Top             =   7200
+      Top             =   7080
       Width           =   11175
    End
    Begin VB.Menu topbarJoy 

@@ -30,9 +30,6 @@ Option Explicit
     Const myDriveScale = 5000   'Steps per Revolution - Check Dip Switches on Drives
     Const myScaleX = 50000  'Steps per Inch - Ball screw & 1"/Rev + 10:1 transmission -> DriveScale * 10
     Const myScaleY = 50000
-    
-    Const YlimitInput = 13      'Input Pin for Y-Travel Limit Switch
-    Const ESTOPpin = 15
 
     Enum myMotors
         mNull
@@ -69,6 +66,9 @@ Option Explicit
         
         Private zeroOffset As myCoordinate
         
+        Private YlimitInput As Integer      'Input Pin for Y-Travel Limit Switch
+        Private ESTOPpin As Integer         'Input Pin for ESTOP
+        
 
 '---===---===---===---===--- Setup - Constants & Variables ---===---===---===---===---===---===---===---===---===---===
 '---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---=
@@ -90,7 +90,7 @@ Option Explicit
 '---===---===---===---===--- Basic Functions - Initialize, Read-Only, Etc. ---===---===---===---===---===---===---===--
 
 '--------------------------- Init & Clear Functions -------------------------------------------------------------------
-    Public Sub init6k(myMotorX As myMotors, myMotorY As myMotors, movAcknInpt As Integer)
+    Public Sub init6k(myMotorX As myMotors, myMotorY As myMotors, movAcknInpt As Integer, ESTOP_Input_Pin As Integer, Y_Limit_Input_Pin As Integer)
         
         'Initialize 6k:
         
@@ -123,6 +123,8 @@ Option Explicit
             
         'Set up IO
             
+            YlimitInput = Y_Limit_Input_Pin
+            
             'Set up Y-Axis negative limit switch
             Dim strLimitSwitch As String
             
@@ -143,6 +145,8 @@ Option Explicit
             
             
             'Set up estop button
+            ESTOPpin = ESTOP_Input_Pin
+            
             c6k.Write "1INFNC" & Str(ESTOPpin) & "-C:"
             
             
@@ -201,13 +205,13 @@ Option Explicit
     
     
     'Estop - disable all outputs
-    Public Function chkESTOP(In_ESTOP As Integer) As Boolean
+    Public Function chkESTOP() As Boolean
     
         'Return false by default
         chkESTOP = False
     
         'If ESTOP pin is not raised, exit
-        If Not chkIn(In_ESTOP) Then Exit Function
+        If Not chkIn(ESTOPpin) Then Exit Function
         
         'Imediate stop command, imediate shut down all outputs, disable motors
         c6k.Write "!AD100,100:!S:!OUTALL1,32,0:DRIVE00:"
@@ -423,7 +427,7 @@ Option Explicit
             Case 1
                 inputStr = inputStr & "1"
             Case 2
-                inputStr = inputStr & "2"
+                inputStr = inputStr & "E"
         End Select
         
         inputStr = inputStr & ":"

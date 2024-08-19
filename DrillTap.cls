@@ -42,6 +42,8 @@ Option Explicit
     Const In_ESTOP = 15
     Const In_Clamp_Off = 16
     
+    Const In_MoveAck = 32
+    
     
     Const Axis_X = 2
     Const Axis_Y = 1
@@ -72,6 +74,7 @@ Option Explicit
     End Enum
     
     Private myPosition As atPosition
+    Private ESTOP_SET As Boolean
      
 '--------------------------- Class Variables --------------------------------------------------------------------------
 
@@ -92,6 +95,8 @@ Option Explicit
     Private zeroOffset As myCoordinate  'Location of drill relative to hard stops of machine
     Private goTap As myCoordinate  'Location of Tap relative to Drill
     Private goDrill As myCoordinate
+    
+    Private maintIO(16) As Boolean
     
     Private myXY As New Class6kXY
     
@@ -117,7 +122,7 @@ Option Explicit
         joyOn = False
             
         'Create 6k movement control object
-        myXY.init6k 2, 1, 32    'X-axis is motor 2, Y-axis is motor 1, acknowledge input is pin 32
+        myXY.init6k Axis_X, Axis_Y, In_MovAck, In_ESTOP, In_TravelLim    'X-axis is motor 2, Y-axis is motor 1, acknowledge input is pin 32
         
         'Store calibration constants
         zeroOffset.X = myZeroOffsetX
@@ -209,14 +214,12 @@ Option Explicit
 
 
     Public Function checkESTOP() As Boolean
-            
-        'Return false by default
-        checkESTOP = False
+                       
+        'If estop flag set, pin data irrelevant. If it is not set, check estop pin
+        If Not ESTOP_SET Then ESTOP_SET = myXY.chkESTOP
         
-        'Check estop; raise flag if true
-        If myXY.chkESTOP(In_ESTOP) Then
-            checkESTOP = True
-        End If
+        'Return value of ESTOP SET
+        checkESTOP = ESTOP_SET
         
     End Function
     
@@ -224,6 +227,73 @@ Option Explicit
         myXY.reset6k
     End Function
 
+
+    Public Sub maintPassive()
+    
+        Dim i As Integer
+        Dim check As Boolean
+        
+        For i = 1 To 16
+            'For the first 8 pins, check as outputs. For the next 8 pins, check as inputs
+            If i < 9 Then check = myXY.chkOut(i + 1) Else check = myXY.chkIn(i + 1)
+            
+            'If Active Maintenance mode and manually activated I/O, color red
+            If (check And frmMaintenance.frameMaintIO.Enabled And maintIO(i)) Then
+                frmMaintenence.cmdMaintIO(i).BackColor = &H9191EA
+            
+            'If I/O is enabled, color green
+            ElseIf check Then
+                frmMaintenance.cmdMaintIO(i).BackColor = &H91EA9A
+            
+            'If I/O is disabled, color Blue
+            Else
+                frmMaintenance.cmdMaintIO(i).BackColor = &HEAC091
+            End If
+            
+            
+        Next i
+    
+    End Sub
+    
+    Public Sub maintActive(inputPin As Integer, enable As Booelan)
+        
+        'If the input is 0, this is a call to enable or disable active maintenance mode
+        If inputPin = 0 Then
+        
+            Dim i As Integer
+            
+            'Clear all I/O Booleans
+            For i = 0 To 16
+                maintIO(i) = False
+            Next i
+            
+            'Enable or disable the maintenance frame according to the enable input
+            frmMaintenance.frameMaintIO.enable = enable
+            
+        'Any other input, assuming the mode is active, should be set and cleared manually
+        Else
+            
+            If frmMaintenance.frameIO.enable Then
+                
+                'The boolean array should be updated accordingly
+                maintIO(inputPin - 1) = enable
+                
+                
+                'If 1-8, output pins. If 9-16, input pins.
+                If inputPin < 9 Then
+                    myXY.setOut inputPin, enable
+                Else
+                    'Input pins are switched between virtual on and enable, not on/off (true false)
+                    If enable Then
+                        myXY.setIn inputPin, 1
+                    Else
+                        myXY.setIn inputPin, 2
+                    End If
+                End If
+            End If
+        End If
+    
+    End Sub
 
 
 '---------------------------- Output Enable/Disable -------------------------------------------------------------------
