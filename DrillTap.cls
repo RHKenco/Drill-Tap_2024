@@ -46,12 +46,13 @@ Option Explicit
     Const Axis_X = 2
     Const Axis_Y = 1
 
-    Private Type myCoordinate
-        X As Double
-        Y As Double
-    End Type
+    Public Enum dtCo
+        cNULL
+        cX
+        cY
+    End Enum
 
-    Private Enum joyDirection
+    Public Enum joyDirection
         joyNeutral
         joyUp
         joyUpRight
@@ -109,7 +110,7 @@ Option Explicit
 '---===---===---===---===--- Basic Functions - Initialize, Read-Only, Etc. ---===---===---===---===---===---===---===--
 
 '--------------------------- Init & Clear Functions -------------------------------------------------------------------
-    Public Sub initDrillTap(stdOffset As Double, myToolOffset As myCoordinate, myZeroOffset As myCoordinate)
+    Public Sub initDrillTap(stdOffset As Double, myToolOffsetX As Double, myToolOffsetY As Double, myZeroOffsetX As Double, myZeroOffsetY As Double)
         
         'Initialize class variables
         zeroSet = False
@@ -129,23 +130,21 @@ Option Explicit
             
     End Sub
     
-    Public Function setHome() As myCoordinate
+    Public Function setHome()
     
         'Get current position, and store it as the last zero location
-        PosLastZero = getPos
+        PosLastZero.X = getCoords(cX)
+        PosLastZero.Y = getCoords(cY)
         
         'Invert the coordinates so the last zero is stored relative to the current zero (not the other way around)
         PosLastZero.X = -PosLastZero.X
         PosLastZero.Y = -PosLastZero.Y
         
         'Set zero using the zeroOffset
-        myXY.setZero zeroOffset
+        myXY.setZero zeroOffset.X, zeroOffset.Y
         
         'Indicate that the zero is properly set
         zeroSet = True
-        
-        'Return the last zero position
-        setHome = PosLastZero
         
     End Function
 
@@ -159,10 +158,15 @@ Option Explicit
         
         
     ''' getPos - Gets the current position of both axes
-    Public Function getCoords() As myCoordinate
+    Public Function getCoords(coordinate As dtCo) As Double
         
-        getPos.X = myXY.getPosX()
-        getPos.Y = myXY.getPosY()
+        Select Case coordinate
+            Case cX
+                getCoords = myXY.getPosX()
+            Case cY
+                getCoords = myXY.getPosY()
+            Case Else
+        End Select
         
     End Function
     
@@ -171,9 +175,15 @@ Option Explicit
     End Function
     
     ''' getLastZero - Gets the last zero-set for the indicated motor. Used to determine setzero variance
-    Public Function getLastZero() As myCoordinate
+    Public Function getLastZero(coordinate As dtCo) As Double
     
-        getLastZero = PosLastZero
+        Select Case coordinate
+            Case cX
+                getLastZero = PosLastZero.X
+            Case cY
+                getLastZero = PosLastZero.Y
+            Case Else
+        End Select
     
     End Function
     

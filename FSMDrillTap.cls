@@ -27,8 +27,6 @@ Option Explicit
 
 '--------------------------- Class Enumerations & Constants -----------------------------------------------------------
 
-
-
 Public Enum fsmStates
     s0_Init
     s1_Stby
@@ -320,7 +318,7 @@ Private Sub runState4()
             Case moveToTapNow
                 myDrillTap.goToTap
             Case moveToPositionNow
-                myUI.getCoords
+                'TODO - add move to position to Maintenance
         End Select
         
         myUI.updStatus uiWaiting, ""

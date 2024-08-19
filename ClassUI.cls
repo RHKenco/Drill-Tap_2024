@@ -27,7 +27,12 @@ Option Explicit
 
 '--------------------------- Class Enumerations & Constants -----------------------------------------------------------
 
-
+Public Enum uiCo
+    cNULL
+    cX
+    cY
+End Enum
+    
 
 Public Enum uiStatus
     uiLoading
@@ -189,15 +194,15 @@ Public Function getDir() As joyDirection
     
 End Function
 
-Public Function getCoords() As myCoordinate
+Public Function getCoords(coordinate As uiCo) As Double
 
-    'Convert strings in maintenance form to position doubles.
-    Dim tempXY As myCoordinate
-    
-    tempXY.X = CDbl(frmMaintenance.txtMaintPos(0))
-    tempXY.Y = CDbl(frmMaintenance.txtMaintPos(1))
-    
-    getCoords = tempXY
+    Select Case coordinate
+        Case cX
+            getCoords = CDbl(frmMaintenance.txtMaintPos(0))
+        Case cY
+            getCoords = CDbl(frmMaintenance.txtMaintPos(1))
+        Case Else
+    End Select
 
 End Function
 
@@ -480,7 +485,8 @@ Public Sub updDRO()
 
 Dim currentPosition As myCoordinate
 
-currentPosition = myDrillTap.getCoords
+currentPosition.X = myDrillTap.getCoords(cX)
+currentPosition.Y = myDrillTap.getCoords(cY)
 
 frmUI.lblDRO(0).Caption = "X:     " & Format(currentPosition.X, "###0.000") & " in"
 frmUI.lblDRO(1).Caption = "Y:     " & Format(currentPosition.Y, "###0.000") & " in"

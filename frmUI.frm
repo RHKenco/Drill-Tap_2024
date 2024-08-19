@@ -729,7 +729,7 @@ Private Sub Form_Load()
     zeroOffsetCoordinate.X = 8
     zeroOffsetCoordinate.Y = 3
     
-    myDrillTap.initDrillTap 0.625, toolOffsetCoordinate, zeroOffsetCoordinate
+    myDrillTap.initDrillTap 0.625, toolOffsetCoordinate.X, toolOffsetCoordinate.Y, zeroOffsetCoordinate.X, zeroOffsetCoordinate.Y
     
     
     'Initialize FSM
@@ -808,8 +808,10 @@ Private Sub topbarSet0_Click()
 
     Dim userReturn As VbMsgBoxResult
     
-    currentPos = myDrillTap.getPos
-    lastZero = myDrillTap.getLastZero
+    currentPos.X = myDrillTap.getCoords(cX)
+    currentPos.Y = myDrillTap.getCoords(cY)
+    lastZero.X = myDrillTap.getLastZero(cX)
+    lastZero.Y = myDrillTap.getLastZero(cY)
     
     myMsg = "Current position differs from zero by:" & vbCrLf & "X: " & currentPos.X & vbCrLf & "Y: " & currentPos.Y & vbCrLf & vbCrLf
     myMsg = myMsg & "And from the prior zero by:" & vbCrLf & "X: " & lastZero.X & vbCrLf & "Y: " & lastZero.Y & vbCrLf & vbCrLf
