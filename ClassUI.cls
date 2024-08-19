@@ -268,7 +268,7 @@ End Function
 Public Sub go()
 
     'If the estop is not set
-    If Not myDrillTap.estopSet Then
+    If Not myDrillTap.ESTOPset Then
     
         'Call the FSM to go to the run state
         myFSM.setGoStop
@@ -283,7 +283,7 @@ Public Sub go()
         If messageReturn = vbOK Then
         
             'Call the FSM to clear the ESTOP
-            myFSM.setClrESTOP
+            myFSM.clearESTOP
             
         End If
     End If

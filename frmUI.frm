@@ -3,8 +3,8 @@ Begin VB.Form frmUI
    BackColor       =   &H00400000&
    Caption         =   "Drill & Tap"
    ClientHeight    =   9630
-   ClientLeft      =   165
-   ClientTop       =   810
+   ClientLeft      =   225
+   ClientTop       =   855
    ClientWidth     =   11880
    ForeColor       =   &H8000000E&
    LinkTopic       =   "Form1"
@@ -71,7 +71,7 @@ Begin VB.Form frmUI
          Caption         =   "Cycles:"
          BeginProperty Font 
             Name            =   "MS Sans Serif"
-            Size            =   15
+            Size            =   13.5
             Charset         =   0
             Weight          =   700
             Underline       =   0   'False
@@ -91,7 +91,7 @@ Begin VB.Form frmUI
          Caption         =   "Drill :     0"
          BeginProperty Font 
             Name            =   "MS Sans Serif"
-            Size            =   15
+            Size            =   13.5
             Charset         =   0
             Weight          =   700
             Underline       =   0   'False
@@ -111,7 +111,7 @@ Begin VB.Form frmUI
          Caption         =   "Tap :     0"
          BeginProperty Font 
             Name            =   "MS Sans Serif"
-            Size            =   15
+            Size            =   13.5
             Charset         =   0
             Weight          =   700
             Underline       =   0   'False
@@ -150,7 +150,7 @@ Begin VB.Form frmUI
          Caption         =   "Y:     0.000 in"
          BeginProperty Font 
             Name            =   "MS Sans Serif"
-            Size            =   15
+            Size            =   13.5
             Charset         =   0
             Weight          =   700
             Underline       =   0   'False
@@ -170,7 +170,7 @@ Begin VB.Form frmUI
          Caption         =   "X:     0.000 in"
          BeginProperty Font 
             Name            =   "MS Sans Serif"
-            Size            =   15
+            Size            =   13.5
             Charset         =   0
             Weight          =   700
             Underline       =   0   'False
@@ -446,7 +446,7 @@ Begin VB.Form frmUI
          Caption         =   "  System Speeds  "
          BeginProperty Font 
             Name            =   "MS Sans Serif"
-            Size            =   15
+            Size            =   13.5
             Charset         =   0
             Weight          =   700
             Underline       =   0   'False
@@ -809,10 +809,10 @@ Private Sub topbarSet0_Click()
 
     Dim userReturn As VbMsgBoxResult
     
-    currentPos.X = myDrillTap.getCoords(cX)
-    currentPos.Y = myDrillTap.getCoords(cY)
-    lastZero.X = myDrillTap.getLastZero(cX)
-    lastZero.Y = myDrillTap.getLastZero(cY)
+    currentPos.X = myDrillTap.getCoords(dX)
+    currentPos.Y = myDrillTap.getCoords(dY)
+    lastZero.X = myDrillTap.getLastZero(dX)
+    lastZero.Y = myDrillTap.getLastZero(dY)
     
     myMsg = "Current position differs from zero by:" & vbCrLf & "X: " & currentPos.X & vbCrLf & "Y: " & currentPos.Y & vbCrLf & vbCrLf
     myMsg = myMsg & "And from the prior zero by:" & vbCrLf & "X: " & lastZero.X & vbCrLf & "Y: " & lastZero.Y & vbCrLf & vbCrLf

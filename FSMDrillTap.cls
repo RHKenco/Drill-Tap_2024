@@ -75,6 +75,7 @@ Public Sub initializeFSM()
     maintenanceMode = False
     runMode = False
     moveMode = moveNone
+    clearESTOPnow = False
     
     clearESTOPnow = False
     
@@ -126,6 +127,8 @@ End Sub
 
 'Immediately go to ESTOP State
 Public Sub setESTOP()
+
+    myUI.updStatus uiESTOP, ""
 
     setState s7_ESTOP
     
@@ -529,7 +532,7 @@ Private Sub runState7()
         
         'TODO - add estop clear commands
         
-        myUI.updStatus uiStandby
+        myUI.updStatus uiStandby, ""
         setState s1_Stby
         
         clearESTOPnow = False

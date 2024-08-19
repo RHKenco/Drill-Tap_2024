@@ -49,9 +49,9 @@ Option Explicit
     Const Axis_Y = 1
 
     Public Enum dtCo
-        cNULL
-        cX
-        cY
+        dNULL
+        dX
+        dY
     End Enum
 
     Public Enum joyDirection
@@ -120,9 +120,10 @@ Option Explicit
         'Initialize class variables
         zeroSet = False
         joyOn = False
+        ESTOP_SET = False
             
         'Create 6k movement control object
-        myXY.init6k Axis_X, Axis_Y, In_MovAck, In_ESTOP, In_TravelLim    'X-axis is motor 2, Y-axis is motor 1, acknowledge input is pin 32
+        myXY.init6k Axis_X, Axis_Y, In_MoveAck, In_ESTOP, In_TravelLim    'X-axis is motor 2, Y-axis is motor 1, acknowledge input is pin 32
         
         'Store calibration constants
         zeroOffset.X = myZeroOffsetX
@@ -218,9 +219,15 @@ Option Explicit
         'If estop flag set, pin data irrelevant. If it is not set, check estop pin
         If Not ESTOP_SET Then ESTOP_SET = myXY.chkESTOP
         
+        If ESTOP_SET Then myFSM.setESTOP
+        
         'Return value of ESTOP SET
         checkESTOP = ESTOP_SET
         
+    End Function
+    
+    Public Function ESTOPset() As Boolean
+        ESTOPset = ESTOP_SET
     End Function
     
     Public Function resetESTOP()
@@ -255,7 +262,7 @@ Option Explicit
     
     End Sub
     
-    Public Sub maintActive(inputPin As Integer, enable As Booelan)
+    Public Sub maintActive(inputPin As Integer, enable As Boolean)
         
         'If the input is 0, this is a call to enable or disable active maintenance mode
         If inputPin = 0 Then
