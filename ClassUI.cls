@@ -63,6 +63,16 @@ Public Enum uiTxtbxs
     txtMaintY
 End Enum
 
+Public Enum uiCounter
+    countNull
+    countDrill
+    countTap
+    countBoth
+End Enum
+
+Const savePath = "C:\DrillTap2024\savedData\cycles.txt"
+
+
 'Keypress booleans to track the state of multiple keys
 Public uiKeyUp As Boolean
 Public uiKeyRight As Boolean
@@ -72,6 +82,11 @@ Public uiKeyLeft As Boolean
 'Store Drill & Tap Cycles
 Private drillCycles As Integer
 Private tapCycles As Integer
+Private drillAvg As Double
+Private tapAvg As Double
+Private drillAvgCy As Integer
+Private tapAvgCy As Integer
+
 
 'Validation strings for textbox numeric entry
 Private txtbxDrillSpeedCHK As String
@@ -114,6 +129,9 @@ Private txtbxMaintYCHK As String
         txtbxTapToChk = frmUI.txtDeep(1).Text
         txtbxMaintXCHK = frmMaint.txtMaintPos(0).Text
         txtbxMaintYCHK = frmMaint.txtMaintPos(1).Text
+        
+        'Load drill & tap counters
+        loadCycles
             
             
     End Sub
@@ -458,7 +476,115 @@ Public Sub updStatus(myStatus As uiStatus, strInput As String)
 
 End Sub
 
+Private Sub loadCycles()
 
+    'If a previously saved drill / tap cycle file exists, then load data
+    If Dir(savePath) <> "" Then
+        
+        'Load previous data
+        Open savePath For Input As #1
+        Input #1, drillCycles, tapCycles, drillAvg, drillAvgCy, tapAvg, tapAvgCy
+        Close #1
+        
+        updCycles drillCycles, tapCycles
+            
+    'If the file doesn't exist, ensure variables are cleared.
+    Else
+        
+        drillCycles = 0
+        tapCycles = 0
+        drillAvg = 0
+        drillAvgCy = 0
+        tapAvg = 0
+        tapAvgCy = 0
+    
+    End If
+
+End Sub
+
+Private Sub updCycles()
+
+    'Update the UI
+    frmUI.lblDrillTapCount(0).Caption = "Drill:     " & Str(drillCycles)
+    frmUI.lblDrillTapCount(0).Caption = "Tap :     " & Str(tapCycles)
+    
+    'Save to file
+    Open savePath For Output As #1
+    Write #1, drillCycles, tapCycles, drillAvg, drillAvgCy, tapAvg, tapAvgCy
+    Close #1
+
+End Sub
+
+Public Sub increment(myTool As uiCounter)
+    
+    'Increment counters
+    Select Case myTool
+        Case countDrill, countBoth
+            drillCycles = drillCycles + 1
+        Case countTap, countBoth
+            tapCycles = tapCycles + 1
+        Case Else
+            Exit Sub
+    End Select
+    
+    'Update UI
+    updCycles
+    
+End Sub
+
+Public Sub resetCounter(resetTool As uiCounter)
+    
+    'Set up variables to the appropriate tool
+    Dim toolStr As String
+    Dim myAvg As Double
+    Dim myCounter As Integer
+    Dim myCycles As Integer
+    
+    Select Case uiCounter
+        Case countDrill
+            myCycles = drillCycles
+            myAvg = drillAvg
+            myCounter = drillAvgCy
+            toolStr = "Drill"
+        Case countTap
+            myCycles = tapCycles
+            myAvg = tapAvg
+            myCounter = tapAvgCy
+            toolStr = "Tap"
+        Case Else
+            Exit Sub
+    End Select
+    
+    'Verify that the user wants to reset
+    Dim boxReturn As VbMsgBoxResult
+    boxReturn = MsgBox(toolStr & " has been used for " & Str(myCycles) & " Cycles." & vbCrLf & "Average is " & Format(myAvg, "###0.0") & " Cycles. Reset Counter?", vbYesNo, "Reset Drill Counter?")
+    
+    'If the user confirms the reset
+    If boxReturn = vbYes Then
+        
+        'Compute the rolling average
+        myAvg = ((myAvg * (myCounter)) / (myCounter + 1)) + (myCycles / (myCounter + 1))
+        
+        
+        'Reset the counter
+        Select Case uiCounter
+            Case countDrill
+                drillCycles = 0
+                drillAvg = myAvg
+                drillAvgCy = myCounter + 1
+            Case countTap
+                tapCycles = 0
+                tapAvg = myAvg
+                tapAvgCy = myCounter + 1
+            Case Else
+                Exit Sub
+        End Select
+        
+        'Update UI
+        updCycles
+        
+    End If
+End Sub
 
 '---===---===---=== Advanced Functions -  ---===---===---===---===---===---===---==
 '---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---=

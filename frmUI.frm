@@ -435,6 +435,7 @@ Begin VB.Form frmUI
          Width           =   1935
       End
       Begin VB.Timer tmrFSM 
+         Enabled         =   0   'False
          Interval        =   50
          Left            =   120
          Top             =   360
@@ -691,12 +692,50 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Sub cmdGoToDrillTap_Click(Index As Integer)
 
+    'Request move destination from FSM
+    Dim myDestination As moveTo
+    
+    If Index = 0 Then myDestination = moveToDrillNow
+    If Index = 1 Then myDestination = moveToTapNow
+
+    myFSM.setMoveDest (myDestination)
+
+End Sub
+
+Private Sub cmdResetCount_Click(Index As Integer)
+    
+    Dim myReset As uiCounter
+    
+    If Index = 0 Then myReset = countDrill
+    If Index = 1 Then myReset = countTap
+    
+    myUI.resetCounter (myReset)
+    
 End Sub
 
 Private Sub Form_Load()
 
+    'Initialize UI
     myUI.initUI
     
+    
+    'Initialize 6k
+    Dim toolOffsetCoordinate As myCoordinate
+    Dim zeroOffsetCoordinate As myCoordinate
+    
+    toolOffsetCoordinate.X = 6
+    toolOffsetCoordinate.Y = 3
+    
+    zeroOffsetCoordinate.X = 8
+    zeroOffsetCoordinate.Y = 3
+    
+    myDrillTap.initDrillTap 0.625, toolOffsetCoordinate, zeroOffsetCoordinate
+    
+    
+    'Initialize FSM
+    myFSM.initializeFSM
+    
+    'Turn on key preview for joystick operation
     Me.KeyPreview = True
 
 

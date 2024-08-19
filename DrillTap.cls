@@ -402,6 +402,7 @@ Public Function goToTap() As Boolean
 
 End Function
 
+
 Public Function runDrill(drillDeep As Double, currentCycle As Integer, totalCycles As Integer, dryRun As Boolean) As Integer
     
     runDrill = currentCycle
@@ -411,21 +412,39 @@ Public Function runDrill(drillDeep As Double, currentCycle As Integer, totalCycl
     'On the prep cycle, initialize the drill and coolant if it is not a dry run. Delay 1 second
     If currentCycle = 0 Then
         
+        'Power drill & Coolant if it is not a dry run
         If Not dryRun Then
             myXY.setOut Out_Drill, True
             myXY.setOut Out_Cool, True
+            
+            'Increment drill cycle counter
+            myUI.increment (countDrill)
         End If
         
         myXY.moveDelay 1
+        
+
     
     End If
     
     'If there is currently a move in progress, do not proceed. Else acknowledge prior move
     If myXY.checkMov Then Exit Function Else myXY.ackMov
 
+    'If the last cycle has been reached, disable drill and exit
+    If currentCycle = totalCycles Then
+        If Not dryRun Then
+            myXY.setOut Out_Drill, False
+            myXY.setOut Out_Cool, False
+        End If
+        
+        runDrill = currentCycle + 1
+        Exit Function
+        
+    End If
+
     'Compute the drill depth and send drill command
     Dim cycleDeep As Double
-    cycleDeep = (currentCycle / totalCycles) * drillDeep
+    cycleDeep = (currentCycle / (totalCycles - 1)) * drillDeep
     
     myXY.movePeck cycleDeep, 0.5, V_Drill, V_Jog
     
@@ -448,15 +467,30 @@ Public Function runTap(tapDeep As Double, currentCycle As Integer, totalCycles A
         End If
         
         myXY.moveDelay 1
+        
+        'Increment tap cycle counter
+        myUI.increment (countTap)
     
     End If
     
     'If there is currently a move in progress, do not proceed. Else acknowledge prior move
     If myXY.checkMov Then Exit Function Else myXY.ackMov
 
+    'If the last cycle has been reached, disable Tap and exit
+    If currentCycle = totalCycles Then
+        If Not dryRun Then
+            myXY.setOut Out_Tap, False
+            myXY.setOut Out_Cool, False
+        End If
+        
+        runTap = currentCycle + 1
+        Exit Function
+        
+    End If
+
     'Compute the drill depth and send drill command
     Dim cycleDeep As Double
-    cycleDeep = (currentCycle / totalCycles) * drillDeep
+    cycleDeep = (currentCycle / (totalCycles - 1)) * drillDeep
     
     myXY.movePeck cycleDeep, 0.5, V_Tap, V_Tap
     

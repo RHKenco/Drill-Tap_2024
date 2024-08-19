@@ -83,6 +83,9 @@ Public Sub initializeFSM()
     'Set state variable to 0
     fsmState = 0
     
+    'Start UI form timer
+    frmUI.tmrFSM.Enabled = True
+    
 End Sub
 
 Private Sub setState(state As fsmStates)
@@ -178,6 +181,8 @@ End Sub
 Private Sub runState0()
 
     'Initialize FSM on first run
+    myUI.updStatus uiStandby
+    setState s1_Stby
 
 End Sub
 
@@ -204,6 +209,14 @@ End Sub
 Private Sub runState1()
     
     'Standby State - Waits for USER to tell the machine to go
+    
+    
+    
+    
+    
+    
+        'Update system speeds before locking down user control of those boxes
+        myXY.setVel frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
 
 End Sub
 
@@ -215,6 +228,9 @@ Private Sub runState2()
     If innerState = 0 Then
     
         myDrillTap.joyState True
+        
+        'Set UI state
+        myUI.updStatus uiJoystick, ""
     
     End If
     
@@ -228,6 +244,7 @@ Private Sub runState2()
     Else
     
         myDrillTap.joyState False
+        myUI.updStatus uiStandby, ""
         setState s1_Stby
         
     End If
@@ -255,12 +272,15 @@ Private Sub runState4()
             Case moveToPositionNow
                 myUI.getCoords
         End Select
+        
+        myUI.updStatus uiWaiting, ""
     End If
     
     'When any pending moves have been completed, exit to standby state
     If myDrillTap.waitForMove() Then
     
         'Go to standby state
+        myUI.updStatus uiStandby, ""
         setState s1_Stby
     End If
 
@@ -278,8 +298,6 @@ Private Sub runState5()
     Else
     
     myUI.updStatus uiClampOff, ""
-    myUI.btnState btnStby
-    
     
     setState s1_Stby
     
@@ -300,13 +318,15 @@ Private Sub runState6()
             'If the system is set to tap-only, then go to tap. Otherwise, go to drill
             If frmUI.optDrillTapAuto(1) Then
                 innerState = 3
+                myUI.updStatus uiWaiting, ""
             Else
                 innerState = 1
+                myUI.updStatus uiWaiting, ""
             End If
             
         Case 1  'Move-To-Drill - if necessary
         
-            'If not at drill position, move to tap position
+            'If not at drill position, move to drill position
             If myDrillTap.getPos() <> atDrill Then
                 myDrillTap.goToDrill
                 Exit Sub
@@ -333,6 +353,9 @@ Private Sub runState6()
             
             'While the cycle counter is less than the desired number of cycles, run the tap
             If Counter <= runCycles Then
+            
+                'First loop, set UI
+                If Counter = 0 Then myUI.updStatus uiRunningDrill, ""
                 
                 Counter = myDrillTap.runTap(CDbl(frmUI.txtDeep(0)), Counter, runCycles, frmUI.chkDryRun.Value)
             
@@ -374,6 +397,9 @@ Private Sub runState6()
             
             'While the cycle counter is less than the desired number of cycles, run the tap
             If Counter <= runCycles Then
+            
+                'First loop, set UI
+                If Counter = 0 Then myUI.updStatus uiRunningDrill, ""
                 
                 'Express tap depth as a percentage of drill depth
                 Dim myTapDepth As Double
@@ -388,9 +414,11 @@ Private Sub runState6()
                     'If run tap only has been selected, move to tap then exit state
                     If frmUI.optDrillTapAuto(1).Value Then
                         innerState = 3
+                        myUI.updStatus uiWaiting, ""
                     'If run cycle or run auto was selected, move to drill
                     ElseIf frmUI.optDrillTapAuto(2).Value Or frmUI.optDrillTapAuto(3).Value Then
                         innerState = 1
+                        myUI.updStatus uiWaiting, ""
                     End If
                 End If
             End If
@@ -399,13 +427,21 @@ Private Sub runState6()
             Counter = 0
             
             Select Case Counter
-                Case 0  'Wait for clamp to be disengaged
-                    If Not myDrillTap.checkClamp Then Counter = 1
+                Case 0
+                    'Update UI Msg
+                    myUI.updStatus uiWaiting, ""
+                    Counter = 1
                     Exit Sub
-                Case 1 'Wait for clamp to be reengaged
+                Case 1
+                    'Wait for clamp to be disengaged
+                    If Not myDrillTap.checkClamp Then Counter = 2
+                    Exit Sub
+                Case 2
+                    'Wait for clamp to be reengaged
                     If myDrillTap.checkClamp Then
                         Counter = 0
-                        stateInner = 1
+                        innerState = 1
+                        myUI.updStatus uiWaiting, ""
                     End If
                     Exit Sub
             End Select
@@ -417,7 +453,9 @@ Private Sub runState6()
             If myDrillTap.waitForMove() Then
             
                 'Go to standby state
+                myUI.updStatus uiStandby
                 setState s1_Stby
+                
             End If
             
         
