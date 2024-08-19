@@ -531,7 +531,9 @@ Private Sub runState7()
         
         'TODO - add estop clear commands
         
+        myUI.updStatus uiStandby
         setState s1_Stby
+        
         clearESTOPnow = False
     End If
     

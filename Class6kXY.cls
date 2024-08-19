@@ -32,7 +32,8 @@ Option Explicit
     Const myScaleY = 50000
     
     Const YlimitInput = 13      'Input Pin for Y-Travel Limit Switch
-    
+    Const ESTOPpin = 15
+
     Enum myMotors
         mNull
         m1
@@ -121,10 +122,15 @@ Option Explicit
             c6k.Write "SCALE1:"
             
         'Set up IO
+            
+            'Set up Y-Axis negative limit switch
             Dim strLimitSwitch As String
             
             If myMotorY = m1 Then
                 strLimitSwitch = Str(YlimitInput) & "-1S:"
+            Else
+                strLimitSwitch = Str(YlimitInput) & "-2S:"
+            End If
             
             c6k.Write "1INFNC" & strLimitSwitch
             
@@ -134,6 +140,11 @@ Option Explicit
             If myMotorY = m1 Then strEOT = "0,1" Else strEOT = "1,0"
             
             c6k.Write "LH" & strEOT & ":LHAD100,100:"
+            
+            
+            'Set up estop button
+            c6k.Write "1INFNC" & Str(ESTOPpin) & "-C:"
+            
             
         'Initialize the 6k's motion parameters
         c6kReset

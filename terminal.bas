@@ -90,14 +90,10 @@ Public Input23Mask
 Public Pump As Boolean
 Public Last_Pcut_State As Integer
 
-
-
-Type myCoordinate
+Public Type myCoordinate
     X As Double
     Y As Double
 End Type
-
-
 
 
 

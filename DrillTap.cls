@@ -46,7 +46,12 @@ Option Explicit
     Const Axis_X = 2
     Const Axis_Y = 1
 
-    Public Enum joyDirection
+    Private Type myCoordinate
+        X As Double
+        Y As Double
+    End Type
+
+    Private Enum joyDirection
         joyNeutral
         joyUp
         joyUpRight
@@ -153,7 +158,7 @@ Option Explicit
     
         
         
-    ''' getPos - Gets the current position of the X-axis motor
+    ''' getPos - Gets the current position of both axes
     Public Function getCoords() As myCoordinate
         
         getPos.X = myXY.getPosX()
@@ -200,6 +205,10 @@ Option Explicit
             checkESTOP = True
         End If
         
+    End Function
+    
+    Public Function resetESTOP()
+        myXY.reset6k
     End Function
 
 

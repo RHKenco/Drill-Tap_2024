@@ -476,6 +476,17 @@ Public Sub updStatus(myStatus As uiStatus, strInput As String)
 
 End Sub
 
+Public Sub updDRO()
+
+Dim currentPosition As myCoordinate
+
+currentPosition = myDrillTap.getCoords
+
+frmUI.lblDRO(0).Caption = "X:     " & Format(currentPosition.X, "###0.000") & " in"
+frmUI.lblDRO(1).Caption = "Y:     " & Format(currentPosition.Y, "###0.000") & " in"
+
+End Sub
+
 Private Sub loadCycles()
 
     'If a previously saved drill / tap cycle file exists, then load data
