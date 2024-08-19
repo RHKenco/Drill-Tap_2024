@@ -39,8 +39,8 @@ Public Enum uiStatus
     uiStandby
     uiWaiting
     uiJoystick
-    uiClampON
-    uiClampOff
+    uiClampOFF
+    uiClampOFFcycle
     uiESTOP
     uiRunningDrill
     uiRunningTap
@@ -75,7 +75,7 @@ Public Enum uiCounter
     countBoth
 End Enum
 
-Const savePath = "C:\DrillTap2024\savedData\cycles.txt"
+Const savePath = "C:\Drill-Tap_2024\savedData\cycles.txt"
 
 
 'Keypress booleans to track the state of multiple keys
@@ -132,8 +132,8 @@ Private txtbxMaintYCHK As String
         txtbxJogSpeedCHK = frmUI.txtSpeeds(2).Text
         txtbxDrillToCHK = frmUI.txtDeep(0).Text
         txtbxTapToChk = frmUI.txtDeep(1).Text
-        txtbxMaintXCHK = frmMaint.txtMaintPos(0).Text
-        txtbxMaintYCHK = frmMaint.txtMaintPos(1).Text
+        txtbxMaintXCHK = frmMaintenance.txtMaintPos(0).Text
+        txtbxMaintYCHK = frmMaintenance.txtMaintPos(1).Text
         
         'Load drill & tap counters
         loadCycles
@@ -268,7 +268,7 @@ End Function
 Public Sub go()
 
     'If the estop is not set
-    If Not myXY.estopSet Then
+    If Not myDrillTap.estopSet Then
     
         'Call the FSM to go to the run state
         myFSM.setGoStop
@@ -293,7 +293,7 @@ End Sub
 
 Private Sub btnState(newState As btnState)
 
-    Select Case btnState
+    Select Case newState
         Case btnInit
         
             frmUI.cmdGO.Caption = "GO"
@@ -427,7 +427,7 @@ Public Sub updStatus(myStatus As uiStatus, strInput As String)
         
             btnState btnJoystick
             
-        Case uiClampOff
+        Case uiClampOFF
         
             myMsg = "Clamp Off - Load Shank before pressing GO"
         
@@ -503,7 +503,7 @@ Private Sub loadCycles()
         Input #1, drillCycles, tapCycles, drillAvg, drillAvgCy, tapAvg, tapAvgCy
         Close #1
         
-        updCycles drillCycles, tapCycles
+        updCycles
             
     'If the file doesn't exist, ensure variables are cleared.
     Else
