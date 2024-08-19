@@ -95,7 +95,7 @@ Option Explicit
         'Initialize 6k:
         
         'Enable FastStatus
-            c5k.fsenabled = True
+            c6k.fsenabled = True
         
         'Enable input-selected programs
             c6k.Write "INSELP1,50:"
@@ -147,7 +147,7 @@ Option Explicit
             
             
         'Initialize the 6k's motion parameters
-        c6kReset
+        reset6k
         
         
         'Set initialized internal variables
@@ -207,7 +207,7 @@ Option Explicit
         chkESTOP = False
     
         'If ESTOP pin is not raised, exit
-        If Not myXY.chkIn(In_ESTOP) Then Exit Function
+        If Not chkIn(In_ESTOP) Then Exit Function
         
         'Imediate stop command, imediate shut down all outputs, disable motors
         c6k.Write "!AD100,100:!S:!OUTALL1,32,0:DRIVE00:"
@@ -309,14 +309,14 @@ Option Explicit
     'getPosX - Function to get the position of the X-axis
     Public Function getPosX() As Double
         
-        getPos = fsinfo.MotorPos(motorX) - offset.X
+        getPosX = fsinfo.MotorPos(motorX) - zeroOffset.X
         
     End Function
     
     'getPosY - Function to get the position of the Y-axis
     Public Function getPosY() As Double
         
-        getPos = fsinfo.MotorPos(motorY) - offset.Y
+        getPosY = fsinfo.MotorPos(motorY) - zeroOffset.Y
         
     End Function
     
@@ -393,8 +393,8 @@ Option Explicit
         inBin = 2 ^ (myInput - 1)
         
         'Compare the binary input identifier to the c6k Input register. Return the result
-        chkIn = fsinfo.Input(1) & inBin
-    
+        chkIn = fsinfo.ProgIn(1) & inBin
+            
     End Function
     
     'chkOut - Function to check the status of an output.
@@ -405,7 +405,7 @@ Option Explicit
         outBin = 2 ^ (myOutput - 1)
         
         'Compare the binary input identifier to the c6k Input register. Return the result
-        chkOut = fsinfo.Output(1) & inBin
+        chkOut = fsinfo.ProgOut(1) & inBin
     
     End Function
     

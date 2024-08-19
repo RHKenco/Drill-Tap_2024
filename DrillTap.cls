@@ -120,10 +120,13 @@ Option Explicit
         myXY.init6k 2, 1, 32    'X-axis is motor 2, Y-axis is motor 1, acknowledge input is pin 32
         
         'Store calibration constants
-        zeroOffset = myZeroOffset
+        zeroOffset.X = myZeroOffsetX
+        zeroOffset.Y = myZeroOffsetY
+        
         goDrill.X = 0
         goDrill.Y = 0
-        goTap = myToolOffset
+        goTap.X = myToolOffsetX
+        goTap.Y = myToolOffsetY
         
         'Initialize clamp functions
         myXY.initClamp Out_Clamp_Sol, Out_Clamp_Pump, In_Clamp_On, In_Clamp_Off

@@ -90,7 +90,7 @@ Private Sub setState(state As fsmStates)
 
     fsmState = state
     Counter = 0
-    stateInner = 0
+    innerState = 0
 
 End Sub
 
@@ -177,7 +177,7 @@ End Sub
 Private Sub runState0()
 
     'Initialize FSM on first run
-    myUI.updStatus uiStandby
+    myUI.updStatus uiStandby, ""
     setState s1_Stby
 
 End Sub
@@ -221,7 +221,7 @@ Private Sub runState1()
         End If
     
         'Update system speeds before locking down user control of those boxes
-        myXY.setVel frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
+        myDrillTap.setVel frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
 
 End Sub
 
@@ -345,7 +345,7 @@ Private Sub runState5()
     'If it is not set, update status message and return to standby
     Else
     
-    myUI.updStatus uiClampOff, ""
+    myUI.updStatus uiClampOFF, ""
     
     setState s1_Stby
     
