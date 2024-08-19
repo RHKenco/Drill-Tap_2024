@@ -255,20 +255,18 @@ Option Explicit
     
     Private Sub joyEnable()
     
-        'TODO - Enter jog mode
+        'Enable jog mode
+        myXY.jogMode True
     
     End Sub
     
     Private Sub joyDisable()
 
         'Ensure all virtual inputs are disabled
-        myXY.setIn In_Joy_X1, 2
-        myXY.setIn In_Joy_X2, 2
-        myXY.setIn In_Joy_Y1, 2
-        myXY.setIn In_Joy_Y2, 2
+        joy joyNeutral
         
-        
-        'TODO - End jog mode and revert motor control state
+        'Disable jog mode
+        myXY.jogMode False
 
     End Sub
     

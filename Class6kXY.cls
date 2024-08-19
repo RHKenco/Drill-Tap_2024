@@ -160,6 +160,8 @@ Option Explicit
         'Set default velocity to 0, Set initial values for Acceleration, Tie Decell to accel
         c6k.Write "V0,0:A10,10:AD0,0:"
         
+        'Set jog motion parameters
+        c6k.Write "JOGA10,5:JOGAD300,150:JOGVH6,3:JOGVL30,15:"
     
     End Sub
     
@@ -350,6 +352,20 @@ Option Explicit
         temp = c6k.FastStatus
         Call CopyMemory(fsinfo, temp(0), 280)
 
+    End Sub
+    
+    Public Sub jogMode(myState As Boolean)
+    
+        'If jog is being enabled
+        If myState Then
+            'Set inputs to move motors
+            c6k.Write "INFNC2-2J:INFNC1-2K:INFNC4-1J:INFNC3-1K:JOG11:"
+        
+        'If jog is being disabled
+        Else
+            c6k.Write "JOG00:INFNC2-A:INFNC1-A:INFNC4-A:INFNC3-A:"
+        End If
+    
     End Sub
 
 

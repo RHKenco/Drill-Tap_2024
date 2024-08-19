@@ -232,12 +232,15 @@ Private Sub runState2()
     'Joystick State - Operates the virtual joystick via the keyboard
     
     'If first run, enable joystick
-    If innerState = 0 Then
+    If (innerState = 0) Or (maintenanceMode And (innerState = 1)) Then
     
         myDrillTap.joyState True
         
         'Set UI state
         myUI.updStatus uiJoystick, ""
+        
+        innerState = 1
+        If maintenanceMode Then innerState = 2
     
     End If
     
@@ -247,12 +250,21 @@ Private Sub runState2()
         'Run Joystick
         myDrillTap.joy myUI.getDir
         
+        'If maintenance mode is also enabled, cycle to maintenance state
+        If maintenanceMode Then fsmState = s3_Maint
+        
     'When joystick mode is disabled, shut down joystick and exit state
     Else
     
         myDrillTap.joyState False
-        myUI.updStatus uiStandby, ""
-        setState s1_Stby
+        
+        If maintenanceMode Then
+            fsmState = s3_Maint
+            innerState = 1
+        Else
+            myUI.updStatus uiStandby, ""
+            setState s1_Stby
+        End If
         
     End If
 
@@ -261,6 +273,37 @@ End Sub
 Private Sub runState3()
 
     'Mantenance State - Prevents all I/O from triggering program-related items. Allows for user actuated I/O. Runs joystick from a different location than state2
+
+    'first run, set up I/O defaults
+    If (innerState = 0) Or (joystickMode And (innerState = 1)) Then
+
+
+        innerState = 1
+        If joystickMode Then innerState = 2
+
+    End If
+
+    If maintenanceMode Then
+
+
+
+
+
+        'If joystick is also enabled, cycle to joystick state
+        If joystickMode Then fsmState = s2_Joy
+
+    
+    'When maintenance mode is disabled, shut down maintenance and exit state
+    Else
+        If joystickMode Then
+            fsmState = s2_Joy
+            innerState = 1
+        Else
+            myUI.updStatus uiStandby, ""
+            setState s1_Stby
+        End If
+    End If
+
 
 End Sub
 
