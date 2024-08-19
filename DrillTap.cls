@@ -170,7 +170,7 @@ Option Explicit
         
     End Function
     
-    Public Function getPos() As atPosition
+    Public Function getPos() As Integer
         getPos = myPosition
     End Function
     
