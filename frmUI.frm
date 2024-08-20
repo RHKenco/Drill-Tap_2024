@@ -849,7 +849,7 @@ Private Sub topbarSet0_Click()
     
     userReturn = MsgBox(myMsg, vbYesNo, "Set Zero?")
     
-    If userReturn = vbOK Then myDrillTap.setHome
+    If userReturn = vbYes Then myDrillTap.setHome
 
 End Sub
 
