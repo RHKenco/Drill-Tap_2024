@@ -128,9 +128,9 @@ End Sub
 'Immediately go to ESTOP State
 Public Sub setESTOP()
 
-    'myUI.updStatus uiESTOP, ""
+    myUI.updStatus uiESTOP, ""
 
-    'setState s7_ESTOP
+    setState s7_ESTOP
     
 End Sub
 

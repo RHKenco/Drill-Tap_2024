@@ -432,11 +432,11 @@ Option Explicit
         
         Select Case myAction
             Case 0
-                inputStr = inputStr & "0"
+                inputStr = inputStr & "-0"
             Case 1
-                inputStr = inputStr & "1"
+                inputStr = inputStr & "-1"
             Case 2
-                inputStr = inputStr & "E"
+                inputStr = inputStr & "-E"
         End Select
         
         inputStr = inputStr & ":"
@@ -461,7 +461,7 @@ Option Explicit
     
         Dim outStr As String
         
-        outStr = "10OUT." & Str(myOutput)
+        outStr = "1OUT." & Str(myOutput)
         
         If myStatus Then outStr = outStr & "-1:" Else outStr = outStr & "-0:"
         

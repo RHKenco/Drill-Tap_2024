@@ -259,7 +259,7 @@ Option Explicit
             If i < 9 Then check = myXY.chkOut(i + 1) Else check = myXY.chkIn(i + 1)
             
             'If Active Maintenance mode and manually activated I/O, color red
-            If (check And frmMaintenance.frameMaintIO.Enabled And maintIO(i)) Then
+            If ((check And frmMaintenance.frameMaintIO.Enabled) And maintIO(i + 1)) Then
                 frmMaintenance.cmdMaintIO(i).BackColor = &H9191EA
             
             'If I/O is enabled, color green
