@@ -384,7 +384,7 @@ Option Explicit
         'If jog is being enabled
         If myState Then
             'Set inputs to move motors
-            c6k.Write "INFNC2-2J:INFNC1-2K:INFNC4-1J:INFNC3-1K:JOG11:"
+            c6k.Write "1INFNC9-2J:1INFNC10-2K:1INFNC11-1J:1INFNC3-12K:JOG11:"
         
         'If jog is being disabled
         Else
@@ -427,39 +427,6 @@ Option Explicit
     Public Sub setIn(myInput As Integer, myAction As Integer)
     
         Dim inputStr As String
-        
-        
-        
-        
-        'Alternate Code -------------------------------------------------------
-        'Dim i As Integer
-        
-        'First 8 are outputs; use E to ignore
-        'inputStr = "1INEN" & "EEEE" & "EEEE"
-        
-        'If the input value is less than 9, inproper input
-        'If myInput < 9 Then Exit Sub
-        
-        'For each input pin
-        'For i = 9 To 16
-        
-            'If the loop has reached the input pin, load the appropriate action
-            'If i = myInput Then
-                'Select Case myAction
-                    'Case 0
-                        'inputStr = inputStr & "0"
-                    'Case 1
-                        'inputStr = inputStr & "1"
-                    'Case 2
-                        'inputStr = inputStr & "E"
-                'End Select
-            
-            'Otherwise, leave the pin enabled
-            'Else
-                'inputStr = inputStr & "E"
-            'End If
-        'Next i
-        '--------------------------------------------------------------------
         
         'Initialize the command & select pin
         inputStr = "!1INEN." & Str(myInput) & "-"
