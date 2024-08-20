@@ -464,16 +464,22 @@ End Sub
 
 Private Sub Form_Load()
 
-    maintenanceOpen = True
-
 End Sub
 
-Private Sub Form_Unload(Cancel As Integer)
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
 
     maintenanceOpen = False
     
     'Ensure active maintenance mode is disabled
     myDrillTap.maintActive 0, mActiveOff
+    
+    'If closed from the window, hide form instead of unloading
+    If UnloadMode = vbFormControlMenu Then
+        'Cancel overall unload and hide form
+        Cancel = 1
+        Me.Hide
+        frmUI.Show
+    End If
     
 End Sub
 
@@ -481,6 +487,7 @@ Private Sub topbarEnIO_Click()
 
     'Enable active maintenance mode
     myDrillTap.maintActive 0, mActiveOn
+    Me.Show
     
 
 End Sub

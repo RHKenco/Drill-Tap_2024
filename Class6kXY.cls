@@ -204,8 +204,14 @@ Option Explicit
     End Sub
     
     
-    'Estop - disable all outputs
-    Public Function chkESTOP() As Boolean
+    'chkESTOP - Checks ESTOP pin and stops all motion if it is raised
+    '   - INPUTS:
+    '       - Active - Boolean that allows bypass of controller ESTOP shutdown. Used for maintenance purposes
+    '   - OUTPUTS:
+    '       - Boolean containing ESTOP State - True -> ESTOP Active, False -> ESTOP not Active
+    '   - ACTIONS:
+    '       - If Estop pin is set; stops all motion, disables all outputs, disables drives
+    Public Function chkESTOP(Active As Boolean) As Boolean
     
         'Return false by default
         chkESTOP = False
@@ -213,8 +219,11 @@ Option Explicit
         'If ESTOP pin is not raised, exit
         If Not chkIn(ESTOPpin) Then Exit Function
         
-        'Imediate stop command, imediate shut down all outputs, disable motors
-        'c6k.Write "!AD100,100:!S:!OUTALL1,32,0:DRIVE00:"
+        If Active Then
+            'Imediate stop command, imediate shut down all outputs, disable motors
+            c6k.Write "!AD100,100:!S:!OUTALL1,32,0:WAIT(MOV=b00):DRIVE00:"
+        End If
+        
         chkESTOP = True
     
     End Function

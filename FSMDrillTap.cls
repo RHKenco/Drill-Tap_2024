@@ -193,8 +193,10 @@ Private Sub runAlways()
     'Update maintenance when necessary
     If maintenanceOpen Then myDrillTap.maintPassive
     
-    'Operations that should run every loop, regardless of state (i.e. ESTOP check)
-    myDrillTap.checkESTOP
+    'Check ESTOP Unless in Active Maintenance Mode
+    myDrillTap.checkESTOP ((Not frmMaintenance.frameMaintIO.Enabled))
+    
+    'Update the DRO
     myUI.updDRO
 
 End Sub

@@ -718,8 +718,7 @@ Private Sub Form_Load()
     'Initialize UI
     myUI.initUI
     
-    'Clear maintenance Form Open flag
-    maintenanceOpen = False
+    
     
     'Initialize 6k
     Dim toolOffsetCoordinate As myCoordinate
@@ -734,8 +733,20 @@ Private Sub Form_Load()
     myDrillTap.initDrillTap 0.625, toolOffsetCoordinate.X, toolOffsetCoordinate.Y, zeroOffsetCoordinate.X, zeroOffsetCoordinate.Y
     
     
+    
+    'Load maintenance form
+    Load frmMaintenance
+    frmMaintenance.Hide
+    
+    'Clear maintenance Form Open flag
+    maintenanceOpen = False
+    
+    
+    
     'Initialize FSM
     myFSM.initializeFSM
+    
+    
     
     'Turn on key preview for joystick operation
     Me.KeyPreview = True
@@ -776,7 +787,23 @@ Private Sub Form_KeyUp(KeyCode As Integer, Shift As Integer)
 
 End Sub
 
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
 
+    Dim msgBoxResponse As VbMsgBoxResult
+    
+    msgBoxResponse = MsgBox("Would you like to close the program?", vbOKCancel, "Close Drill & Tap?")
+    
+    If msgBoxResponse = vbCancel Then Cancel = 1
+
+End Sub
+
+Private Sub Form_Unload(Cancel As Integer)
+
+    Unload frmMaintenance
+    
+    frmMain.Show
+
+End Sub
 
 Private Sub cmdGO_Click()
 
@@ -798,8 +825,9 @@ End Sub
 
 Private Sub topbarMaint_Click()
 
-    myFSM.setMaintenance False
+    maintenanceOpen = True
     frmMaintenance.Show
+    Me.Show
 
 End Sub
 

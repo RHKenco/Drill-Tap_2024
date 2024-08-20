@@ -271,8 +271,9 @@ Public Sub go()
     If Not myDrillTap.ESTOPset Then
         
         'If in active maintenance mode, disable
-        If True Then
-        
+        If frmMaintenance.frameMaintIO.Enabled Then
+            'Disable active maintenance mode
+            myDrillTap.maintActive 0, mActiveOff
         Else
             'Call the FSM to go to the run state
             myFSM.setGoStop

@@ -221,11 +221,17 @@ Option Explicit
         isJoyOn = joyOn
     End Function
 
-
-    Public Function checkESTOP() As Boolean
+    'checkESTOP - Checks ESTOP pin and stops all motion if it is raised
+    '   - INPUTS:
+    '       - Active - Boolean that allows bypass of controller ESTOP shutdown. Used for maintenance purposes
+    '   - OUTPUTS:
+    '       - Boolean containing ESTOP State - True -> ESTOP Active, False -> ESTOP not Active
+    '   - ACTIONS:
+    '       - If ESTOP is set; sets class flag, ignores pin until cleared, sets FSM Estop state
+    Public Function checkESTOP(Active As Boolean) As Boolean
                        
         'If estop flag set, pin data irrelevant. If it is not set, check estop pin
-        If Not ESTOP_SET Then ESTOP_SET = myXY.chkESTOP
+        If Not ESTOP_SET Then ESTOP_SET = myXY.chkESTOP(Active)
         
         If ESTOP_SET Then myFSM.setESTOP
         
@@ -321,6 +327,7 @@ Option Explicit
         'Any other input, assuming the mode is active, should be set and cleared manually
         Else
             
+            'Verify that maintenance mode is enabled
             If frmMaintenance.frameMaintIO.Enabled Then
                 
                 'The boolean array should be updated accordingly
