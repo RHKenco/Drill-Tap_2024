@@ -34,6 +34,7 @@ Private writeDisplayString As String
 Const c6kEntry = "c6k   > "
 Const usrEntry = "user  > "
 Const bnkEntry = "        "
+Const cmdPrompt = " > "
 
 Const maxConsoleChars = 5000
 
@@ -67,6 +68,9 @@ Private cmdH9 As String
 
 Public Sub initConsole()
 
+
+    frmConsole.txtConsole(0).Text = cmdPrompt
+
     'Initialize command history
     cmdPoint = 9
     cmdH1 = ""
@@ -93,7 +97,7 @@ End Sub
 Private Sub write6kNow(writeStr As String)
 
     'Add command to the write buffer, to be entered into the console
-    If wirteStr <> "" Then
+    If writeStr <> "" Then
         writeBuffer = writeBuffer & writeStr
     End If
     
@@ -110,7 +114,7 @@ Private Sub writeToConsole(writeStr As String)
 
     If writeStr <> "" Then
     
-        writeDisplayString = writeDisplayString & usrEntry & writeStr & Chr$(13)
+        writeDisplayString = writeDisplayString & usrEntry & writeStr & vbCrLf
     
     End If
 
@@ -122,11 +126,13 @@ Private Sub read6kNow()
     Dim readString As String
     
     'Read from the 6k
-    readString = c6k.Read()
+    readString = c6k.read()
     
     'Append the read 6k data to the end of the console buffer
-    readBuffer = readBuffer + readString
-
+    If readString <> "" Then
+        readBuffer = readBuffer & readString
+    End If
+    
 End Sub
 
 Public Function getHistory(Index As Integer)
@@ -227,7 +233,7 @@ End Sub
 
 Public Sub update()
     
-    write6kNow (writeBuffer)
+    write6kNow ""
     
     read6kNow
     
@@ -237,21 +243,47 @@ End Sub
 
 Private Sub updConsole()
 
-    Dim nextChar As Char
+    Dim nextChar As String
     Dim i As Integer
+    Dim Limit As Integer
+    Dim tempBuffer As String
+    Dim addBuffer As String
+    
+    tempBuffer = readBuffer
+    
+    If Len(tempBuffer) > 300 Then Limit = 300 Else Limit = Len(tempBuffer)
+    
+    If (Limit = 0) Then
+        If writeDisplayString <> "" Then
+            GoTo DisplayWrite
+        Else
+            Exit Sub
+        End If
+    End If
     
     'Until there is a carriage return in the output, the limit is reached, or the end of the buffer is reached, Output
-    For i = 0 To Min(Len(readBuffer), 300)
+    For i = 1 To Limit
         'Select the next character in the read buffer
-        nextChar = Left(readBuffer, 1)
+        nextChar = Left(tempBuffer, 1)
     
         'Print that character to the console
         
         'If the character is a carriage return
         If nextChar = Chr$(13) Then
+        
+            'Remove the character from the read buffer
+            tempBuffer = Right(tempBuffer, (Len(tempBuffer) - 1))
+        
+            'Add generated line line
+            frmConsole.txtConsole(0).SelStart = Len(frmConsole.txtConsole(0).Text)
+            frmConsole.txtConsole(0).Text = frmConsole.txtConsole(0).Text & addBuffer
+            addBuffer = ""
+            frmConsole.txtConsole(0).SelStart = Len(frmConsole.txtConsole(0).Text)
+            
+DisplayWrite:
             
             'move to the next line
-            frmConsole.txtConsole(0).Text = txtConsole(0).Text & Chr$(13)
+            frmConsole.txtConsole(0).Text = frmConsole.txtConsole(0).Text & vbCrLf
             
             'If a command has been written to the 6k, write it to the console when possible
             If writeDisplayString <> "" Then
@@ -262,22 +294,23 @@ Private Sub updConsole()
             'Add space to front of line
             frmConsole.txtConsole(0).Text = frmConsole.txtConsole(0).Text & c6kEntry
             
-            'Exit loop each time a line is completed
+            'After a line is printed, exit loop
             Exit For
             
         'Otherwise, add it to the console
         Else
         
-            'Add character to textbox
-            frmConsole.txtConsole(0).SelStart = Len(tfrmConsole.xtConsole(0).Text)
-            frmConsole.txtConsole(0).Text = frmConsole.txtConsole(0).Text & nextChar
-            frmConsole.txtConsole(0).SelStart = Len(frmConsole.txtConsole(0).Text)
+            'Add character to the addbuffer
+            addBuffer = addBuffer & nextChar
+            'Remove the character from the read buffer
+            tempBuffer = Right(tempBuffer, (Len(tempBuffer) - 1))
             
         End If
-        
-        'Remove the character from the read buffer
-        readBuffer = Right(readBuffer, (Len(readBuffer) - 1))
+
     Next i
+    
+    'Set read buffer to the truncated tempBuffer
+    readBuffer = tempBuffer
     
     'Truncate the console to ensure it does not overflow
     If Len(frmConsole.txtConsole(0).Text) Then frmConsole.txtConsole(0).Text = Right(frmConsole.txtConsole(0).Text, maxConsoleChars)
@@ -292,7 +325,7 @@ Public Sub commandLineEnter()
     cmdInput = frmConsole.txtConsole(1).Text
     
     'Remove the user entry prefix from the string, then remove leading or trailing spaces
-    cmdInput = Right(cmdInput, (Len(cmdInput) - Len(usrEntry) + 1))
+    cmdInput = Right(cmdInput, (Len(cmdInput) - (Len(cmdPrompt) - 1)))
     cmdInput = Trim(cmdInput)
     
     'Ensure that a command terminator is the last character sent
@@ -303,7 +336,8 @@ Public Sub commandLineEnter()
     writeQueue (cmdInput)
     
     'Clear the textbox for new entry
-    frmConsole.txtConsole(1).Text = usrEntry
+    frmConsole.txtConsole(1).Text = cmdPrompt
+    frmConsole.txtConsole(1).SelLength = Len(frmConsole.txtConsole(1).Text)
 
     'Store the command in the history array
     setHistory (cmdInput)

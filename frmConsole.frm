@@ -241,11 +241,6 @@ Private Sub Form_Load()
 
 End Sub
 
-Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
-    
-
-End Sub
-
 Private Sub Form_Unload(Cancel As Integer)
 
     'Ensure all forms are closed
@@ -268,20 +263,25 @@ Private Sub timer6kRead_Timer()
 
 End Sub
 
-Private Sub txtConsole_Keypress(KeyAscii As Integer)
-
+Private Sub txtConsole_KeyDown(Index As Integer, KeyCode As Integer, Shift As Integer)
+    
+    'If any entry is in console textbox instead of command line textbox, ignore
+    If Index = 0 Then Exit Sub
+    
     Static pointer As Integer
 
-    Select Case KeyAscii
+    Select Case KeyCode
         Case vbKeyUp
             pointer = pointer + 1
             If pointer > 9 Then pointer = 9
+            e.Handled = True
         Case vbKeyDown
             If pointer <> 0 Then
                 pointer = pointer - 1
                 If pointer < 1 Then pointer = 1
             End If
-        Case 13 'Enter is pressed
+            e.Handled = True
+        Case vbKeyReturn 'Enter is pressed
             myCns.commandLineEnter
             pointer = 0
         Case Else
