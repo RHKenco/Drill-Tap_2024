@@ -27,16 +27,21 @@ Option Explicit
 
 '--------------------------- Class Enumerations & Constants -----------------------------------------------------------
 
+    'Onboard Inputs - Virtual inputs for Jog Mode
+    Const In_Joy_X1 = 1
+    Const In_Joy_X2 = 2
+    Const In_Joy_Y1 = 3
+    Const In_Joy_Y2 = 4
+    
+    'Expansion Outputs - Pins 1-8
     Const Out_Clamp_Sol = 2
     Const Out_Clamp_Pump = 3
     Const Out_Drill = 4
     Const Out_Tap = 5
     Const Out_Cool = 6
     
-    Const In_Joy_X1 = 9
-    Const In_Joy_X2 = 10
-    Const In_Joy_Y1 = 11
-    Const In_Joy_Y2 = 12
+    'Expansion Inputs - Pins 9-16
+    Const In_Clamp_Lim = 12
     Const In_TravelLim = 13
     Const In_Clamp_On = 14
     Const In_ESTOP = 15
@@ -372,7 +377,7 @@ Option Explicit
     
     Public Function checkClamp() As Boolean
     
-        checkClamp = myXY.checkOut(Out_Clamp_Sol)
+        checkClamp = myXY.checkIn(In_Clamp_Lim)
     
     End Function
     
@@ -423,50 +428,50 @@ Option Explicit
     
         Select Case direction
             Case joyNeutral  'No Movement
-                myXY.setIn In_Joy_X1, 2
-                myXY.setIn In_Joy_X2, 2
-                myXY.setIn In_Joy_Y1, 2
-                myXY.setIn In_Joy_Y2, 2
+                myXY.setJogIn In_Joy_X1, False
+                myXY.setJogIn In_Joy_X2, False
+                myXY.setJogIn In_Joy_Y1, False
+                myXY.setJogIn In_Joy_Y2, False
             Case joyUp  'Move Up
-                myXY.setIn In_Joy_X1, 2
-                myXY.setIn In_Joy_X2, 2
-                myXY.setIn In_Joy_Y1, 1
-                myXY.setIn In_Joy_Y2, 2
+                myXY.setJogIn In_Joy_X1, False
+                myXY.setJogIn In_Joy_X2, False
+                myXY.setJogIn In_Joy_Y1, True
+                myXY.setJogIn In_Joy_Y2, False
             Case joyUpRight  'Move Up Right
-                myXY.setIn In_Joy_X1, 1
-                myXY.setIn In_Joy_X2, 2
-                myXY.setIn In_Joy_Y1, 1
-                myXY.setIn In_Joy_Y2, 2
+                myXY.setJogIn In_Joy_X1, True
+                myXY.setJogIn In_Joy_X2, False
+                myXY.setJogIn In_Joy_Y1, True
+                myXY.setJogIn In_Joy_Y2, False
             Case joyRight  'Move Right
-                myXY.setIn In_Joy_X1, 1
-                myXY.setIn In_Joy_X2, 2
-                myXY.setIn In_Joy_Y1, 2
-                myXY.setIn In_Joy_Y2, 2
+                myXY.setJogIn In_Joy_X1, True
+                myXY.setJogIn In_Joy_X2, False
+                myXY.setJogIn In_Joy_Y1, False
+                myXY.setJogIn In_Joy_Y2, False
             Case joyDownRight  'Move Down Right
-                myXY.setIn In_Joy_X1, 1
-                myXY.setIn In_Joy_X2, 2
-                myXY.setIn In_Joy_Y1, 2
-                myXY.setIn In_Joy_Y2, 1
+                myXY.setJogIn In_Joy_X1, True
+                myXY.setJogIn In_Joy_X2, False
+                myXY.setJogIn In_Joy_Y1, False
+                myXY.setJogIn In_Joy_Y2, True
             Case joyDown  'Move Down
-                myXY.setIn In_Joy_X1, 2
-                myXY.setIn In_Joy_X2, 2
-                myXY.setIn In_Joy_Y1, 2
-                myXY.setIn In_Joy_Y2, 1
+                myXY.setJogIn In_Joy_X1, False
+                myXY.setJogIn In_Joy_X2, False
+                myXY.setJogIn In_Joy_Y1, False
+                myXY.setJogIn In_Joy_Y2, True
             Case joyDownLeft  'Move Down Left
-                myXY.setIn In_Joy_X1, 2
-                myXY.setIn In_Joy_X2, 1
-                myXY.setIn In_Joy_Y1, 2
-                myXY.setIn In_Joy_Y2, 1
+                myXY.setJogIn In_Joy_X1, False
+                myXY.setJogIn In_Joy_X2, True
+                myXY.setJogIn In_Joy_Y1, False
+                myXY.setJogIn In_Joy_Y2, True
             Case joyLeft  'Move Left
-                myXY.setIn In_Joy_X1, 2
-                myXY.setIn In_Joy_X2, 1
-                myXY.setIn In_Joy_Y1, 2
-                myXY.setIn In_Joy_Y2, 2
+                myXY.setJogIn In_Joy_X1, False
+                myXY.setJogIn In_Joy_X2, True
+                myXY.setJogIn In_Joy_Y1, False
+                myXY.setJogIn In_Joy_Y2, False
             Case joyUpLeft  'Move Up Left
-                myXY.setIn In_Joy_X1, 2
-                myXY.setIn In_Joy_X2, 1
-                myXY.setIn In_Joy_Y1, 1
-                myXY.setIn In_Joy_Y2, 2
+                myXY.setJogIn In_Joy_X1, False
+                myXY.setJogIn In_Joy_X2, True
+                myXY.setJogIn In_Joy_Y1, True
+                myXY.setJogIn In_Joy_Y2, False
             Case Else
         End Select
 
