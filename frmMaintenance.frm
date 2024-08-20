@@ -450,6 +450,9 @@ Begin VB.Form frmMaintenance
    Begin VB.Menu topbarEnIO 
       Caption         =   "Enable I/O"
    End
+   Begin VB.Menu topbarOpenConsole 
+      Caption         =   "Show Console"
+   End
 End
 Attribute VB_Name = "frmMaintenance"
 Attribute VB_GlobalNameSpace = False
@@ -479,6 +482,7 @@ Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
     
 End Sub
 
+
 Private Sub topbarEnIO_Click()
 
     'Enable active maintenance mode
@@ -486,6 +490,12 @@ Private Sub topbarEnIO_Click()
     Me.Show
     
 
+End Sub
+
+Private Sub topbarOpenConsole_Click()
+    
+    frmConsole.Show
+    
 End Sub
 
 Private Sub txtMaintPos_Change(Index As Integer)

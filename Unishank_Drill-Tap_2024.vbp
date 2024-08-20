@@ -1,5 +1,5 @@
 Type=Exe
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\Windows\SysWOW64\stdole2.tlb#OLE Automation
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\Windows\SysWOW64\stdole2.tlb#OLE Automation
 Module=terminal; terminal.bas
 Form=frmMain.frm
 Class=ClassDrillTap; DrillTap.cls
@@ -8,7 +8,9 @@ Form=frmUI.frm
 Class=ClassFSMDrillTap; FSMDrillTap.cls
 Class=ClassUI; ClassUI.cls
 Form=frmMaintenance.frm
-Startup="frmMain"
+Class=Class6kConsole; Class6kConsole.cls
+Form=frmConsole.frm
+Startup="frmConsole"
 HelpFile=""
 Command32=""
 Name="Unishank_Drill_Tap"

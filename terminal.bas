@@ -55,7 +55,7 @@ End Type
 '------------------------------------------------------------------------------------------------------------------------------------------
 ' Win API Function declarations
 '------------------------------------------------------------------------------------------------------------------------------------------
-Declare Sub CopyMemory Lib "Kernel32" Alias "RtlMoveMemory" (destination As Any, source As Any, ByVal numbytes As Long)
+Declare Sub CopyMemory Lib "Kernel32" Alias "RtlMoveMemory" (destination As Any, Source As Any, ByVal numbytes As Long)
 
 
 '------------------------------------------------------------------------------------------------------------------------------------------
@@ -67,6 +67,7 @@ Global connected As Boolean     ' flag to indicate connection state - could also
 Global alarms As Long 'alarm status
 
 'Control Classes
+Global myCns As New Class6kConsole
 Global myDrillTap As New ClassDrillTap
 Global myUI As New ClassUI
 Global myFSM As New ClassFSMDrillTap

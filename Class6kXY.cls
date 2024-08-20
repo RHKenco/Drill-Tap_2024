@@ -98,11 +98,11 @@ Option Explicit
             c6k.fsenabled = True
         
         'Enable input-selected programs
-            c6k.Write "INSELP1,50:"
+            myCns.writeQueue "INSELP1,50:"
         
         'Set up axes
             'Set axes to behave as steppers
-            c6k.Write "AXSDEF00:"
+            myCns.writeQueue "AXSDEF00:"
             
             'Set Scaling Factors to correct motors
             Dim strDriveScale As String
@@ -116,10 +116,10 @@ Option Explicit
                 strResScale = Str(myScaleY) & "," & Str(myScaleX)
             End If
                 
-            c6k.Write "DRES" & strDriveScale & ":SCLD" & strResScale & ":SCLV" & strResScale & ":SCLA" & strResScale & ":"
+            myCns.writeQueue "DRES" & strDriveScale & ":SCLD" & strResScale & ":SCLV" & strResScale & ":SCLA" & strResScale & ":"
             
             'Enable Scaling
-            c6k.Write "SCALE1:"
+            myCns.writeQueue "SCALE1:"
             
         'Set up IO
             
@@ -134,20 +134,20 @@ Option Explicit
                 strLimitSwitch = Str(YlimitInput) & "-2S:"
             End If
             
-            c6k.Write "1INFNC" & strLimitSwitch
+            myCns.writeQueue "1INFNC" & strLimitSwitch
             
             'Enable EOT Limit for negative Y-Axis
             Dim strEOT As String
             
             If myMotorY = m1 Then strEOT = "0,1" Else strEOT = "1,0"
             
-            c6k.Write "LH" & strEOT & ":LHAD100,100:"
+            myCns.writeQueue "LH" & strEOT & ":LHAD100,100:"
             
             
             'Set up estop button
             ESTOPpin = ESTOP_Input_Pin
             
-            c6k.Write "1INFNC" & Str(ESTOPpin) & "-C:"
+            myCns.writeQueue "1INFNC" & Str(ESTOPpin) & "-C:"
             
             
         'Initialize the 6k's motion parameters
@@ -167,39 +167,39 @@ Option Explicit
     Public Sub reset6k()
     
         'Initialize 6k motion parameters
-        c6k.Write "DRIVE1,1:"
+        myCns.writeQueue "DRIVE1,1:"
         
         'Ensure Continuous Command Execution is Disabled
-        c6k.Write "COMEXC0:"
+        myCns.writeQueue "COMEXC0:"
         
         'Set default velocity to 0, Set initial values for Acceleration, Tie Decell to accel
-        c6k.Write "V0,0:A10,10:AD0,0:"
+        myCns.writeQueue "V0,0:A10,10:AD0,0:"
         
         'Set jog motion parameters
-        c6k.Write "JOGA10,5:JOGAD300,150:JOGVH6,3:JOGVL30,15:"
+        myCns.writeQueue "JOGA10,5:JOGAD300,150:JOGVH6,3:JOGVL30,15:"
     
     End Sub
     
     'Function specifically for operating the hydraulic clamp on the Drill-Tap
     Public Sub initClamp(mySol As Integer, myPump As Integer, myOnInput As Integer, myOffInput As Integer)
     
-        c6k.Write "DEL CLAMPOFF:DEF CLAMPOFF:"
+        myCns.writeQueue "DEL CLAMPOFF:DEF CLAMPOFF:"
             setOut mySol, True
-        c6k.Write "END:"
+        myCns.writeQueue "END:"
         
-        c6k.Write "DEL CLAMPON:DEF CLAMPON:"
+        myCns.writeQueue "DEL CLAMPON:DEF CLAMPON:"
         
             setOut mySol, True
             setOut myPump, True
-            c6k.Write "T1.9:"
+            myCns.writeQueue "T1.9:"
             setOut mySol, False
-            c6k.Write "T.5:"
+            myCns.writeQueue "T.5:"
             setOut myPump, False
     
-        c6k.Write "END:"
+        myCns.writeQueue "END:"
         
-        c6k.Write "1INFNC" & Str(myOffInput) & "P1:"
-        c6k.Write "1INFNC" & Str(myOnInput) & "P2:"
+        myCns.writeQueue "1INFNC" & Str(myOffInput) & "P1:"
+        myCns.writeQueue "1INFNC" & Str(myOnInput) & "P2:"
     
     End Sub
     
@@ -221,7 +221,7 @@ Option Explicit
         
         If Active Then
             'Imediate stop command, imediate shut down all outputs, disable motors
-            c6k.Write "!AD100,100:!S:!OUTALL1,32,0:WAIT(MOV=b00):DRIVE00:"
+            myCns.writeQueue "!AD100,100:!S:!OUTALL1,32,0:WAIT(MOV=b00):DRIVE00:"
         End If
         
         chkESTOP = True
@@ -306,7 +306,7 @@ Option Explicit
         zeroOffset.Y = offsetY
     
         'Sets zero to the offset location
-        c6k.Write "PSET" + Str(offsetX) + "," + Str(offsetY) + ":"
+        myCns.writeQueue "PSET" + Str(offsetX) + "," + Str(offsetY) + ":"
     
     End Sub
     
@@ -314,7 +314,7 @@ Option Explicit
     Public Sub setZeroHere()
     
         'Sets zero to the offset location
-        c6k.Write "PSET0,0:"
+        myCns.writeQueue "PSET0,0:"
     
     End Sub
     
@@ -344,7 +344,7 @@ Option Explicit
         vel_Str = genCmd(motorX, "V", Str(vel))
                 
         'Send command to 6k
-        c6k.Write vel_Str
+        myCns.writeQueue vel_Str
     
     End Sub
 
@@ -359,14 +359,14 @@ Option Explicit
         vel_Str = genCmd(motorY, "V", Str(vel))
                 
         'Send command to 6k
-        c6k.Write vel_Str
+        myCns.writeQueue vel_Str
     
     End Sub
     
     Public Sub setVel(vel As Double)
     
         'Set velocity of both axes
-        c6k.Write "V" & Str(vel) & "," & Str(vel) & ":"
+        myCns.writeQueue "V" & Str(vel) & "," & Str(vel) & ":"
     
     End Sub
     
@@ -384,11 +384,11 @@ Option Explicit
         'If jog is being enabled
         If myState Then
             'Set inputs to move motors
-            c6k.Write "1INFNC2-2J:1INFNC1-2K:1INFNC4-1J:1INFNC3-1K:JOG11:"
+            myCns.writeQueue "1INFNC2-2J:1INFNC1-2K:1INFNC4-1J:1INFNC3-1K:JOG11:"
         
         'If jog is being disabled
         Else
-            c6k.Write "JOG00:INFNC2-A:INFNC1-A:INFNC4-A:INFNC3-A:"
+            myCns.writeQueue "JOG00:INFNC2-A:INFNC1-A:INFNC4-A:INFNC3-A:"
         End If
     
     End Sub
@@ -404,7 +404,7 @@ Option Explicit
         If myState Then cmdStr = cmdStr & "1:" Else cmdStr = cmdStr & "0:"
         
         'Execute command
-        c6k.Write cmdStr
+        myCns.writeQueue cmdStr
     
     End Sub
 
@@ -460,7 +460,7 @@ Option Explicit
         inputStr = inputStr & ":"
         
         'Send the command to the 6k
-        c6k.Write inputStr
+        myCns.writeQueue inputStr
     
     End Sub
     
@@ -468,7 +468,7 @@ Option Explicit
     
         setIn myInput, 1
         
-        c6k.Write "T" & Str(myTime) & ":"
+        myCns.writeQueue "T" & Str(myTime) & ":"
         
         setIn myInput, 2
     
@@ -484,7 +484,7 @@ Option Explicit
         
         If myStatus Then outStr = outStr & "-1:" Else outStr = outStr & "-0:"
         
-        c6k.Write outStr
+        myCns.writeQueue outStr
     
     End Sub
     
@@ -570,7 +570,7 @@ Option Explicit
         waitX = "WAIT(MOV = b" & genCmdBin(motorX, True, True, True) & "):"
         
         'Send to 6k
-        c6k.Write xStr & goX & waitX
+        myCns.writeQueue xStr & goX & waitX
     
     End Sub
     
@@ -598,7 +598,7 @@ Option Explicit
         waitY = "WAIT(MOV = b" & genCmdBin(motorY, True, True, True) & "):"
         
         'Send to 6k
-        c6k.Write yStr & goY & waitY
+        myCns.writeQueue yStr & goY & waitY
     
     End Sub
 
@@ -633,7 +633,7 @@ Option Explicit
         myNewPosY = newPosY - zeroOffset.Y
         If (myNewPosY < 0) Then myNewPosY = 0
         
-        c6k.Write "D" & Str(myNewPosX) & "," & Str(myNewPosY) & ":GO11:WAIT(MOV = b00):"
+        myCns.writeQueue "D" & Str(myNewPosX) & "," & Str(myNewPosY) & ":GO11:WAIT(MOV = b00):"
         
     End Sub
     
@@ -715,7 +715,7 @@ Option Explicit
         startMov
         
             'Delay the 6k by the indicated time
-            c6k.Write "T" & Str(delayTime) & ":"
+            myCns.writeQueue "T" & Str(delayTime) & ":"
         
         'Clear moving flag and set completion flag
         completeMov
