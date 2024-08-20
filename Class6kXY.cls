@@ -384,7 +384,7 @@ Option Explicit
         'If jog is being enabled
         If myState Then
             'Set inputs to move motors
-            c6k.Write "INFNC2-2J:INFNC1-2K:INFNC4-1J:INFNC3-1K:JOG11:"
+            c6k.Write "1INFNC9-2J:1INFNC10-2K:1INFNC11-1J:1INFNC3-12K:JOG11:"
         
         'If jog is being disabled
         Else

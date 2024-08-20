@@ -335,7 +335,7 @@ Option Explicit
                 
                 
                 'If 1-8, output pins. If 9-16, input pins.
-                If inputPin < 9 Then
+                If inputPin < 8 Then
                     myXY.setOut inputPin, enable
                 Else
                     'Input pins are switched between virtual on and enable, not on/off (true false)
