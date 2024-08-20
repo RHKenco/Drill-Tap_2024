@@ -214,7 +214,7 @@ Option Explicit
         If Not chkIn(ESTOPpin) Then Exit Function
         
         'Imediate stop command, imediate shut down all outputs, disable motors
-        c6k.Write "!AD100,100:!S:!OUTALL1,32,0:DRIVE00:"
+        'c6k.Write "!AD100,100:!S:!OUTALL1,32,0:DRIVE00:"
         chkESTOP = True
     
     End Function
@@ -397,7 +397,7 @@ Option Explicit
         inBin = 2 ^ (myInput - 1)
         
         'Compare the binary input identifier to the c6k Input register. Return the result
-        chkIn = fsinfo.ProgIn(1) & inBin
+        chkIn = fsinfo.ProgIn(1) And inBin
             
     End Function
     
@@ -409,7 +409,7 @@ Option Explicit
         outBin = 2 ^ (myOutput - 1)
         
         'Compare the binary input identifier to the c6k Input register. Return the result
-        chkOut = fsinfo.ProgOut(1) & inBin
+        chkOut = fsinfo.ProgOut(1) And inBin
     
     End Function
     
