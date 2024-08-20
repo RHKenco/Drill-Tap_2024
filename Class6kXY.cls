@@ -384,12 +384,27 @@ Option Explicit
         'If jog is being enabled
         If myState Then
             'Set inputs to move motors
-            c6k.Write "INFNC2-2J:INFNC1-2K:INFNC4-1J:INFNC3-1K:JOG11:"
+            c6k.Write "1INFNC2-2J:1INFNC1-2K:1INFNC4-1J:1INFNC3-1K:JOG11:"
         
         'If jog is being disabled
         Else
             c6k.Write "JOG00:INFNC2-A:INFNC1-A:INFNC4-A:INFNC3-A:"
         End If
+    
+    End Sub
+    
+    Public Sub setJogIn(myPin As Boolean, myState As Boolean)
+    
+        Dim cmdStr As String
+        
+        'Initialize command - No number before INEN to indicate virtual input is in onboard I/O (Not expansion)
+        cmdStr = "!INEN." & myPin & "-"
+        
+        'Set state of pin to On or Off per myState input
+        If myState Then cmdStr = cmdStr & "1:" Else cmdStr = cmdStr & "0:"
+        
+        'Execute command
+        c6k.Write cmdStr
     
     End Sub
 
@@ -428,19 +443,23 @@ Option Explicit
     
         Dim inputStr As String
         
-        inputStr = "INEN." & Str(myInput)
+        'Initialize the command & select pin
+        inputStr = "!1INEN." & Str(myInput) & "-"
         
+        'Set Output state
         Select Case myAction
             Case 0
-                inputStr = inputStr & "-0"
+                inputStr = inputStr & "0"
             Case 1
-                inputStr = inputStr & "-1"
+                inputStr = inputStr & "1"
             Case 2
-                inputStr = inputStr & "-E"
+                inputStr = inputStr & "E"
         End Select
         
+        'Properly terminate the command
         inputStr = inputStr & ":"
         
+        'Send the command to the 6k
         c6k.Write inputStr
     
     End Sub
