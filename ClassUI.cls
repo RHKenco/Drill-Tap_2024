@@ -269,10 +269,16 @@ Public Sub go()
 
     'If the estop is not set
     If Not myDrillTap.ESTOPset Then
-    
-        'Call the FSM to go to the run state
-        myFSM.setGoStop
-    
+        
+        'If in active maintenance mode, disable
+        If True Then
+        
+        Else
+            'Call the FSM to go to the run state
+            myFSM.setGoStop
+        End If
+        
+        
     'If estip is set
     Else
         'Query the user to reset the ESTOP flag

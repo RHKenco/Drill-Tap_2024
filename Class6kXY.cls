@@ -409,7 +409,7 @@ Option Explicit
         outBin = 2 ^ (myOutput - 1)
         
         'Compare the binary input identifier to the c6k Input register. Return the result
-        chkOut = fsinfo.ProgOut(1) And inBin
+        chkOut = fsinfo.ProgOut(1) And outBin
     
     End Function
     

@@ -798,7 +798,7 @@ End Sub
 
 Private Sub topbarMaint_Click()
 
-    myFSM.setMaintenance
+    myFSM.setMaintenance False
     frmMaintenance.Show
 
 End Sub

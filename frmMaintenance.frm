@@ -15,7 +15,7 @@ Begin VB.Form frmMaintenance
       Caption         =   "Manual Position"
       BeginProperty Font 
          Name            =   "MS Sans Serif"
-         Size            =   17.25
+         Size            =   16.5
          Charset         =   0
          Weight          =   700
          Underline       =   0   'False
@@ -88,7 +88,7 @@ Begin VB.Form frmMaintenance
          Caption         =   "Y:                      in"
          BeginProperty Font 
             Name            =   "MS Sans Serif"
-            Size            =   15
+            Size            =   13.5
             Charset         =   0
             Weight          =   700
             Underline       =   0   'False
@@ -108,7 +108,7 @@ Begin VB.Form frmMaintenance
          Caption         =   "X:                      in"
          BeginProperty Font 
             Name            =   "MS Sans Serif"
-            Size            =   15
+            Size            =   13.5
             Charset         =   0
             Weight          =   700
             Underline       =   0   'False
@@ -129,7 +129,7 @@ Begin VB.Form frmMaintenance
       Caption         =   "I/O"
       BeginProperty Font 
          Name            =   "MS Sans Serif"
-         Size            =   17.25
+         Size            =   16.5
          Charset         =   0
          Weight          =   700
          Underline       =   0   'False
@@ -468,7 +468,7 @@ Private Sub Form_Load()
 
 End Sub
 
-Private Sub Form_Unload()
+Private Sub Form_Unload(Cancel As Integer)
 
     maintenanceOpen = False
     

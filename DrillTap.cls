@@ -67,13 +67,13 @@ Option Explicit
     End Enum
      
     'Integer and Enum to store position of the machine
-    Private Enum atPosition
+    Public Enum atPosition
         atUnk
         atDrill
         atTap
     End Enum
     
-    Private Enum maintOption
+    Public Enum maintOption
         mActiveOn
         mActiveOff
         mEnable
@@ -104,7 +104,7 @@ Option Explicit
     Private goTap As myCoordinate  'Location of Tap relative to Drill
     Private goDrill As myCoordinate
     
-    Private maintIO(16) As Boolean
+    Private maintIO(17) As Boolean
     
     Private myXY As New Class6kXY
     
@@ -248,13 +248,13 @@ Option Explicit
         Dim i As Integer
         Dim check As Boolean
         
-        For i = 1 To 16
+        For i = 0 To 15
             'For the first 8 pins, check as outputs. For the next 8 pins, check as inputs
             If i < 9 Then check = myXY.chkOut(i + 1) Else check = myXY.chkIn(i + 1)
             
             'If Active Maintenance mode and manually activated I/O, color red
             If (check And frmMaintenance.frameMaintIO.Enabled And maintIO(i)) Then
-                frmMaintenence.cmdMaintIO(i).BackColor = &H9191EA
+                frmMaintenance.cmdMaintIO(i).BackColor = &H9191EA
             
             'If I/O is enabled, color green
             ElseIf check Then
@@ -280,7 +280,7 @@ Option Explicit
             Case mActiveOff
                 inputPin = 0
                 enable = False
-            Case mActoveOn
+            Case mActiveOn
                 inputPin = 0
                 enable = True
             Case mEnable
@@ -308,11 +308,11 @@ Option Explicit
             
             'Enable or disable the maintenance frame according to the enable input
             If enable Then
-                frmMaintenance.frameMaintIO.enable = True
+                frmMaintenance.frameMaintIO.Enabled = True
                 myFSM.setMaintenance True
                 myUI.updStatus uiMaintEnabled, ""
             Else
-                frmMaintenance.frameMaintIO.enable = False
+                frmMaintenance.frameMaintIO.Enabled = False
                 myFSM.setMaintenance False
                 myUI.updStatus uiStandby, ""
             End If
@@ -321,7 +321,7 @@ Option Explicit
         'Any other input, assuming the mode is active, should be set and cleared manually
         Else
             
-            If frmMaintenance.frameIO.enable Then
+            If frmMaintenance.frameMaintIO.Enabled Then
                 
                 'The boolean array should be updated accordingly
                 maintIO(inputPin) = enable
