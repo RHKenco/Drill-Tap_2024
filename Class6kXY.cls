@@ -428,19 +428,56 @@ Option Explicit
     
         Dim inputStr As String
         
-        inputStr = "INEN." & Str(myInput)
         
+        
+        
+        'Alternate Code -------------------------------------------------------
+        'Dim i As Integer
+        
+        'First 8 are outputs; use E to ignore
+        'inputStr = "1INEN" & "EEEE" & "EEEE"
+        
+        'If the input value is less than 9, inproper input
+        'If myInput < 9 Then Exit Sub
+        
+        'For each input pin
+        'For i = 9 To 16
+        
+            'If the loop has reached the input pin, load the appropriate action
+            'If i = myInput Then
+                'Select Case myAction
+                    'Case 0
+                        'inputStr = inputStr & "0"
+                    'Case 1
+                        'inputStr = inputStr & "1"
+                    'Case 2
+                        'inputStr = inputStr & "E"
+                'End Select
+            
+            'Otherwise, leave the pin enabled
+            'Else
+                'inputStr = inputStr & "E"
+            'End If
+        'Next i
+        '--------------------------------------------------------------------
+        
+        'Initialize the command & select pin
+        inputStr = "!1INEN." & Str(myInput) & "-"
+        
+        'Set Output state
         Select Case myAction
             Case 0
-                inputStr = inputStr & "-0"
+                inputStr = inputStr & "0"
             Case 1
-                inputStr = inputStr & "-1"
+                inputStr = inputStr & "1"
             Case 2
-                inputStr = inputStr & "-E"
+                inputStr = inputStr & "E"
         End Select
         
+        'Properly terminate the command
         inputStr = inputStr & ":"
         
+        'Send the command to the 6k
         c6k.Write inputStr
     
     End Sub
