@@ -33,7 +33,7 @@ Private writeDisplayString As String
 
 Const c6kEntry = "c6k   > "
 Const usrEntry = "user  > "
-Const bnkEntry = "        "
+Const bnkEntry = "            "
 Const cmdPrompt = " > "
 
 Const maxConsoleChars = 5000
@@ -69,7 +69,7 @@ Private cmdH9 As String
 Public Sub initConsole()
 
 
-    frmConsole.txtConsole(0).Text = cmdPrompt
+    frmConsole.txtConsole(1).Text = cmdPrompt
 
     'Initialize command history
     cmdPoint = 9
@@ -142,12 +142,12 @@ Public Function getHistory(Index As Integer)
     
     rtnString = ""
     
-    If i < 1 Then i = 1
-    If i > 9 Then i = 9
+    If Index < 1 Then Index = 1
+    If Index > 9 Then Index = 9
     i = Index + cmdPoint
     
     'Ensure that the value does not cycle
-    If i > 8 Then i = i - 8
+    If i > 9 Then i = i - 9
     Do:
         Select Case i
             Case 1
@@ -172,7 +172,8 @@ Public Function getHistory(Index As Integer)
         
         'If there are empty history values, return oldest value. If no values, exit
         If rtnString = "" Then i = i - 1
-        If i = 0 Then Exit Do
+        If i = 0 Then i = 9
+        If i = cmdPoint Then Exit Do
         
     Loop Until rtnString <> ""
     
@@ -241,6 +242,14 @@ Public Sub update()
 
 End Sub
 
+Public Sub CLEAR()
+
+    readBuffer = ""
+    writeBuffer = ""
+    writeDisplayString = ""
+
+End Sub
+
 Private Sub updConsole()
 
     Dim nextChar As String
@@ -276,6 +285,8 @@ Private Sub updConsole()
             'Remove the character from the read buffer
             tempBuffer = Right(tempBuffer, (Len(tempBuffer) - 1))
         
+            If newLine Then GoTo DisplayNextI
+        
             'Add generated line to the console
             frmConsole.txtConsole(0).SelStart = Len(frmConsole.txtConsole(0).Text)
             frmConsole.txtConsole(0).Text = frmConsole.txtConsole(0).Text & addBuffer
@@ -305,6 +316,7 @@ DisplayWrite:
         
             'Add space to front of line if entry is starting on a clear line
             If newLine Then frmConsole.txtConsole(0).Text = frmConsole.txtConsole(0).Text & bnkEntry
+            newLine = False
         
             'Add character to the addbuffer
             addBuffer = addBuffer & nextChar
@@ -313,6 +325,8 @@ DisplayWrite:
             
         End If
 
+DisplayNextI:
+
     Next i
     
     'Set read buffer to the truncated tempBuffer
@@ -320,6 +334,9 @@ DisplayWrite:
     
     'Truncate the console to ensure it does not overflow
     If Len(frmConsole.txtConsole(0).Text) Then frmConsole.txtConsole(0).Text = Right(frmConsole.txtConsole(0).Text, maxConsoleChars)
+
+    'Ensure cursor is at end of window
+    frmConsole.txtConsole(0).SelStart = Len(frmConsole.txtConsole(0).Text)
 
 End Sub
 
@@ -343,7 +360,7 @@ Public Sub commandLineEnter()
     
     'Clear the textbox for new entry
     frmConsole.txtConsole(1).Text = cmdPrompt
-    frmConsole.txtConsole(1).SelLength = Len(frmConsole.txtConsole(1).Text)
+    frmConsole.txtConsole(1).SelStart = Len(frmConsole.txtConsole(1).Text)
 
     'Store the command in the history array
     setHistory (cmdInput)

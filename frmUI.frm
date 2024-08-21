@@ -799,9 +799,12 @@ End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
 
+    frmConsole.cmdConnect(1).Enabled = True
+    frmConsole.cmdConnect(2).Enabled = True
+
     Unload frmMaintenance
     
-    frmMain.Show
+    frmConsole.Show
 
 End Sub
 

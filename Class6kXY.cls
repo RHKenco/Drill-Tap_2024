@@ -100,6 +100,9 @@ Option Explicit
         'Enable input-selected programs
             myCns.writeQueue "INSELP1,50:"
         
+        'Erase predefined programs
+            myCns.writeQueue "ERASE:"
+        
         'Set up axes
             'Set axes to behave as steppers
             myCns.writeQueue "AXSDEF00:"
@@ -183,11 +186,11 @@ Option Explicit
     'Function specifically for operating the hydraulic clamp on the Drill-Tap
     Public Sub initClamp(mySol As Integer, myPump As Integer, myOnInput As Integer, myOffInput As Integer)
     
-        myCns.writeQueue "DEL CLAMPOFF:DEF CLAMPOFF:"
+        myCns.writeQueue "DEL COFF:DEF COFF:"
             setOut mySol, True
         myCns.writeQueue "END:"
         
-        myCns.writeQueue "DEL CLAMPON:DEF CLAMPON:"
+        myCns.writeQueue "DEL CON:DEF CON:"
         
             setOut mySol, True
             setOut myPump, True
@@ -198,8 +201,8 @@ Option Explicit
     
         myCns.writeQueue "END:"
         
-        myCns.writeQueue "1INFNC" & Str(myOffInput) & "P1:"
-        myCns.writeQueue "1INFNC" & Str(myOnInput) & "P2:"
+        myCns.writeQueue "1INFNC" & Str(myOffInput) & "-P1:"
+        myCns.writeQueue "1INFNC" & Str(myOnInput) & "-P2:"
     
     End Sub
     
@@ -393,7 +396,7 @@ Option Explicit
     
     End Sub
     
-    Public Sub setJogIn(myPin As Boolean, myState As Boolean)
+    Public Sub setJogIn(myPin As Integer, myState As Boolean)
         
         'Verify that the pin needs to be changed - XOR returns false if both are the same -> Not xor
         If Not (fsinfo.ProgOut(0) Xor (2 ^ (myPin - 1))) Then

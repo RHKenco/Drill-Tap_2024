@@ -50,6 +50,7 @@ Begin VB.Form frmConsole
    End
    Begin VB.CommandButton cmdConnect 
       Caption         =   "Connect"
+      Default         =   -1  'True
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   12
@@ -176,6 +177,7 @@ Private Sub cmdConnect_Click(Index As Integer)
                 timer6kRead.Enabled = False 'disable response polling (default)
                 connected = False           'set connected flag to false
                 MsgBox "Connection attempt failed...", 0, "Status"
+                Exit Sub
             End If
             
             
@@ -191,6 +193,8 @@ Private Sub cmdConnect_Click(Index As Integer)
             cmdConnect(1).Enabled = True
             cmdConnect(2).Enabled = True
             
+            txtConsole(1).SetFocus
+            txtConsole(1).SelStart = Len(txtConsole(1).Text)
             
         Case 1 'Disconnect Button
             
@@ -209,13 +213,27 @@ Private Sub cmdConnect_Click(Index As Integer)
             cmdConnect(1).Enabled = False
             cmdConnect(2).Enabled = False
             
+            myCns.CLEAR
+            
         Case 2 'Launch Button
+        
+            cmdConnect(1).Enabled = False
+            cmdConnect(2).Enabled = False
         
             Me.Hide
             frmUI.Show
             
             
     End Select
+
+End Sub
+
+Private Sub Form_Activate()
+
+    If connected Then
+        txtConsole(1).SetFocus
+        txtConsole(1).SelStart = Len(txtConsole(1).Text)
+    End If
 
 End Sub
 
@@ -236,8 +254,20 @@ Private Sub Form_Load()
     cmdConnect(0).Enabled = True
     cmdConnect(1).Enabled = False
     cmdConnect(2).Enabled = False
+    
+    
 
     Me.Refresh
+
+End Sub
+
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
+
+    Dim msgBoxResponse As VbMsgBoxResult
+    
+    msgBoxResponse = MsgBox("Would you like to close the program?", vbOKCancel, "Close Drill & Tap?")
+    
+    If msgBoxResponse = vbCancel Then Cancel = 1
 
 End Sub
 
@@ -269,22 +299,50 @@ Private Sub txtConsole_KeyDown(Index As Integer, KeyCode As Integer, Shift As In
     If Index = 0 Then Exit Sub
     
     Static pointer As Integer
+    Dim tempStr As String
 
     Select Case KeyCode
         Case vbKeyUp
             pointer = pointer + 1
             If pointer > 9 Then pointer = 9
-            e.Handled = True
+            tempStr = myCns.getHistory(pointer)
+            txtConsole(1).Text = " > " & tempStr
+            txtConsole(1).Refresh
+            KeyCode = 0
         Case vbKeyDown
             If pointer <> 0 Then
                 pointer = pointer - 1
                 If pointer < 1 Then pointer = 1
             End If
-            e.Handled = True
+            tempStr = myCns.getHistory(pointer)
+            txtConsole(1).Text = " > " & tempStr
+            txtConsole(1).Refresh
+            KeyCode = 0
         Case vbKeyReturn 'Enter is pressed
             myCns.commandLineEnter
             pointer = 0
+            KeyCode = 0
         Case Else
     End Select
+
+End Sub
+
+Private Sub txtConsole_KeyPress(Index As Integer, KeyAscii As Integer)
+
+    KeyAscii = Asc(UCase$(Chr$(KeyAscii)))
+
+End Sub
+
+Private Sub txtConsole_Change(Index As Integer)
+
+Static oldString As String
+
+If Left(txtConsole(1).Text, 3) <> " > " Then
+    txtConsole(1).Text = oldString
+    txtConsole(1).SelStart = Len(txtConsole(1).Text)
+End If
+
+oldString = txtConsole(1).Text
+
 
 End Sub
