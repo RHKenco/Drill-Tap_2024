@@ -249,6 +249,8 @@ Private Sub updConsole()
     Dim tempBuffer As String
     Dim addBuffer As String
     
+    Static newLine As Boolean
+    
     tempBuffer = readBuffer
     
     If Len(tempBuffer) > 300 Then Limit = 300 Else Limit = Len(tempBuffer)
@@ -274,7 +276,7 @@ Private Sub updConsole()
             'Remove the character from the read buffer
             tempBuffer = Right(tempBuffer, (Len(tempBuffer) - 1))
         
-            'Add generated line line
+            'Add generated line to the console
             frmConsole.txtConsole(0).SelStart = Len(frmConsole.txtConsole(0).Text)
             frmConsole.txtConsole(0).Text = frmConsole.txtConsole(0).Text & addBuffer
             addBuffer = ""
@@ -284,21 +286,25 @@ DisplayWrite:
             
             'move to the next line
             frmConsole.txtConsole(0).Text = frmConsole.txtConsole(0).Text & vbCrLf
+            newLine = True
             
-            'If a command has been written to the 6k, write it to the console when possible
+            'If a command has been written to the 6k, write it to the console
             If writeDisplayString <> "" Then
-                frmConsole.txtConsole(0).Text = frmConsole.txtConsole(0).Text & writeDisplayString
+                'When writing stored commands to the console, add extra space before, then add two spaces after and show 6k entry indicator
+                frmConsole.txtConsole(0).Text = vbCrLf & frmConsole.txtConsole(0).Text & writeDisplayString & vbCrLf & vbCrLf & c6kEntry
                 writeDisplayString = ""
+                newLine = False
             End If
             
-            'Add space to front of line
-            frmConsole.txtConsole(0).Text = frmConsole.txtConsole(0).Text & c6kEntry
             
             'After a line is printed, exit loop
             Exit For
             
         'Otherwise, add it to the console
         Else
+        
+            'Add space to front of line if entry is starting on a clear line
+            If newLine Then frmConsole.txtConsole(0).Text = frmConsole.txtConsole(0).Text & bnkEntry
         
             'Add character to the addbuffer
             addBuffer = addBuffer & nextChar

@@ -394,17 +394,22 @@ Option Explicit
     End Sub
     
     Public Sub setJogIn(myPin As Boolean, myState As Boolean)
-    
-        Dim cmdStr As String
         
-        'Initialize command - No number before INEN to indicate virtual input is in onboard I/O (Not expansion)
-        cmdStr = "!INEN." & myPin & "-"
+        'Verify that the pin needs to be changed - XOR returns false if both are the same -> Not xor
+        If Not (fsinfo.ProgOut(0) Xor (2 ^ (myPin - 1))) Then
+            
+            Dim cmdStr As String
+            
+            'Initialize command - No number before INEN to indicate virtual input is in onboard I/O (Not expansion)
+            cmdStr = "!INEN." & myPin & "-"
+            
+            'Set state of pin to On or Off per myState input
+            If myState Then cmdStr = cmdStr & "1:" Else cmdStr = cmdStr & "0:"
         
-        'Set state of pin to On or Off per myState input
-        If myState Then cmdStr = cmdStr & "1:" Else cmdStr = cmdStr & "0:"
-        
-        'Execute command
-        myCns.writeQueue cmdStr
+            'Execute command
+            myCns.writeQueue cmdStr
+            
+        End If
     
     End Sub
 
