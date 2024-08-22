@@ -187,9 +187,6 @@ End Sub
 
 Private Sub runAlways()
     
-    'Update faststatus
-    myDrillTap.update
-    
     'Update maintenance when necessary
     If maintenanceOpen Then myDrillTap.maintPassive
     
@@ -521,17 +518,11 @@ Private Sub runState7()
 
     'ESTOP State - Locks up everything except the UI and waits for user to clear ESTOP condition
     
-    If innerState = 0 Then
-    
-        'TODO - add estop initialization
-    
-    End If
-    
     
     'If ESTOP cleared
     If clearESTOPnow Then
         
-        'TODO - add estop clear commands
+        myDrillTap.resetESTOP
         
         myUI.updStatus uiStandby, ""
         setState s1_Stby

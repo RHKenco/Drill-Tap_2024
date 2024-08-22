@@ -477,6 +477,7 @@ Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
         'Cancel overall unload and hide form
         Cancel = 1
         Me.Hide
+        frmConsole.Hide
         frmUI.Show
     End If
     

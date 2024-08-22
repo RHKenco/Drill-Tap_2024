@@ -103,6 +103,23 @@ Begin VB.Form frmConsole
       Top             =   120
       Width           =   1935
    End
+   Begin VB.Label lblCmdCount 
+      Caption         =   "0"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   18
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   495
+      Left            =   5040
+      TabIndex        =   6
+      Top             =   120
+      Width           =   855
+   End
    Begin VB.Label lbl6kConsole 
       Caption         =   "Drill - Tap C6k2 Console:"
       BeginProperty Font 
@@ -157,7 +174,7 @@ Private Sub cmdConnect_Click(Index As Integer)
     
             'Prompt user for IP address
             tempIP = InputBox("Enter target IP Address:", "Port Setting", ipAddr)
-            If Len(ipAddr) = 0 Then Exit Sub
+            If Len(tempIP) = 0 Then Exit Sub
             
             'If the entered IP address differs from the loaded one, save the new address
             If ipAddr <> tempIP Then
@@ -202,6 +219,8 @@ Private Sub cmdConnect_Click(Index As Integer)
             timer6kRead.Enabled = False
             
             'Disconnect from 6k
+            'c6k.Disconnect
+            connected = False
             Set c6k = Nothing
             
             
@@ -263,7 +282,18 @@ End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
 
+
     Dim msgBoxResponse As VbMsgBoxResult
+    
+    If maintenanceOpen = True Then
+        
+        msgBoxResponse = MsgBox("Would you like to hide the console?", vbYesNo)
+        
+        If msgBoxResponse = vbYes Then Me.Hide
+            
+        Cancel = 1
+        Exit Sub
+    End If
     
     msgBoxResponse = MsgBox("Would you like to close the program?", vbOKCancel, "Close Drill & Tap?")
     
@@ -284,6 +314,9 @@ Private Sub Form_Unload(Cancel As Integer)
 
     'Disconnect from 6k
     If connected Then cmdConnect_Click (1)
+    
+    'Clear 6k Object
+    Set c6k = Nothing
 
 End Sub
 

@@ -755,35 +755,38 @@ Private Sub Form_Load()
 End Sub
 
 Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
-
-    Select Case KeyCode
-        Case vbKeyUp
-            myUI.uiKeyUp = True
-        Case vbKeyRight
-            myUI.uiKeyRight = True
-        Case vbKeyDown
-            myUI.uiKeyDown = True
-        Case vbKeyLeft
-            myUI.uiKeyLeft = True
-        Case Else
-    End Select
+    
+    If myDrillTap.isJoyOn Then
+        Select Case KeyCode
+            Case vbKeyUp, vbKeyNumpad8
+                myUI.uiKeyUp = True
+            Case vbKeyRight, vbKeyNumpad6
+                myUI.uiKeyRight = True
+            Case vbKeyDown, vbKeyNumpad4
+                myUI.uiKeyDown = True
+            Case vbKeyLeft, vbKeyNumpad2
+                myUI.uiKeyLeft = True
+            Case Else
+        End Select
+    End If
 
 End Sub
 
-
 Private Sub Form_KeyUp(KeyCode As Integer, Shift As Integer)
 
-    Select Case KeyCode
-        Case vbKeyUp
-            myUI.uiKeyUp = False
-        Case vbKeyRight
-            myUI.uiKeyRight = False
-        Case vbKeyDown
-            myUI.uiKeyDown = False
-        Case vbKeyLeft
-            myUI.uiKeyLeft = False
-        Case Else
-    End Select
+    If myDrillTap.isJoyOn Then
+        Select Case KeyCode
+            Case vbKeyUp, vbKeyNumpad8
+                myUI.uiKeyUp = False
+            Case vbKeyRight, vbKeyNumpad6
+                myUI.uiKeyRight = False
+            Case vbKeyDown, vbKeyNumpad4
+                myUI.uiKeyDown = False
+            Case vbKeyLeft, vbKeyNumpad2
+                myUI.uiKeyLeft = False
+            Case Else
+        End Select
+    End If
 
 End Sub
 

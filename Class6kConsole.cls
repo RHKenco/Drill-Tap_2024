@@ -33,7 +33,7 @@ Private writeDisplayString As String
 
 Const c6kEntry = "c6k   > "
 Const usrEntry = "user  > "
-Const bnkEntry = "            "
+Const bnkEntry = "          "
 Const cmdPrompt = " > "
 
 Const maxConsoleChars = 5000
@@ -93,20 +93,24 @@ Public Sub writeQueue(writeStr As String)
 
 End Sub
 
+Private Sub write6k()
 
-Private Sub write6kNow(writeStr As String)
-
-    'Add command to the write buffer, to be entered into the console
-    If writeStr <> "" Then
-        writeBuffer = writeBuffer & writeStr
-    End If
-    
     writeToConsole writeBuffer
     
-    'Write the command to the 6k
+    'Write the commands to the 6k
     c6k.Write (writeBuffer)
     
     writeBuffer = ""
+
+End Sub
+
+Public Sub write6kNow(writeStr As String)
+
+    'Add command to the write buffer, to be entered into the console
+    writeBuffer = writeStr & writeBuffer
+
+    'Write the command to the 6k
+    c6k.Write (writeStr)
 
 End Sub
 
@@ -121,7 +125,7 @@ Private Sub writeToConsole(writeStr As String)
 End Sub
 
 
-Private Sub read6kNow()
+Private Sub read6k()
 
     Dim readString As String
     
@@ -234,11 +238,17 @@ End Sub
 
 Public Sub update()
     
-    write6kNow ""
+    'If the 6k is not overloaded with commands, add commands
+    'If c6k.CommandCount < 5 Then
+    write6k
     
-    read6kNow
+    read6k
     
     updConsole
+    
+    
+    frmConsole.lblCmdCount.Caption = c6k.CommandCount
+    frmConsole.Refresh
 
 End Sub
 
@@ -280,18 +290,23 @@ Private Sub updConsole()
         'Print that character to the console
         
         'If the character is a carriage return
-        If nextChar = Chr$(13) Then
-        
+        If (nextChar = Chr$(13)) Or (nextChar = Chr$(10)) Then
+            
             'Remove the character from the read buffer
             tempBuffer = Right(tempBuffer, (Len(tempBuffer) - 1))
-        
-            If newLine Then GoTo DisplayNextI
-        
-            'Add generated line to the console
-            frmConsole.txtConsole(0).SelStart = Len(frmConsole.txtConsole(0).Text)
-            frmConsole.txtConsole(0).Text = frmConsole.txtConsole(0).Text & addBuffer
-            addBuffer = ""
-            frmConsole.txtConsole(0).SelStart = Len(frmConsole.txtConsole(0).Text)
+            
+            
+            If addBuffer <> "" Then
+                'Add generated line to the console
+                frmConsole.txtConsole(0).SelStart = Len(frmConsole.txtConsole(0).Text)
+                frmConsole.txtConsole(0).Text = frmConsole.txtConsole(0).Text & addBuffer
+                addBuffer = ""
+                frmConsole.txtConsole(0).SelStart = Len(frmConsole.txtConsole(0).Text)
+            End If
+            
+            If newLine Then
+                GoTo DisplayNextI
+            End If
             
 DisplayWrite:
             
@@ -316,7 +331,7 @@ DisplayWrite:
         
             'Add space to front of line if entry is starting on a clear line
             If newLine Then frmConsole.txtConsole(0).Text = frmConsole.txtConsole(0).Text & bnkEntry
-            newLine = False
+            If nextChar <> "" Then newLine = False
         
             'Add character to the addbuffer
             addBuffer = addBuffer & nextChar
@@ -356,7 +371,7 @@ Public Sub commandLineEnter()
     
 
     'Write input to the queue
-    writeQueue (cmdInput)
+    write6kNow (cmdInput)
     
     'Clear the textbox for new entry
     frmConsole.txtConsole(1).Text = cmdPrompt

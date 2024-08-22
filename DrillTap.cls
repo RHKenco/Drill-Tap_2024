@@ -251,6 +251,7 @@ Option Explicit
     
     Public Function resetESTOP()
         myXY.reset6k
+        ESTOP_SET = False
     End Function
 
 
@@ -377,7 +378,7 @@ Option Explicit
     
     Public Function checkClamp() As Boolean
     
-        checkClamp = myXY.checkIn(In_Clamp_Lim)
+        checkClamp = myXY.chkIn(In_Clamp_Lim)
     
     End Function
     

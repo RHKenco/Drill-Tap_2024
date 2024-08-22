@@ -95,12 +95,15 @@ Option Explicit
         'Initialize 6k:
         
         'Enable FastStatus
-            c6k.fsenabled = True
+            'c6k.fsenabled = True
+        
+            'Ensure drives are disabled on startup, to allow scaling to be set properly
+            myCns.writeQueue "@DRIVE0:"
         
         'Enable input-selected programs
             myCns.writeQueue "INSELP1,50:"
         
-        'Erase predefined programs
+        'Erase predefined programs to ensure new programs have the correct identifiers
             myCns.writeQueue "ERASE:"
         
         'Set up axes
@@ -170,7 +173,7 @@ Option Explicit
     Public Sub reset6k()
     
         'Initialize 6k motion parameters
-        myCns.writeQueue "DRIVE1,1:"
+        myCns.writeQueue "DRIVE11:"
         
         'Ensure Continuous Command Execution is Disabled
         myCns.writeQueue "COMEXC0:"
@@ -224,7 +227,7 @@ Option Explicit
         
         If Active Then
             'Imediate stop command, imediate shut down all outputs, disable motors
-            myCns.writeQueue "!AD100,100:!S:!OUTALL1,32,0:WAIT(MOV=b00):DRIVE00:"
+            myCns.writeQueue "!AD100,100:!S:!OUTALL1,32,0:WAIT(MOV=b00):@DRIVE0:"
         End If
         
         chkESTOP = True
@@ -325,14 +328,14 @@ Option Explicit
     'getPosX - Function to get the position of the X-axis
     Public Function getPosX() As Double
         
-        getPosX = fsinfo.MotorPos(motorX) - zeroOffset.X
+        getPosX = c6k.MotorPos(motorX) - zeroOffset.X
         
     End Function
     
     'getPosY - Function to get the position of the Y-axis
     Public Function getPosY() As Double
         
-        getPosY = fsinfo.MotorPos(motorY) - zeroOffset.Y
+        getPosY = c6k.MotorPos(motorY) - zeroOffset.Y
         
     End Function
     
@@ -378,7 +381,7 @@ Option Explicit
     
         Dim temp() As Byte
         temp = c6k.FastStatus
-        Call CopyMemory(fsinfo, temp(0), 280)
+        Call CopyMemory(c6k, temp(0), 280)
 
     End Sub
     
@@ -387,7 +390,7 @@ Option Explicit
         'If jog is being enabled
         If myState Then
             'Set inputs to move motors
-            myCns.writeQueue "1INFNC2-2J:1INFNC1-2K:1INFNC4-1J:1INFNC3-1K:JOG11:"
+            myCns.writeQueue "INFNC2-2J:INFNC1-2K:INFNC4-1J:INFNC3-1K:JOG11:"
         
         'If jog is being disabled
         Else
@@ -399,7 +402,22 @@ Option Explicit
     Public Sub setJogIn(myPin As Integer, myState As Boolean)
         
         'Verify that the pin needs to be changed - XOR returns false if both are the same -> Not xor
-        If Not (fsinfo.ProgOut(0) Xor (2 ^ (myPin - 1))) Then
+        Dim inputState As Long
+        Dim pinBinary As Long
+        
+        Static myIn(4) As Boolean
+        
+        'Resolve the input state into a boolan for the desired pin
+        'inputState = c6k.Inputs(0)
+        'pinBinary = (2 ^ (myPin - 1))
+        
+        'inputState = CBool(inputState And pinBinary)
+        
+        inputState = myIn(myPin)
+        
+        'Compare the state of the pin to the desired state
+        If (inputState Xor myState) Then
+            
             
             Dim cmdStr As String
             
@@ -410,7 +428,8 @@ Option Explicit
             If myState Then cmdStr = cmdStr & "1:" Else cmdStr = cmdStr & "0:"
         
             'Execute command
-            myCns.writeQueue cmdStr
+            myCns.write6kNow cmdStr
+            myIn(myPin) = myState
             
         End If
     
@@ -429,7 +448,7 @@ Option Explicit
         inBin = 2 ^ (myInput - 1)
         
         'Compare the binary input identifier to the c6k Input register. Return the result
-        chkIn = fsinfo.ProgIn(1) And inBin
+        chkIn = c6k.Inputs(1) And inBin
             
     End Function
     
@@ -441,7 +460,7 @@ Option Explicit
         outBin = 2 ^ (myOutput - 1)
         
         'Compare the binary input identifier to the c6k Input register. Return the result
-        chkOut = fsinfo.ProgOut(1) And outBin
+        chkOut = c6k.Outputs(1) And outBin
     
     End Function
     

@@ -275,8 +275,14 @@ Public Sub go()
             'Disable active maintenance mode
             myDrillTap.maintActive 0, mActiveOff
         Else
-            'Call the FSM to go to the run state
-            myFSM.setGoStop
+        
+            If myDrillTap.isJoyOn Then
+                'If the joystick is on, clear joystick
+                myFSM.setJoystick
+            Else
+                'Call the FSM to go to the run state
+                myFSM.setGoStop
+            End If
         End If
         
         
