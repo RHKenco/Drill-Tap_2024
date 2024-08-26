@@ -33,6 +33,8 @@ Option Explicit
     Const In_Joy_Y1 = 3
     Const In_Joy_Y2 = 4
     
+    Const In_MoveAck = 5
+    
     'Expansion Outputs - Pins 1-8
     Const Out_Clamp_Sol = 2
     Const Out_Clamp_Pump = 3
@@ -47,7 +49,7 @@ Option Explicit
     Const In_ESTOP = 15
     Const In_Clamp_Off = 16
     
-    Const In_MoveAck = 32
+
     
     
     Const Axis_X = 2
@@ -73,6 +75,7 @@ Option Explicit
      
     'Integer and Enum to store position of the machine
     Public Enum atPosition
+        atMove
         atUnk
         atDrill
         atTap
@@ -87,6 +90,7 @@ Option Explicit
     End Enum
     
     Private myPosition As atPosition
+    Private myDestination As atPosition
     Private ESTOP_SET As Boolean
      
 '--------------------------- Class Variables --------------------------------------------------------------------------
@@ -148,7 +152,7 @@ Option Explicit
         goTap.Y = myToolOffsetY
         
         'Initialize clamp functions
-        myXY.initClamp Out_Clamp_Sol, Out_Clamp_Pump, In_Clamp_On, In_Clamp_Off
+        'myXY.initClamp Out_Clamp_Sol, Out_Clamp_Pump, In_Clamp_On, In_Clamp_Off
             
     End Sub
     
@@ -193,6 +197,7 @@ Option Explicit
     End Function
     
     Public Function getPos() As Integer
+        
         getPos = myPosition
     End Function
     
@@ -209,8 +214,8 @@ Option Explicit
     
     End Function
     
-    ''' setVel - Sets the internal velocity variables for drill/tap movement
-    Public Sub setVel(JogVel As String, drillVel As String, TapVel As String)
+    ''' setVelDefaults - Sets the internal velocity variables for drill/tap movement
+    Public Sub setVelDefaults(JogVel As String, drillVel As String, TapVel As String)
     
         V_Jog = JogVel
         V_Drill = drillVel
@@ -501,20 +506,58 @@ Public Function waitForMove() As Boolean
 
     waitForMove = False
     
-    'If there is currently a move in progress, do not proceed. Else acknowledge prior move
-    If myXY.checkMov Then Exit Function Else myXY.ackMov
+    Dim checkForMove As Integer
     
-    If goToDrill = True Then
-        goToDrill = False
-        myPosition = atDrill
-    ElseIf goToTap = True Then
-        goToTap = False
-        myPosition = atTap
+    checkForMove = myXY.checkMov
+    
+    'If there is no move currently in progress, return true
+    If checkForMove = 0 Then
+        GoTo NoMoveInProgress
+    'If there is a move in progress
     Else
-        myPosition = atUnk
+        'If the move is completed, acknowledge the completion
+        If checkForMove = 2 Then
+            'Do not continue until the acnowledgement is confirmed
+            If Not myXY.ackMov Then Exit Function
+        'If the move is ongoing, or the input errors, exit function
+        Else
+            Exit Function
+        End If
     End If
     
+    Select Case myDestination
+        Case atDrill
+            myPosition = atDrill
+        Case atTap
+            myPosition = atTap
+        Case atUnk
+            myPosition = atUnk
+    End Select
+    
+NoMoveInProgress:
+    
     waitForMove = True
+
+End Function
+
+Public Function goToPosition(positionX As Double, positionY As Double) As Boolean
+
+    goToPosition = False
+    
+    If joyOn Then Exit Function
+    
+    'If there is currently a move in progress, do not proceed
+    If myXY.checkMov Then Exit Function
+
+    'Set velocity for motion
+    myXY.setVel CDbl(V_Jog)
+    'Move to the drill position
+    myXY.moveTo positionX, positionY, movYX
+
+
+    myDestination = atUnk
+    
+    goToPosition = True
 
 End Function
 
@@ -524,14 +567,18 @@ Public Function goToDrill() As Boolean
 
     If joyOn Then Exit Function
     
-    'If there is currently a move in progress, do not proceed. Else acknowledge prior move
-    If myXY.checkMov Then Exit Function Else myXY.ackMov
+    If myPosition = atDrill Then Exit Function
+    
+    'If there is currently a move in progress, do not proceed
+    If myXY.checkMov Then Exit Function
 
+    'Set velocity for motion
+    myXY.setVel CDbl(V_Jog)
     'Move to the drill position
-    myXY.moveTo goDrill, movY0XY
+    myXY.moveTo goDrill.X, goDrill.Y, movY0XY
 
 
-    myPosition = atDrill
+    myDestination = atDrill
     
     goToDrill = True
 
@@ -543,12 +590,18 @@ Public Function goToTap() As Boolean
     
     If joyOn Then Exit Function
     
-    'If there is currently a move in progress, do not proceed. Else acknowledge prior move
-    If myXY.checkMov Then Exit Function Else myXY.ackMov
-
-    'Move to the drill position
-    myXY.moveTo goTap, movY0XY
+    If myPosition = atTap Then Exit Function
     
+    'If there is currently a move in progress, do not proceed.
+    If myXY.checkMov Then Exit Function
+
+    'Set velocity for motion
+    myXY.setVel CDbl(V_Jog)
+    'Move to the Tap position
+    myXY.moveTo goTap.X, goTap.Y, movY0XY
+    
+    
+    myDestination = atTap
     goToTap = True
 
 End Function
@@ -579,7 +632,11 @@ Public Function runDrill(drillDeep As Double, currentCycle As Integer, totalCycl
     End If
     
     'If there is currently a move in progress, do not proceed. Else acknowledge prior move
-    If myXY.checkMov Then Exit Function Else myXY.ackMov
+    If myXY.checkMov Then
+        Exit Function
+    Else
+        If Not myXY.ackMov Then Exit Function
+    End If
 
     'If the last cycle has been reached, disable drill and exit
     If currentCycle = totalCycles Then
@@ -597,6 +654,8 @@ Public Function runDrill(drillDeep As Double, currentCycle As Integer, totalCycl
     Dim cycleDeep As Double
     cycleDeep = (currentCycle / (totalCycles - 1)) * drillDeep
     
+    'Set velocity for motion
+    myXY.setVel CDbl(V_Drill)
     myXY.movePeck cycleDeep, 0.5, V_Drill, V_Jog
     
     
@@ -625,7 +684,11 @@ Public Function runTap(tapDeep As Double, currentCycle As Integer, totalCycles A
     End If
     
     'If there is currently a move in progress, do not proceed. Else acknowledge prior move
-    If myXY.checkMov Then Exit Function Else myXY.ackMov
+    If myXY.checkMov Then
+        Exit Function
+    Else
+        If Not myXY.ackMov Then Exit Function
+    End If
 
     'If the last cycle has been reached, disable Tap and exit
     If currentCycle = totalCycles Then
@@ -643,6 +706,8 @@ Public Function runTap(tapDeep As Double, currentCycle As Integer, totalCycles A
     Dim cycleDeep As Double
     cycleDeep = (currentCycle / (totalCycles - 1)) * drillDeep
     
+    'Set velocity for motion
+    myXY.setVel CDbl(V_Tap)
     myXY.movePeck cycleDeep, 0.5, V_Tap, V_Tap
     
     

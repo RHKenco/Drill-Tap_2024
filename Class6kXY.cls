@@ -92,23 +92,23 @@ Option Explicit
 '--------------------------- Init & Clear Functions -------------------------------------------------------------------
     Public Sub init6k(myMotorX As myMotors, myMotorY As myMotors, movAcknInpt As Integer, ESTOP_Input_Pin As Integer, Y_Limit_Input_Pin As Integer)
         
-        'Initialize 6k:
-        
+    'Initialize 6k:
+    
         'Enable FastStatus
-            'c6k.fsenabled = True
-        
-            'Ensure drives are disabled on startup, to allow scaling to be set properly
-            myCns.writeQueue "@DRIVE0:"
-        
-        'Enable input-selected programs
-            myCns.writeQueue "INSELP1,50:"
-        
+            c6k.fsenabled = True
+            
         'Erase predefined programs to ensure new programs have the correct identifiers
-            myCns.writeQueue "ERASE:"
+            myCns.write6k "ERASE:"
+            
+            'Ensure drives are disabled on startup, to allow scaling to be set properly
+            myCns.write6k "@DRIVE0:"
+        
+        'Enable Absolute Mode
+            myCns.write6k "@MA1:"
         
         'Set up axes
             'Set axes to behave as steppers
-            myCns.writeQueue "AXSDEF00:"
+            myCns.write6k "@AXSDEF0:@DRFEN0:"
             
             'Set Scaling Factors to correct motors
             Dim strDriveScale As String
@@ -122,38 +122,38 @@ Option Explicit
                 strResScale = Str(myScaleY) & "," & Str(myScaleX)
             End If
                 
-            myCns.writeQueue "DRES" & strDriveScale & ":SCLD" & strResScale & ":SCLV" & strResScale & ":SCLA" & strResScale & ":"
+            myCns.write6k "DRES" & strDriveScale & ":SCLD" & strResScale & ":SCLV" & strResScale & ":SCLA" & strResScale & ":"
             
             'Enable Scaling
-            myCns.writeQueue "SCALE1:"
+            myCns.write6k "SCALE1:@MC0:"
             
         'Set up IO
             
             YlimitInput = Y_Limit_Input_Pin
             
             'Set up Y-Axis negative limit switch
-            Dim strLimitSwitch As String
+            'Dim strLimitSwitch As String
             
-            If myMotorY = m1 Then
-                strLimitSwitch = Str(YlimitInput) & "-1S:"
-            Else
-                strLimitSwitch = Str(YlimitInput) & "-2S:"
-            End If
+            'If myMotorY = m1 Then
+                'strLimitSwitch = Str(YlimitInput) & "-1S:"
+            'Else
+                'strLimitSwitch = Str(YlimitInput) & "-2S:"
+            'End If
             
-            myCns.writeQueue "1INFNC" & strLimitSwitch
+            'myCns.write6k "1INFNC" & strLimitSwitch
             
             'Enable EOT Limit for negative Y-Axis
-            Dim strEOT As String
+            'Dim strEOT As String
             
-            If myMotorY = m1 Then strEOT = "0,1" Else strEOT = "1,0"
+            'If myMotorY = m1 Then strEOT = "0,1" Else strEOT = "1,0"
             
-            myCns.writeQueue "LH" & strEOT & ":LHAD100,100:"
+            'myCns.write6k "@LH0:LH" & strEOT & ":LHAD100,100:LHLVL1:"
             
             
             'Set up estop button
-            ESTOPpin = ESTOP_Input_Pin
+            'ESTOPpin = ESTOP_Input_Pin
             
-            myCns.writeQueue "1INFNC" & Str(ESTOPpin) & "-C:"
+            'myCns.write6k "1INLVL" & Str(ESTOPpin) & "-1:1INFNC" & Str(ESTOPpin) & "-D:"
             
             
         'Initialize the 6k's motion parameters
@@ -173,41 +173,41 @@ Option Explicit
     Public Sub reset6k()
     
         'Initialize 6k motion parameters
-        myCns.writeQueue "DRIVE11:"
+        myCns.write6k "DRIVE11:"
         
         'Ensure Continuous Command Execution is Disabled
-        myCns.writeQueue "COMEXC0:"
+        myCns.write6k "COMEXC1:"
         
         'Set default velocity to 0, Set initial values for Acceleration, Tie Decell to accel
-        myCns.writeQueue "V0,0:A10,10:AD0,0:"
+        myCns.write6k "V0,0:A10,10:AD0,0:"
         
         'Set jog motion parameters
-        myCns.writeQueue "JOGA10,5:JOGAD300,150:JOGVH6,3:JOGVL30,15:"
+        'myCns.write6k "JOGA10,5:JOGAD300,150:JOGVH6,3:JOGVL30,15:"
     
     End Sub
     
     'Function specifically for operating the hydraulic clamp on the Drill-Tap
-    Public Sub initClamp(mySol As Integer, myPump As Integer, myOnInput As Integer, myOffInput As Integer)
+    'Public Sub initClamp(mySol As Integer, myPump As Integer, myOnInput As Integer, myOffInput As Integer)
     
-        myCns.writeQueue "DEL COFF:DEF COFF:"
-            setOut mySol, True
-        myCns.writeQueue "END:"
+        'myCns.write6k "DEL COFF:DEF COFF:"
+            'setOut mySol, True
+        'myCns.write6k "END:"
         
-        myCns.writeQueue "DEL CON:DEF CON:"
+        'myCns.write6k "DEL CON:DEF CON:"
         
-            setOut mySol, True
-            setOut myPump, True
-            myCns.writeQueue "T1.9:"
-            setOut mySol, False
-            myCns.writeQueue "T.5:"
-            setOut myPump, False
+            'setOut mySol, True
+            'setOut myPump, True
+            'myCns.write6k "T1.9:"
+            'setOut mySol, False
+            'myCns.write6k "T.5:"
+            'setOut myPump, False
     
-        myCns.writeQueue "END:"
+        'myCns.write6k "END:"
         
-        myCns.writeQueue "1INFNC" & Str(myOffInput) & "-P1:"
-        myCns.writeQueue "1INFNC" & Str(myOnInput) & "-P2:"
+        'myCns.write6k "1INFNC" & Str(myOffInput) & "-P1:"
+        'myCns.write6k "1INFNC" & Str(myOnInput) & "-P2:"
     
-    End Sub
+    'End Sub
     
     
     'chkESTOP - Checks ESTOP pin and stops all motion if it is raised
@@ -227,7 +227,7 @@ Option Explicit
         
         If Active Then
             'Imediate stop command, imediate shut down all outputs, disable motors
-            myCns.writeQueue "!AD100,100:!S:!OUTALL1,32,0:WAIT(MOV=b00):@DRIVE0:"
+            myCns.write6k "!AD100,100:!S:!OUTALL1,32,0:WAIT(MOV=b00):@DRIVE0:"
         End If
         
         chkESTOP = True
@@ -279,12 +279,16 @@ Option Explicit
         'Create Temporary string
         Dim rtnStr As String
         
+        If inv Then
+            If motor = 1 Then motor = 2 Else motor = 1
+        End If
+        
         'Generate initial binary based on motor
         Select Case motor
             Case 1
-                If inv Then rtnStr = "01" Else rtnStr = "10"
+                rtnStr = "10"
             Case 2
-                If inv Then rtnStr = "10" Else rtnStr = "01"
+                rtnStr = "01"
         End Select
         
         'Adjust binary with "Don't Care" (X) as necessary
@@ -308,11 +312,23 @@ Option Explicit
     'setZero - Function to set the zero location of the 6k
     Public Sub setZero(offsetX As Double, offsetY As Double)
     
+        Dim cmdStr As String
+        
         zeroOffset.X = offsetX
         zeroOffset.Y = offsetY
     
         'Sets zero to the offset location
-        myCns.writeQueue "PSET" + Str(offsetX) + "," + Str(offsetY) + ":"
+        cmdStr = "PSET"
+        
+        If motorX = 1 Then
+            cmdStr = cmdStr & Str(offsetX) & "," & Str(offsetY)
+        Else
+            cmdStr = cmdStr & Str(offsetY) & "," & Str(offsetX)
+        End If
+        
+        cmdStr = cmdStr & ":"
+        
+        myCns.write6k cmdStr
     
     End Sub
     
@@ -320,7 +336,7 @@ Option Explicit
     Public Sub setZeroHere()
     
         'Sets zero to the offset location
-        myCns.writeQueue "PSET0,0:"
+        myCns.write6k "PSET0,0:"
     
     End Sub
     
@@ -328,14 +344,26 @@ Option Explicit
     'getPosX - Function to get the position of the X-axis
     Public Function getPosX() As Double
         
-        getPosX = c6k.MotorPos(motorX) - zeroOffset.X
+        Dim globalPos As Double
+        Dim localPos As Double
+        globalPos = (c6k.MotorPos(motorX) / myScaleX)
+        
+        localPos = globalPos - zeroOffset.X
+        
+        getPosX = localPos
         
     End Function
     
     'getPosY - Function to get the position of the Y-axis
     Public Function getPosY() As Double
         
-        getPosY = c6k.MotorPos(motorY) - zeroOffset.Y
+        Dim globalPos As Double
+        Dim localPos As Double
+        globalPos = (c6k.MotorPos(motorY) / myScaleY)
+        
+        localPos = globalPos + zeroOffset.Y
+        
+        getPosY = localPos
         
     End Function
     
@@ -350,7 +378,7 @@ Option Explicit
         vel_Str = genCmd(motorX, "V", Str(vel))
                 
         'Send command to 6k
-        myCns.writeQueue vel_Str
+        myCns.write6k vel_Str
     
     End Sub
 
@@ -365,14 +393,14 @@ Option Explicit
         vel_Str = genCmd(motorY, "V", Str(vel))
                 
         'Send command to 6k
-        myCns.writeQueue vel_Str
+        myCns.write6k vel_Str
     
     End Sub
     
     Public Sub setVel(vel As Double)
     
         'Set velocity of both axes
-        myCns.writeQueue "V" & Str(vel) & "," & Str(vel) & ":"
+        myCns.write6k "V" & Str(vel) & "," & Str(vel) & ":"
     
     End Sub
     
@@ -390,11 +418,11 @@ Option Explicit
         'If jog is being enabled
         If myState Then
             'Set inputs to move motors
-            myCns.writeQueue "INFNC2-2J:INFNC1-2K:INFNC4-1J:INFNC3-1K:JOG11:"
+            myCns.write6k "INFNC2-2J:INFNC1-2K:INFNC4-1J:INFNC3-1K:JOG11:"
         
         'If jog is being disabled
         Else
-            myCns.writeQueue "JOG00:INFNC2-A:INFNC1-A:INFNC4-A:INFNC3-A:"
+            myCns.write6k "JOG00:INFNC2-A:INFNC1-A:INFNC4-A:INFNC3-A:"
         End If
     
     End Sub
@@ -422,7 +450,7 @@ Option Explicit
             Dim cmdStr As String
             
             'Initialize command - No number before INEN to indicate virtual input is in onboard I/O (Not expansion)
-            cmdStr = "!INEN." & myPin & "-"
+            cmdStr = "INEN." & myPin & "-"
             
             'Set state of pin to On or Off per myState input
             If myState Then cmdStr = cmdStr & "1:" Else cmdStr = cmdStr & "0:"
@@ -445,12 +473,34 @@ Option Explicit
     
         'Convert the input from an integer identifier to a binary long
         Dim inBin As Long
+        Dim in6k As Long
         inBin = 2 ^ (myInput - 1)
+        in6k = c6k.Inputs(1)
         
         'Compare the binary input identifier to the c6k Input register. Return the result
-        chkIn = c6k.Inputs(1) And inBin
+        chkIn = in6k And inBin
             
     End Function
+    
+    Public Function chkAckPin() As Boolean
+    
+        Dim in6k As Long
+        in6k = c6k.Inputs(0)
+    
+        chkAckPin = in6k And (2 ^ (movComplete - 1))
+    
+    End Function
+    
+    Private Sub setAckPin(State As Boolean)
+    
+        Dim cmdStr As String
+        cmdStr = "INEN." & Str(movComplete)
+        
+        If State Then cmdStr = cmdStr & "-1:" Else cmdStr = cmdStr & "-0:"
+    
+        myCns.write6k cmdStr
+    
+    End Sub
     
     'chkOut - Function to check the status of an output.
     Public Function chkOut(myOutput As Integer) As Boolean
@@ -487,7 +537,7 @@ Option Explicit
         inputStr = inputStr & ":"
         
         'Send the command to the 6k
-        myCns.writeQueue inputStr
+        myCns.write6k inputStr
     
     End Sub
     
@@ -495,7 +545,7 @@ Option Explicit
     
         setIn myInput, 1
         
-        myCns.writeQueue "T" & Str(myTime) & ":"
+        myCns.write6k "T" & Str(myTime) & ":"
         
         setIn myInput, 2
     
@@ -511,7 +561,7 @@ Option Explicit
         
         If myStatus Then outStr = outStr & "-1:" Else outStr = outStr & "-0:"
         
-        myCns.writeQueue outStr
+        myCns.write6k outStr
     
     End Sub
     
@@ -523,7 +573,7 @@ Option Explicit
     
     Private Sub completeMov()
         
-        setIn movComplete, 1
+        setAckPin True
         movStarted = False
         
     End Sub
@@ -536,7 +586,7 @@ Option Explicit
         'If not movStarted, return based on status ov movComplete
         Else
             'If movComplete raised, then return state 2 - move complete. Else return 0 - no move in progress
-            If chkIn(movComplete) Then checkMov = 2 Else checkMov = 0
+            If chkAckPin Then checkMov = 2 Else checkMov = 0
         End If
 
     End Function
@@ -546,13 +596,26 @@ Option Explicit
         'By default, return false
         ackMov = False
         
-        'If there is not currently a move in progress, exit function
-        If Not chkIn(movComplete) Then
+        'Prevent repeated acknowlege commands to the 6k
+        Static cmdSent As Boolean
+        
+        'If there is not currently a move pending acknowledgement, exit function
+        If Not chkAckPin Then
             Exit Function
-        'If there is a currently queued move,
+        'If there is a currently completed move,
         Else
-            setIn movComplete, 0
-            ackMov = True
+            'If the command has not been sent, send acknowledge command
+            If Not cmdSent Then
+                setAckPin False
+                cmdSent = True
+            'Once the command has been sent
+            Else
+                'Do not confirm acknowledgement until the pin has been cleared
+                If Not chkAckPin Then
+                    ackMov = True
+                    cmdSent = False
+                End If
+            End If
         End If
     
     End Function
@@ -576,11 +639,11 @@ Option Explicit
     Private Sub moveX(newPos As Double)
     
         'Create temporary location var
-        Dim myNewPos As Double
+        Dim newPosGlobal As Double
         
         'Ensure that the motion does not exceed acceptable bounds
-        myNewPos = newPos - zeroOffset.X
-        If (myNewPos < 0) Then myNewPos = 0
+        newPosGlobal = newPos + zeroOffset.X
+        If (newPosGlobal < 0) Then newPosGlobal = 0
     
         'Create temporary String
         Dim xStr As String
@@ -588,7 +651,7 @@ Option Explicit
         Dim waitX As String
                 
         'Generate Position Command
-        xStr = genCmd(motorX, "D", Str(myNewPos))
+        xStr = genCmd(motorX, "D", Str(newPosGlobal))
         
         'Generate Go Command
         goX = "GO" & genCmdBin(motorX, False, False, False) & ":"
@@ -597,18 +660,18 @@ Option Explicit
         waitX = "WAIT(MOV = b" & genCmdBin(motorX, True, True, True) & "):"
         
         'Send to 6k
-        myCns.writeQueue xStr & goX & waitX
+        myCns.write6k xStr & goX & waitX
     
     End Sub
     
     Private Sub moveY(newPos As Double)
 
         'Create temporary location var
-        Dim myNewPos As Double
+        Dim newPosGlobal As Double
         
         'Ensure that the motion does not exceed acceptable bounds
-        myNewPos = newPos - zeroOffset.Y
-        If (myNewPos < 0) Then myNewPos = 0
+        newPosGlobal = newPos - zeroOffset.Y
+        If (newPosGlobal > 0) Then newPosGlobal = 0
         
         'Create temporary String
         Dim yStr As String
@@ -616,7 +679,7 @@ Option Explicit
         Dim waitY As String
                 
         'Generate Position Command
-        yStr = genCmd(motorX, "D", Str(myNewPos))
+        yStr = genCmd(motorY, "D", Str(newPosGlobal))
         
         'Generate Go Command
         goY = "GO" & genCmdBin(motorY, False, False, False) & ":"
@@ -625,7 +688,7 @@ Option Explicit
         waitY = "WAIT(MOV = b" & genCmdBin(motorY, True, True, True) & "):"
         
         'Send to 6k
-        myCns.writeQueue yStr & goY & waitY
+        myCns.write6k yStr & goY & waitY
     
     End Sub
 
@@ -655,12 +718,12 @@ Option Explicit
         Dim myNewPosY As Double
         
         'Ensure that the motion does not exceed acceptable bounds
-        myNewPosX = newPosX - zeroOffset.X
+        myNewPosX = newPosX + zeroOffset.X
         If (myNewPosX < 0) Then myNewPosX = 0
-        myNewPosY = newPosY - zeroOffset.Y
+        myNewPosY = newPosY + zeroOffset.Y
         If (myNewPosY < 0) Then myNewPosY = 0
         
-        myCns.writeQueue "D" & Str(myNewPosX) & "," & Str(myNewPosY) & ":GO11:WAIT(MOV = b00):"
+        myCns.write6k "D" & Str(myNewPosX) & "," & Str(myNewPosY) & ":GO11:WAIT(MOV = b00):"
         
     End Sub
     
@@ -697,7 +760,7 @@ Option Explicit
                     moveY newPosY
                     moveX newPosX
                 Case movY0XY  'Back-Over-Front
-                    moveY -1000
+                    moveY 0
                     moveX newPosX
                     moveY newPosY
             End Select
@@ -742,7 +805,7 @@ Option Explicit
         startMov
         
             'Delay the 6k by the indicated time
-            myCns.writeQueue "T" & Str(delayTime) & ":"
+            myCns.write6k "T" & Str(delayTime) & ":"
         
         'Clear moving flag and set completion flag
         completeMov

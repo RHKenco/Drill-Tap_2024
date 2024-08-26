@@ -82,14 +82,11 @@ Public Sub initializeFSM()
     'Set state variable to 0
     fsmState = 0
     
-    'Start UI form timer
-    frmUI.tmrFSM.Enabled = True
-    
 End Sub
 
-Private Sub setState(state As fsmStates)
+Private Sub setState(State As fsmStates)
 
-    fsmState = state
+    fsmState = State
     Counter = 0
     innerState = 0
 
@@ -111,9 +108,16 @@ End Sub
 
 
 'When possible, go to Joystick State
-Public Sub setJoystick()
+Public Sub setJoystick(State As Integer)
 
-    joystickMode = Not joystickMode
+    Select Case State
+        Case 0
+            joystickMode = False
+        Case 1
+            joystickMode = True
+        Case 2
+            joystickMode = Not joystickMode
+    End Select
 
 End Sub
 
@@ -226,7 +230,7 @@ Private Sub runState1()
         End If
     
         'Update system speeds before locking down user control of those boxes
-        myDrillTap.setVel frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
+        myDrillTap.setVelDefaults frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
 
 End Sub
 
@@ -310,19 +314,34 @@ Private Sub runState4()
 
     'Move State - Idles the FSM until current move is completed
     
+    If innerState = 0 Then
+        myUI.updStatus uiWaiting, ""
+        innerState = 1
+    End If
     
-    'If move is requested, determine destination and call move command
+    'If move is requested, determine destination and call move command. Continue calling command until confirmation is recieved.
     If moveMode > moveInProgress Then
         Select Case moveMode
             Case moveToDrillNow
-                myDrillTap.goToDrill
+                If myDrillTap.goToDrill Then
+                    moveMode = moveInProgress
+                Else
+                    Exit Sub
+                End If
             Case moveToTapNow
-                myDrillTap.goToTap
+                If myDrillTap.goToTap Then
+                    moveMode = moveInProgress
+                Else
+                    Exit Sub
+                End If
             Case moveToPositionNow
-                'TODO - add move to position to Maintenance
+                If myDrillTap.goToPosition(frmMaintenance.txtMaintPos(0), frmMaintenance.txtMaintPos(1)) Then
+                    moveMode = moveInProgress
+                Else
+                    Exit Sub
+                End If
         End Select
         
-        myUI.updStatus uiWaiting, ""
     End If
     
     'When any pending moves have been completed, exit to standby state
@@ -330,6 +349,7 @@ Private Sub runState4()
     
         'Go to standby state
         myUI.updStatus uiStandby, ""
+        moveMode = moveNone
         setState s1_Stby
     End If
 
@@ -502,7 +522,7 @@ Private Sub runState6()
             If myDrillTap.waitForMove() Then
             
                 'Go to standby state
-                myUI.updStatus uiStandby
+                myUI.updStatus uiStandby, ""
                 setState s1_Stby
                 
             End If

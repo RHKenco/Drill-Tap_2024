@@ -85,42 +85,34 @@ Public Sub initConsole()
 
 End Sub
 
+Public Sub write6k(writeStr As String)
 
-
-Public Sub writeQueue(writeStr As String)
-
-    If writeStr <> "" Then writeBuffer = writeBuffer & writeStr
-
-End Sub
-
-Private Sub write6k()
-
-    writeToConsole writeBuffer
+    writeBuffer = writeBuffer & writeStr
     
     'Write the commands to the 6k
     c6k.Write (writeBuffer)
-    
-    writeBuffer = ""
 
 End Sub
 
 Public Sub write6kNow(writeStr As String)
 
     'Add command to the write buffer, to be entered into the console
-    writeBuffer = writeStr & writeBuffer
+    writeBuffer = "!" & writeStr & writeBuffer
 
     'Write the command to the 6k
-    c6k.Write (writeStr)
+    c6k.Write ("!" & writeStr)
 
 End Sub
 
-Private Sub writeToConsole(writeStr As String)
+Private Sub writeToConsole()
 
-    If writeStr <> "" Then
+    If writeBuffer <> "" Then
     
-        writeDisplayString = writeDisplayString & usrEntry & writeStr & vbCrLf
+        writeDisplayString = writeDisplayString & usrEntry & writeBuffer & vbCrLf
     
     End If
+    
+    writeBuffer = ""
 
 End Sub
 
@@ -240,15 +232,19 @@ Public Sub update()
     
     'If the 6k is not overloaded with commands, add commands
     'If c6k.CommandCount < 5 Then
-    write6k
+    writeToConsole
     
     read6k
     
     updConsole
     
     
-    frmConsole.lblCmdCount.Caption = c6k.CommandCount
-    frmConsole.Refresh
+    frmConsole.lblCmdCount.Caption = Len(readBuffer)
+    If Len(readBuffer) < 100 Then
+        frmConsole.Refresh
+    Else
+        frmConsole.lblCmdCount.Refresh
+    End If
 
 End Sub
 
@@ -371,7 +367,7 @@ Public Sub commandLineEnter()
     
 
     'Write input to the queue
-    write6kNow (cmdInput)
+    write6k (cmdInput)
     
     'Clear the textbox for new entry
     frmConsole.txtConsole(1).Text = cmdPrompt

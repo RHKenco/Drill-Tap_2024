@@ -187,13 +187,14 @@ Private Sub cmdConnect_Click(Index As Integer)
             'Attempt Connection
             Set c6k = CreateObject("COM6SRVR.NET")
             If c6k.Connect(ipAddr) > 0 Then
-                myCns.writeQueue "TREV:"    'send TREV command
+                myCns.write6k "TREV:"    'send TREV command
                 timer6kRead.Enabled = True  'enable response polling
                 connected = True            'set connected flag to true
             Else
                 timer6kRead.Enabled = False 'disable response polling (default)
                 connected = False           'set connected flag to false
                 MsgBox "Connection attempt failed...", 0, "Status"
+                Set c6k = Nothing
                 Exit Sub
             End If
             
@@ -240,6 +241,7 @@ Private Sub cmdConnect_Click(Index As Integer)
             cmdConnect(2).Enabled = False
         
             Me.Hide
+            timer6kRead.Enabled = False
             frmUI.Show
             
             

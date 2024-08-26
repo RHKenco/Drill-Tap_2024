@@ -158,14 +158,14 @@ Public Function getDir() As joyDirection
     If uiKeyUp Xor uiKeyDown Then
 
         If uiKeyUp Then upDown = 3
-        If uiKeyUp Then upDown = 6
+        If uiKeyDown Then upDown = 6
         
     End If
     
     If uiKeyRight Xor uiKeyLeft Then
     
         If uiKeyRight Then leftRight = 1
-        If uiKeyRight Then leftRight = 2
+        If uiKeyLeft Then leftRight = 2
         
     End If
     
@@ -278,7 +278,7 @@ Public Sub go()
         
             If myDrillTap.isJoyOn Then
                 'If the joystick is on, clear joystick
-                myFSM.setJoystick
+                myFSM.setJoystick 0
             Else
                 'Call the FSM to go to the run state
                 myFSM.setGoStop

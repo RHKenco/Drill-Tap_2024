@@ -724,11 +724,14 @@ Private Sub Form_Load()
     Dim toolOffsetCoordinate As myCoordinate
     Dim zeroOffsetCoordinate As myCoordinate
     
-    toolOffsetCoordinate.X = 6
-    toolOffsetCoordinate.Y = 3
+    'The relationship between the drill and tap in local coordinates.
+    toolOffsetCoordinate.X = 5.625
+    toolOffsetCoordinate.Y = -1.375
     
-    zeroOffsetCoordinate.X = 8
-    zeroOffsetCoordinate.Y = 3
+    'The relationahip between global and local coordinates. This location corresponds to the drill location.
+    'True Distances are X: 1", Y: 5/16"
+    zeroOffsetCoordinate.X = 0.875
+    zeroOffsetCoordinate.Y = -0.125
     
     myDrillTap.initDrillTap 0.625, toolOffsetCoordinate.X, toolOffsetCoordinate.Y, zeroOffsetCoordinate.X, zeroOffsetCoordinate.Y
     
@@ -746,11 +749,21 @@ Private Sub Form_Load()
     'Initialize FSM
     myFSM.initializeFSM
     
-    
+    'Start UI form timer
+    frmUI.tmrFSM.Enabled = True
     
     'Turn on key preview for joystick operation
     Me.KeyPreview = True
 
+
+End Sub
+
+Private Sub Form_LostFocus()
+
+myUI.uiKeyUp = False
+myUI.uiKeyRight = False
+myUI.uiKeyDown = False
+myUI.uiKeyLeft = False
 
 End Sub
 
@@ -762,9 +775,9 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
                 myUI.uiKeyUp = True
             Case vbKeyRight, vbKeyNumpad6
                 myUI.uiKeyRight = True
-            Case vbKeyDown, vbKeyNumpad4
+            Case vbKeyDown, vbKeyNumpad2
                 myUI.uiKeyDown = True
-            Case vbKeyLeft, vbKeyNumpad2
+            Case vbKeyLeft, vbKeyNumpad4
                 myUI.uiKeyLeft = True
             Case Else
         End Select
@@ -780,9 +793,9 @@ Private Sub Form_KeyUp(KeyCode As Integer, Shift As Integer)
                 myUI.uiKeyUp = False
             Case vbKeyRight, vbKeyNumpad6
                 myUI.uiKeyRight = False
-            Case vbKeyDown, vbKeyNumpad4
+            Case vbKeyDown, vbKeyNumpad2
                 myUI.uiKeyDown = False
-            Case vbKeyLeft, vbKeyNumpad2
+            Case vbKeyLeft, vbKeyNumpad4
                 myUI.uiKeyLeft = False
             Case Else
         End Select
@@ -807,6 +820,10 @@ Private Sub Form_Unload(Cancel As Integer)
 
     Unload frmMaintenance
     
+    'Stop UI form timer and re-enable console only timer
+    frmUI.tmrFSM.Enabled = False
+    
+    frmConsole.timer6kRead.Enabled = True
     frmConsole.Show
 
 End Sub
@@ -819,13 +836,17 @@ End Sub
 
 Private Sub tmrFSM_Timer()
 
+    'Update Console
+    myCns.update
+
+    'Run FSM
     myFSM.runFSM
 
 End Sub
 
 Private Sub topbarJoy_Click()
 
-    myFSM.setJoystick
+    myFSM.setJoystick 2
 
 End Sub
 
@@ -855,8 +876,15 @@ Private Sub topbarSet0_Click()
     
     userReturn = MsgBox(myMsg, vbYesNo, "Set Zero?")
     
-    If userReturn = vbYes Then myDrillTap.setHome
-
+    If userReturn = vbYes Then
+    
+        'Disable Joystick
+        myDrillTap.joyState False
+        myFSM.setJoystick 0
+    
+        'Set Home
+        myDrillTap.setHome
+    End If
 End Sub
 
 Private Sub txtDeep_Change(Index As Integer)
