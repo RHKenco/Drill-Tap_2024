@@ -60,6 +60,11 @@ Option Explicit
         dX
         dY
     End Enum
+    
+    Public Enum myTool
+        tDrill
+        tTap
+    End Enum
 
     Public Enum joyDirection
         joyNeutral
@@ -75,7 +80,7 @@ Option Explicit
      
     'Integer and Enum to store position of the machine
     Public Enum atPosition
-        atMove
+        atI
         atUnk
         atDrill
         atTap
@@ -96,9 +101,9 @@ Option Explicit
 '--------------------------- Class Variables --------------------------------------------------------------------------
 
     'Write-only Variables
-    Private V_Jog As String
-    Private V_Drill As String
-    Private V_Tap As String
+    Private V_Jog As Double
+    Private V_Drill As Double
+    Private V_Tap As Double
     
     'Boolean flag for joystick state - prevent certain actions while joystick is on
     Private joyOn As Boolean
@@ -188,9 +193,9 @@ Option Explicit
         
         Select Case coordinate
             Case cX
-                getCoords = myXY.getPosX()
+                getCoords = myXY.getCo(motorX)
             Case cY
-                getCoords = myXY.getPosY()
+                getCoords = myXY.getCo(motorY)
             Case Else
         End Select
         
@@ -199,7 +204,21 @@ Option Explicit
     Public Function getPos() As Integer
         
         getPos = myPosition
+    
     End Function
+    
+    Private Sub setPos(position As atPosition)
+    
+        Select Case position
+        Case atDrill
+            myPosition = atDrill
+        Case atTap
+            myPosition = atTap
+        Case Else
+            myPosition = atUnk
+    End Select
+    
+    End Sub
     
     ''' getLastZero - Gets the last zero-set for the indicated motor. Used to determine setzero variance
     Public Function getLastZero(coordinate As dtCo) As Double
@@ -217,9 +236,9 @@ Option Explicit
     ''' setVelDefaults - Sets the internal velocity variables for drill/tap movement
     Public Sub setVelDefaults(JogVel As String, drillVel As String, TapVel As String)
     
-        V_Jog = JogVel
-        V_Drill = drillVel
-        V_Tap = TapVel
+        V_Jog = CDbl(JogVel)
+        V_Drill = CDbl(drillVel)
+        V_Tap = CDbl(TapVel)
     
     End Sub
     
@@ -525,14 +544,7 @@ Public Function waitForMove() As Boolean
         End If
     End If
     
-    Select Case myDestination
-        Case atDrill
-            myPosition = atDrill
-        Case atTap
-            myPosition = atTap
-        Case Else
-            myPosition = atUnk
-    End Select
+
     
 NoMoveInProgress:
     
@@ -550,9 +562,9 @@ Public Function goToPosition(positionX As Double, positionY As Double) As Boolea
     If myXY.checkMov Then Exit Function
 
     'Set velocity for motion
-    myXY.setVel CDbl(V_Jog)
+    myXY.setVel mBoth, V_Jog
     'Move to the drill position
-    myXY.moveTo positionX, positionY, movYX
+    myXY.MoveTo positionX, positionY, movYX
 
 
     myDestination = atUnk
@@ -561,167 +573,125 @@ Public Function goToPosition(positionX As Double, positionY As Double) As Boolea
 
 End Function
 
-Public Function goToDrill() As Boolean
+Public Function MoveTo(destination As atPosition) As Boolean
 
-    goToDrill = False
+    MoveTo = False
 
     If joyOn Then Exit Function
     
-    If myPosition = atDrill Then Exit Function
+    If myPosition = destination Then Exit Function
     
     'If there is currently a move in progress, do not proceed
     If myXY.checkMov Then Exit Function
 
+    'When the move has been completed, update the current position and set return true
+    If myDestination = destination Then
+        setPos destination
+        myDestination = atIdle
+        MoveTo = True
+        Exit Function
+    End If
+
     'Set velocity for motion
-    myXY.setVel CDbl(V_Jog)
+    myXY.setVel mBoth, V_Jog
     'Move to the drill position
-    myXY.moveTo goDrill.X, goDrill.Y, movY0XY
-
-
-    myDestination = atDrill
+    Select Case destination
+        Case atDrill
+            myXY.MoveTo goDrill.X, goDrill.Y, movY0XY
+        Case atTap
+            myXY.MoveTo goTap.X, goTap.Y, movY0XY
+        Case atUnk
+            myXY.MoveTo CDbl(frmMaintenance.txtMaintPos(0)), CDbl(frmMaintenance.txtMaintPos(1)), movY0XY
+    End Select
     
-    goToDrill = True
+    myDestination = destination
 
 End Function
 
-Public Function goToTap() As Boolean
+Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Integer, totalCycles As Integer, dryRun As Boolean) As Integer
     
-    goToTap = False
+    runTool = currentCycle
     
     If joyOn Then Exit Function
-    
-    If myPosition = atTap Then Exit Function
-    
-    'If there is currently a move in progress, do not proceed.
+
+    'If there is currently a move in progress, do not proceed. Else acknowledge prior move
     If myXY.checkMov Then Exit Function
 
-    'Set velocity for motion
-    myXY.setVel CDbl(V_Jog)
-    'Move to the Tap position
-    myXY.moveTo goTap.X, goTap.Y, movY0XY
-    
-    
-    myDestination = atTap
-    goToTap = True
-
-End Function
-
-
-Public Function runDrill(drillDeep As Double, currentCycle As Integer, totalCycles As Integer, dryRun As Boolean) As Integer
-    
-    runDrill = currentCycle
-    
-    If joyOn Then Exit Function
-    
-    'On the prep cycle, initialize the drill and coolant if it is not a dry run. Delay 1 second
-    If currentCycle = 0 Then
+    Select Case currentCycle
+        'On the prep cycle, initialize the drill and coolant if it is not a dry run. Delay 1 second
+        Case 0
         
-        'Power drill & Coolant if it is not a dry run
-        If Not dryRun Then
-            myXY.setOut Out_Drill, True
-            myXY.setOut Out_Cool, True
+            'Power drill & Coolant if it is not a dry run
+            If Not dryRun Then
+                'Enable the appropriate tool and increment the use counter
+                Select Case tool
+                    Case tDrill
+                        myXY.setOut Out_Drill, True
+                        myUI.increment (countDrill)
+                    Case tTap
+                        myXY.setOut Out_Tap, True
+                        myUI.increment (countTap)
+                End Select
+                
+                'Enable the coolant pump
+                myXY.setOut Out_Cool, True
+                
+            End If
             
-            'Increment drill cycle counter
-            myUI.increment (countDrill)
-        End If
+            'Delay between turning on the tool and beginning the motion
+            If myXY.moveDelay(1) Then runTool = 1
         
-        myXY.moveDelay 1
+        'Second to last cycle, go to the tool's default position
+        Case (totalCycles - 1)
         
+            'Move to the default position for the selected tool
+            Select Case tool
+                Case tDrill
+                    If myXY.MoveTo(0, goDrill.Y, movY) Then runTool = currentCycle + 1
+                Case tDrill
+                    If myXY.MoveTo(0, goTap.Y, movY) Then runTool = currentCycle + 1
+            End Select
+        
+        'If the last cycle has been reached, disable tool and exit
+        Case totalCycles
 
-    
-    End If
-    
-    'If there is currently a move in progress, do not proceed. Else acknowledge prior move
-    If myXY.checkMov Then
-        Exit Function
-    Else
-        If Not myXY.ackMov Then Exit Function
-    End If
-
-    'If the last cycle has been reached, disable drill and exit
-    If currentCycle = totalCycles Then
-        If Not dryRun Then
-            myXY.setOut Out_Drill, False
-            myXY.setOut Out_Cool, False
-        End If
+            If Not dryRun Then
+                Select Case tool
+                    Case tDrill
+                        myXY.setOut Out_Drill, False
+                    Case tTap
+                        myXY.setOut Out_Tap, False
+                End Select
+                
+                myXY.setOut Out_Cool, False
+            End If
+            
+            runTool = currentCycle + 1
+            
+        'All Other Cycles
+        Case Else
+                
+            'Compute the drill depth and send drill command
+            Dim cycleDeep As Double
+            cycleDeep = (currentCycle / (totalCycles - 1)) * totalDeep
+            
+            Dim moveResult As Boolean
+            
+            Select Case tool
+                Case tDrill
+                    moveResult = myXY.movePeck(cycleDeep, 0.125, V_Drill, V_Jog)
+                Case tTap
+                    moveResult = myXY.movePeck(cycleDeep, 10, V_Tap, V_Tap)
+            End Select
+            
+            
+            'If the move is sucessfully initiated, increment cycle counter
+            If moveResult Then runTool = currentCycle + 1
         
-        runDrill = currentCycle + 1
-        Exit Function
         
-    End If
-
-    'Compute the drill depth and send drill command
-    Dim cycleDeep As Double
-    cycleDeep = (currentCycle / (totalCycles - 1)) * drillDeep
-    
-    'Set velocity for motion
-    myXY.setVel CDbl(V_Drill)
-    myXY.movePeck cycleDeep, 0.5, V_Drill, V_Jog
-    
-    
-    'If the move is sucessfully initiated, increment cycle counter
-    runDrill = currentCycle + 1
+    End Select
 
 End Function
-
-Public Function runTap(tapDeep As Double, currentCycle As Integer, totalCycles As Integer, dryRun As Boolean) As Integer
-
-    If joyOn Then Exit Function
-    
-    'On the prep cycle, initialize the drill and coolant if it is not a dry run. Delay 1 second
-    If currentCycle = 0 Then
-        
-        If Not dryRun Then
-            myXY.setOut Out_Tap, True
-            myXY.setOut Out_Cool, True
-        End If
-        
-        myXY.moveDelay 1
-        
-        'Increment tap cycle counter
-        myUI.increment (countTap)
-    
-    End If
-    
-    'If there is currently a move in progress, do not proceed. Else acknowledge prior move
-    If myXY.checkMov Then
-        Exit Function
-    Else
-        If Not myXY.ackMov Then Exit Function
-    End If
-
-    'If the last cycle has been reached, disable Tap and exit
-    If currentCycle = totalCycles Then
-        If Not dryRun Then
-            myXY.setOut Out_Tap, False
-            myXY.setOut Out_Cool, False
-        End If
-        
-        runTap = currentCycle + 1
-        Exit Function
-        
-    End If
-
-    'Compute the drill depth and send drill command
-    Dim cycleDeep As Double
-    cycleDeep = (currentCycle / (totalCycles - 1)) * drillDeep
-    
-    'Set velocity for motion
-    myXY.setVel CDbl(V_Tap)
-    myXY.movePeck cycleDeep, 0.5, V_Tap, V_Tap
-    
-    
-    'If the move is sucessfully initiated, increment cycle counter
-    runTap = currentCycle + 1
-    
-
-End Function
-
-
-
-
-
-
 
 '---===---===---=== Advanced Functions - Drill & Tap cycles; Move to Position ---===---===---===---===---===---===---==
 '---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---=

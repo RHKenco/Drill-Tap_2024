@@ -59,7 +59,7 @@ Option Explicit
         'Variable defining the move complete acknowledgement virtual input pin. Used to stop windows code until mov end
         Private movComplete As Integer
         'Variable that indicates that a move has been initiated,but not completed
-        Private movStarted As Boolean
+        Private moveInProgress As Boolean
         
         
         Private motorX As Integer
@@ -168,7 +168,7 @@ Option Explicit
         movComplete = movAcknInpt
         
         'Simulate move to delay UI initialization until the 6k initialization is complete
-        movStarted = True
+        moveInProgress = True
         setAckPin True
         
         
@@ -189,6 +189,8 @@ Option Explicit
         
         'Ensure acknowledge pin is set low for future motion
         setAckPin False
+        
+        moveInProgress = False
         
         'Set jog motion parameters
         'myCns.write6k "JOGA10,5:JOGAD300,150:JOGVH6,3:JOGVL30,15:"
@@ -238,8 +240,8 @@ Option Explicit
             'Imediate stop command, imediate shut down all outputs, disable motors
             myCns.write6k "!AD100,100:!S:!OUTALL1,32,0:WAIT(MOV=b00):@DRIVE0:"
             
-            'Clear move started flag
-            movStarted = False
+            'Set move in progress flag to cause move commands to abort
+            moveInProgress = True
             
         End If
         
@@ -254,6 +256,7 @@ Option Explicit
     Private Function coGlobal(motor As Integer, localPos As Double) As Double
     
         Dim globalOff As Double
+        Dim globalPos As Double
     
         Select Case motor
             Case motorX
@@ -262,8 +265,16 @@ Option Explicit
                 globalOff = zeroOffset.Y
         End Select
         
-        coGlobal = localPos + globalOff
+        globalPos = localPos + globalOff
                 
+        Select Case motor
+            Case motorX
+                If globalPos < 0 Then globalPos = 0
+            Case motorY
+                If globalPos > 0 Then globalPos = 0
+        End Select
+        
+        coGlobal = globalPos
     
     End Function
     
@@ -309,6 +320,21 @@ Option Explicit
                 
                 rtnCmd = "D" & posStr & ":" & myCmd & goStr & ":WAIT(MOV = b" & wtStr & "):"
                 
+            Case "V", "D", "A"
+            
+                Dim axisStr As String
+                
+                Select Case motor
+                    Case m1
+                        axisStr = argument
+                    Case m2
+                        axisStr = "," & argument
+                    Case mBoth
+                        axisStr = argument & "," & argument
+                End Select
+                
+                rtnCmd = myCmd & axisStr & ":"
+                
             Case Else
         End Select
             
@@ -350,66 +376,35 @@ Option Explicit
     End Sub
     
     
-    'getPosX - Function to get the position of the X-axis
-    Public Function getPosX() As Double
+    'getPos - Function to get the position of the specified axis
+    Public Function getCo(motor As Integer) As Double
         
         Dim globalPos As Double
         Dim localPos As Double
-        globalPos = (c6k.MotorPos(motorX) / myScaleX)
         
-        localPos = globalPos - zeroOffset.X
+        Select Case motor
+            Case motorX
+                globalPos = (c6k.MotorPos(motorX) / myScaleX)
+            Case motorY
+                globalPos = (c6k.MotorPos(motorY) / myScaleY)
+        End Select
         
-        getPosX = localPos
+        localPos = coLocal(motor, globalPos)
         
-    End Function
-    
-    'getPosY - Function to get the position of the Y-axis
-    Public Function getPosY() As Double
-        
-        Dim globalPos As Double
-        Dim localPos As Double
-        globalPos = (c6k.MotorPos(motorY) / myScaleY)
-        
-        localPos = globalPos + zeroOffset.Y
-        
-        getPosY = localPos
+        getPos = localPos
         
     End Function
     
-    
-    'setVelX - Function to set the velocity of the X-Axis
-    Public Sub setVelX(vel As Double)
-        
+    'setVel - Function to set the velocity of the specified axis
+    Public Sub setVel(motor As Integer, vel As Double)
         'Create string for command
         Dim vel_Str As String
         
         'Generate velocity command
-        vel_Str = genCmd(motorX, "V", Str(vel))
+        vel_Str = genCmd("V", motor, Str(vel))
                 
         'Send command to 6k
         myCns.write6k vel_Str
-    
-    End Sub
-
-
-    'setVelY - Function to set the velocity of the Y-Axis
-    Public Sub setVelY(vel As Double)
-        
-        'Create string for command
-        Dim vel_Str As String
-        
-        'Generate velocity command
-        vel_Str = genCmd(motorY, "V", Str(vel))
-                
-        'Send command to 6k
-        myCns.write6k vel_Str
-    
-    End Sub
-    
-    Public Sub setVel(vel As Double)
-    
-        'Set velocity of both axes
-        myCns.write6k "V" & Str(vel) & "," & Str(vel) & ":"
     
     End Sub
     
@@ -435,43 +430,6 @@ Option Explicit
         End If
     
     End Sub
-    
-    Public Sub setJogIn(myPin As Integer, myState As Boolean)
-        
-        'Verify that the pin needs to be changed - XOR returns false if both are the same -> Not xor
-        Dim inputState As Long
-        Dim pinBinary As Long
-        
-        Static myIn(4) As Boolean
-        
-        'Resolve the input state into a boolan for the desired pin
-        'inputState = c6k.Inputs(0)
-        'pinBinary = (2 ^ (myPin - 1))
-        
-        'inputState = CBool(inputState And pinBinary)
-        
-        inputState = myIn(myPin)
-        
-        'Compare the state of the pin to the desired state
-        If (inputState Xor myState) Then
-            
-            
-            Dim cmdStr As String
-            
-            'Initialize command - No number before INEN to indicate virtual input is in onboard I/O (Not expansion)
-            cmdStr = "INEN." & myPin & "-"
-            
-            'Set state of pin to On or Off per myState input
-            If myState Then cmdStr = cmdStr & "1:" Else cmdStr = cmdStr & "0:"
-        
-            'Execute command
-            myCns.write6kNow cmdStr
-            myIn(myPin) = myState
-            
-        End If
-    
-    End Sub
-
 
 
 '---------------------------- I/O -------------------------------------------------------------------
@@ -573,74 +531,6 @@ Option Explicit
         myCns.write6k outStr
     
     End Sub
-    
-    
-    
-    ' checkMov - Checks the current status of the commands given
-    '   - Access: Local - multiple functions use this one to determine if they can proceed to deliver commands to the 6k
-    '   - Returns:
-    '       - 0 - If there is no move in progress
-    '       - 1 - If there is currently a move in progress that has not been completed
-    '       - 2 - If there is a move that has been completed and needs to be acknowledged
-    Private Function checkMov() As Integer
-    
-        'If movStarted, then return 1
-        If movStarted Then
-            checkMov = 1
-        'If not movStarted, return based on status ov movComplete
-        Else
-            'If movComplete raised, then return state 2 - move complete. Else return 0 - no move in progress
-            If chkAckPin Then checkMov = 2 Else checkMov = 0
-        End If
-
-    End Function
-    
-    ' ackMov - Acknowledges the completion of a move
-    '   - Access: Public - This function is called by outside functions to determine if they may proceed. This code is non-blocking to allow looping checks
-    '   - Returns:
-    '       - True  - if the acknowledge pin has been identified AND reset
-    '       - False - if:
-    '                   - The acknowledge pin has not been raised
-    '                   - The acknowledge pin has been raised and the reset command sent, but the pin has not been cleared
-    Public Function ackMov() As Boolean
-        
-        'By default, return false
-        ackMov = False
-        
-        'Prevent repeated acknowlege commands to the 6k by raising a static boolean when the command is sent to lower the pin
-        Static cmdSent As Boolean
-        
-        'If there is not currently a move pending acknowledgement, exit function
-        If Not chkAckPin Then
-            Exit Function
-        'If there is a currently completed move,
-        Else
-            'If the command has not been sent, send acknowledge command
-            If Not cmdSent Then
-            
-                'Send command to clear pin
-                setAckPin False
-                'Set boolean to prevent repeat sends
-                cmdSent = True
-            
-            'Once the command has been sent
-            Else
-                
-                'Do not confirm acknowledgement until the pin has been cleared
-                If Not chkAckPin Then
-                    
-                    'Return TRUE
-                    ackMov = True
-                    'Reset boolean for next loop
-                    cmdSent = False
-                    'Clear move started flag
-                    movStarted = False
-                    
-                End If
-            End If
-        End If
-    
-    End Function
 
 
 '---===---===---===---===--- Basic Functions - Initialize, Read-Only, Etc. ---===---===---===---===---===---===---===--
@@ -657,7 +547,106 @@ Option Explicit
 
 '---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---=
 '---===---===---===---===- Advanced Functions - Move to Position, etc. ---===---===---===---===---===---===---===---===
-
+    
+    
+    
+    Public Sub setJogIn(myPin As Integer, myState As Boolean)
+        
+        'Verify that the pin needs to be changed - XOR returns false if both are the same -> Not xor
+        Dim inputState As Long
+        Dim pinBinary As Long
+        
+        Static myIn(4) As Boolean
+        
+        'Resolve the input state into a boolan for the desired pin
+        'inputState = c6k.Inputs(0)
+        'pinBinary = (2 ^ (myPin - 1))
+        
+        'inputState = CBool(inputState And pinBinary)
+        
+        inputState = myIn(myPin)
+        
+        'Compare the state of the pin to the desired state
+        If (inputState Xor myState) Then
+            
+            
+            Dim cmdStr As String
+            
+            'Initialize command - No number before INEN to indicate virtual input is in onboard I/O (Not expansion)
+            cmdStr = "INEN." & myPin & "-"
+            
+            'Set state of pin to On or Off per myState input
+            If myState Then cmdStr = cmdStr & "1:" Else cmdStr = cmdStr & "0:"
+        
+            'Execute command
+            myCns.write6kNow cmdStr
+            myIn(myPin) = myState
+            
+        End If
+    
+    End Sub
+    
+    
+    
+    
+    ' checkMove - Simplifies the acknowledge move response down to a simple True-False for continued motion
+    '   - Returns: True if the program may proceed to a new move command; False if a move is in progress.
+    Public Function checkMove() As Booelan
+    
+        Dim response As Integer
+        
+        response = ackMov
+        
+        Select Case response
+            Case 0, 3
+                checkMove = True
+            Case Else
+                checkMove = False
+        End Select
+    
+    End Function
+    
+    ' ackMov - Acknowledges the completion of a move
+    '   - Returns:
+    '       - 0 - If there is no move pending
+    '       - 1 - If there is a move in progress, but the acknowledge pin has not been raised
+    '       - 2 - If the acknowledge pin has been identified and the command to reset it has been issued, but not yet executed
+    '       - 3 - If the acknowledge pin has been set and cleared such that an additional move may occur
+    Public Function ackMov() As Integer
+    
+        'Prevent repeated acknowlege commands to the 6k by raising a static boolean when the command is sent to lower the pin
+        Static cmdSent As Boolean
+        
+        If Not moveInProgress Then
+            ackMov = 0
+        Else
+            ackMov = 1
+            
+            If chkAckPin And Not cmdSent Then
+                
+                'Send command to reset acnkowledge pin
+                setAckPin False
+                cmdSent = True
+                
+                ackMov = 2
+                
+            ElseIf Not chkAckPin And cmdSent Then
+                
+                'Clear variables and return state
+                cmdSent = False
+                moveInProgress = False
+                
+                ackMov = 3
+            
+            End If
+            
+        End If
+        
+        'By default, return false
+        ackMov = False
+    
+    End Function
+    
     'Generic single-axis move command for any input axis.
     Private Sub move(motor As Integer, localPos As Double)
     
@@ -667,7 +656,7 @@ Option Explicit
         'Convert local coordinates to global coordinates
         globalPos = coGlobal(motor, localPos)
         
-        cmdStr = genCmd("GO", motor, CStr(globalPos))
+        cmdStr = genCmd("GO", motor, Format(globalPos, "###0.000"))
         
         myCns.write6k cmdStr
     
@@ -702,7 +691,7 @@ Option Explicit
         If checkMov Then Exit Function
             
         'Set move started flag
-        movStarted = True
+        moveInProgress = True
             
         Select Case moveOption
             Case movNone
@@ -720,7 +709,7 @@ Option Explicit
                 move motorY, newPosY
                 move motorX, newPosX
             Case movY0XY  'Back-Over-Front
-                moveY 0
+                move motorY, 10
                 move motorX, newPosX
                 move motorY, newPosY
         End Select
@@ -741,16 +730,16 @@ Option Explicit
         If checkMov Then Exit Function
         
         'Set move started flag
-        movStarted = True
+        moveInProgress = True
         
         'Set advance velocity
-        setVelY peckVel
+        setVel motorY, peckVel
         
         'Advance axis
         move motorY, peckDeep
         
         'Set retract velocity
-        setVelY peckVel
+        setVel motorY, peckVel
         
         'Retract axis
         move motorY, (peckDeep - peckBack)
@@ -770,7 +759,7 @@ Option Explicit
         If checkMov Then Exit Function
         
         'Set move started flag
-        movStarted = True
+        moveInProgress = True
         
         'Delay the 6k by the indicated time
         myCns.write6k "T" & Str(delayTime) & ":"

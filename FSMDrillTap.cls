@@ -39,7 +39,7 @@ Public Enum fsmStates
 End Enum
 
 
-Public Enum moveTo
+Public Enum MoveTo
     moveNone
     moveInProgress
     moveToDrillNow
@@ -61,7 +61,7 @@ Private Counter As Integer
 Private joystickMode As Boolean
 Private maintenanceMode As Boolean
 Private runMode As Boolean
-Private moveMode As moveTo
+Private moveMode As MoveTo
 Private clearESTOPnow As Boolean
 
 
@@ -100,7 +100,7 @@ Public Sub setGoStop()
 End Sub
 
 'Set move destination; when possible, move to position
-Public Sub setMoveDest(myDestination As moveTo)
+Public Sub setMoveDest(myDestination As MoveTo)
     
     moveMode = myDestination
 
@@ -326,19 +326,19 @@ Private Sub runState4()
     If moveMode > moveInProgress Then
         Select Case moveMode
             Case moveToDrillNow
-                If myDrillTap.goToDrill Then
+                If myDrillTap.MoveTo(atDrill) Then
                     moveMode = moveInProgress
                 Else
                     Exit Sub
                 End If
             Case moveToTapNow
-                If myDrillTap.goToTap Then
+                If myDrillTap.MoveTo(atTap) Then
                     moveMode = moveInProgress
                 Else
                     Exit Sub
                 End If
             Case moveToPositionNow
-                If myDrillTap.goToPosition(frmMaintenance.txtMaintPos(0), frmMaintenance.txtMaintPos(1)) Then
+                If myDrillTap.MoveTo(atUnk) Then
                     moveMode = moveInProgress
                 Else
                     Exit Sub
@@ -400,7 +400,7 @@ Private Sub runState6()
         
             'If not at drill position, move to drill position
             If myDrillTap.getPos() <> atDrill Then
-                myDrillTap.goToDrill
+                myDrillTap.MoveTo (atDrill)
                 Exit Sub
             End If
                     
@@ -429,7 +429,7 @@ Private Sub runState6()
                 'First loop, set UI
                 If Counter = 0 Then myUI.updStatus uiRunningDrill, ""
                 
-                Counter = myDrillTap.runTap(CDbl(frmUI.txtDeep(0)), Counter, runCycles, frmUI.chkDryRun.Value)
+                Counter = myDrillTap.runTool(tDrill, CDbl(frmUI.txtDeep(0)), Counter, runCycles, frmUI.chkDryRun.Value)
             
             'When the cycle counter exceeds the number of desired cycles, wait for current move to finish
             Else
@@ -451,7 +451,7 @@ Private Sub runState6()
         
             'If not at tap position, move to tap position
             If myDrillTap.getPos() <> atTap Then
-                myDrillTap.goToTap
+                myDrillTap.MoveTo (atTap)
                 Exit Sub
             End If
                     
@@ -477,7 +477,7 @@ Private Sub runState6()
                 Dim myTapDepth As Double
                 myTapDepth = CDbl(frmUI.txtDeep(0)) * CDbl(frmUI.txtDeep(1)) / 100
                 
-                Counter = myDrillTap.runTap(myTapDepth, Counter, runCycles, frmUI.chkDryRun.Value)
+                Counter = myDrillTap.runTool(tTap, myTapDepth, Counter, runCycles, frmUI.chkDryRun.Value)
             
             'When the cycle counter exceeds the number of desired cycles, wait for current move to finish
             Else
