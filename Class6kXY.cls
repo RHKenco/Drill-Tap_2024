@@ -35,7 +35,6 @@ Option Explicit
         mNull
         m1
         m2
-        mBoth
     End Enum
 
     'enumerations for the input to the moveTo command
@@ -171,8 +170,6 @@ Option Explicit
         moveInProgress = True
         setAckPin True
         
-        
-        
     End Sub
     
     'reset6k - resets 6k state to initialized state.
@@ -259,10 +256,10 @@ Option Explicit
         Dim globalPos As Double
     
         Select Case motor
-            Case motorX
-                globalOff = zeroOffset.X
-            Case motorY
-                globalOff = zeroOffset.Y
+            Case 1
+                rtnStr = rtnStr & valStr
+            Case 2
+                rtnStr = rtnStr & "," & valStr
         End Select
         
         globalPos = localPos + globalOff
@@ -270,28 +267,50 @@ Option Explicit
         Select Case motor
             Case motorX
                 If globalPos < 0 Then globalPos = 0
-            Case motorY
                 If globalPos > 0 Then globalPos = 0
+            Case motorY
         End Select
         
         coGlobal = globalPos
     
     End Function
     
-    Private Function coLocal(motor As Integer, globalPos As Double) As Double
     
-        Dim localOff As Double
+    'genCmdBin - Function to generate the binary argument for commands such as "GO" and "MOV = b"
+    '   - Inputs:
+    '       - motor - input of which motor to send the command to: Will be motorX or motorY
+    '       - optX - A boolean to determine if values need to be X
+    '       - opt10 - A boolean to determine if the X values need to replace 1 or 0
+    '   - Returns:
+    '       - rtnStr - A string containing the completed command. Ex: "V,0.125:"
+    Private Function genCmdBin(motor As Integer, inv As Boolean, optX As Boolean, opt10 As Boolean) As String
     
+        'Create Temporary string
+        Dim rtnStr As String
+        
+        If inv Then
+            If motor = 1 Then motor = 2 Else motor = 1
+        End If
+        
+        'Generate initial binary based on motor
         Select Case motor
-            Case motorX
-                localOff = zeroOffset.X
-            Case motorY
-                localOff = zeroOffset.Y
+            Case 1
+                rtnStr = "10"
+            Case 2
+                rtnStr = "01"
         End Select
         
-        coLocal = globalPos - localOff
+        'Adjust binary with "Don't Care" (X) as necessary
+        If optX Then
+            If opt10 Then
+                rtnStr = Replace(rtnStr, "1", "X")
+            Else
+                rtnStr = Replace(rtnStr, "0", "X")
+            End If
+        End If
+                
+        genCmdBin = rtnStr
     
-    End Function
     
     Private Function genCmd(myCmd As String, motor As Integer, argument As String) As String
 
@@ -548,7 +567,11 @@ Option Explicit
 '---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---=
 '---===---===---===---===- Advanced Functions - Move to Position, etc. ---===---===---===---===---===---===---===---===
     
+    Private Sub startMov()
     
+        movStarted = True
+        
+    End Sub
     
     Public Sub setJogIn(myPin As Integer, myState As Boolean)
         
@@ -650,45 +673,110 @@ Option Explicit
     'Generic single-axis move command for any input axis.
     Private Sub move(motor As Integer, localPos As Double)
     
-        Dim globalPos As Double
-        Dim cmdStr As String
+        'Create temporary location var
+        Dim newPosGlobal As Double
         
-        'Convert local coordinates to global coordinates
-        globalPos = coGlobal(motor, localPos)
+        'Ensure that the motion does not exceed acceptable bounds
+        newPosGlobal = newPos + zeroOffset.X
+        If (newPosGlobal < 0) Then newPosGlobal = 0
+    
+        'Create temporary String
+        Dim xStr As String
+        Dim goX As String
+        Dim waitX As String
+                
+        'Generate Position Command
+        xStr = genCmd(motorX, "D", Str(newPosGlobal))
         
         cmdStr = genCmd("GO", motor, Format(globalPos, "###0.000"))
         
-        myCns.write6k cmdStr
+        'Generate Wait Command
+        waitX = "WAIT(MOV = b" & genCmdBin(motorX, True, True, True) & "):"
+        
+        'Send to 6k
+        myCns.write6k xStr & goX & waitX
     
     End Sub
     
+    Private Sub moveY(newPos As Double)
+
+        'Create temporary location var
+        Dim newPosGlobal As Double
+        
+        'Ensure that the motion does not exceed acceptable bounds
+        newPosGlobal = newPos - zeroOffset.Y
+        If (newPosGlobal > 0) Then newPosGlobal = 0
+        
+        'Create temporary String
+        Dim yStr As String
+        Dim goY As String
+        Dim waitY As String
+                
+        'Generate Position Command
+        yStr = genCmd(motorY, "D", Str(newPosGlobal))
+        
+        'Generate Go Command
+        goY = "GO" & genCmdBin(motorY, False, False, False) & ":"
+        
+        'Generate Wait Command
+        waitY = "WAIT(MOV = b" & genCmdBin(motorY, True, True, True) & "):"
+        
+        'Send to 6k
+        myCns.write6k yStr & goY & waitY
+    
+    End Sub
+
+    Private Sub moveXatVel(newPosX As Double, vel As Double)
+    
+        setVelX (vel)
+        
+        moveX (newPosX)
+    
+    End Sub
+    
+    Private Sub moveYatVel(newPosY As Double, vel As Double)
+    
+        setVelY (vel)
+        
+        moveY (newPosX)
+    
+    End Sub
+    
+
     
     'moveLine - Moves multiple axes to a specified coordinate in a straight line.
     Private Sub moveLine(newPosX As Double, newPosY As Double)
 
         'Create temporary location var
-        Dim globalPosX As Double
-        Dim globalPosY As Double
-        Dim argStr As String
-        Dim cmdStr As String
+        Dim myNewPosX As Double
+        Dim myNewPosY As Double
         
-        globalPosX = coGlobal(motorX, newPosX)
-        globalPosY = coGlobal(motorY, newPosY)
+        'Ensure that the motion does not exceed acceptable bounds
+        myNewPosX = newPosX + zeroOffset.X
+        If (myNewPosX < 0) Then myNewPosX = 0
+        myNewPosY = newPosY + zeroOffset.Y
+        If (myNewPosY < 0) Then myNewPosY = 0
         
-        argStr = Format(globalPosX, "###0.000") & "," & Format(globalPosY, "###0.000")
-        
-        cmdStr = genCmd("GO", mBoth, argStr)
-        
-        myCns.write6k cmdStr
+        myCns.write6k "D" & Str(myNewPosX) & "," & Str(myNewPosY) & ":GO11:WAIT(MOV = b00):"
         
     End Sub
     
-    Public Function moveTo(newPosX As Double, newPosY As Double, moveOption As moveType)
+    'moveLineAtVel - Moves multiple axes to a specified coordinate in a straight line.
+    Private Sub moveLineAtVel(newPosX As Double, newPosY As Double, vel As Double)
+    
+        setVel (vel)
         
-        moveTo = False
+        moveLine newPosX, newPosY
+        
+    End Sub
+    
+    Public Sub moveTo(newPosX As Double, newPosY As Double, moveOption As moveType)
         
         'If there is either a currently pending movement or a completed-not-acknowledged movement, abort
-        If checkMov Then Exit Function
+        If checkMov Then Exit Sub
+        
+        'Raise flags to start motion
+        startMov
             
         'Set move started flag
         moveInProgress = True
@@ -717,17 +805,16 @@ Option Explicit
         'set completion flag
         setAckPin True
         
-        moveTo = True
+        'Clear moving flag and set completion flag
+        completeMov
         
-    End Function
+    End Sub
     
     'movePeck - Moves front then back, at separate velocities
-    Public Function movePeck(peckDeep As Double, peckBack As Double, peckVel As Double, returnVel As Double)
-    
-        movePeck = False
+    Public Sub movePeck(peckDeep As Double, peckBack As Double, peckVel As Double, returnVel As Double)
     
         'If there is either a currently pending movement or a completed-not-acknowledged movement, abort
-        If checkMov Then Exit Function
+        If checkMov Then Exit Sub
         
         'Set move started flag
         moveInProgress = True
@@ -735,8 +822,8 @@ Option Explicit
         'Set advance velocity
         setVel motorY, peckVel
         
-        'Advance axis
-        move motorY, peckDeep
+        'Clear moving flag and set completion flag
+        completeMov
         
         'Set retract velocity
         setVel motorY, peckVel
@@ -751,25 +838,21 @@ Option Explicit
         
     End Function
     
-    Public Function moveDelay(delayTime As Double)
-    
-        moveDelay = False
+    Public Sub moveDelay(delayTime As Double)
     
         'If there is either a currently pending movement or a completed-not-acknowledged movement, abort
-        If checkMov Then Exit Function
+        If checkMov Then Exit Sub
         
         'Set move started flag
         moveInProgress = True
         
-        'Delay the 6k by the indicated time
-        myCns.write6k "T" & Str(delayTime) & ":"
+            'Delay the 6k by the indicated time
+            myCns.write6k "T" & Str(delayTime) & ":"
         
-        'set completion flag
-        setAckPin True
+        'Clear moving flag and set completion flag
+        completeMov
     
-        moveDelay = True
-    
-    End Function
+    End Sub
 
 '---===---===---===---===- Advanced Functions - Move to Position, etc. ---===---===---===---===---===---===---===---===
 '---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---=

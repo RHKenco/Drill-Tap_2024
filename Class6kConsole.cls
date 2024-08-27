@@ -90,7 +90,7 @@ Public Sub write6k(writeStr As String)
     writeBuffer = writeBuffer & writeStr
     
     'Write the commands to the 6k
-    c6k.Write (writeStr)
+    c6k.Write (writeBuffer)
 
 End Sub
 
