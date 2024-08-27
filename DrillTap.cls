@@ -530,7 +530,7 @@ Public Function waitForMove() As Boolean
             myPosition = atDrill
         Case atTap
             myPosition = atTap
-        Case atUnk
+        Case Else
             myPosition = atUnk
     End Select
     

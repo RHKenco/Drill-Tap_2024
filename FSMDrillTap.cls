@@ -182,7 +182,10 @@ End Sub
 
 
 Private Sub runState0()
-
+    
+    'Wait for 6k loading to be complete before moving to standby state
+    If Not myDrillTap.waitForMove Then Exit Sub
+    
     'Initialize FSM on first run
     myUI.updStatus uiStandby, ""
     setState s1_Stby

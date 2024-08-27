@@ -1,9 +1,9 @@
 terminal = 78, 78, 1419, 846, 
 frmMain = 45, 31, 1146, 819, , -139, 543, 1202, 1311, C
-ClassDrillTap = 272, 121, 1112, 767, 
-Class6kXY = 142, 13, 1275, 801, 
+ClassDrillTap = 333, 180, 1636, 1131, 
+Class6kXY = 142, 13, 1450, 1077, I
 frmUI = 285, 46, 1196, 829, , 54, 6, 902, 794, C
-ClassFSMDrillTap = 117, -4, 1194, 784, 
+ClassFSMDrillTap = 159, 14, 1236, 802, 
 ClassUI = 194, -34, 1409, 859, 
 frmMaintenance = 14, 20, 1352, 788, , 16, 60, 1354, 828, C
 Class6kConsole = 123, 44, 1291, 844, 
