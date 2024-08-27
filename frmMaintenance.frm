@@ -459,6 +459,15 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+Private Sub cmdMaintGoTo_Click()
+
+    'Update velocities from form
+    myDrillTap.setVelDefaults frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
+
+    myFSM.setMoveDest moveToPositionNow
+
+End Sub
+
 Private Sub cmdMaintIO_Click(Index As Integer)
 
     myDrillTap.maintActive (Index + 1), mToggle

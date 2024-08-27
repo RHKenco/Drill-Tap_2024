@@ -80,7 +80,7 @@ Option Explicit
      
     'Integer and Enum to store position of the machine
     Public Enum atPosition
-        atI
+        atIdle
         atUnk
         atDrill
         atTap
@@ -193,9 +193,9 @@ Option Explicit
         
         Select Case coordinate
             Case cX
-                getCoords = myXY.getCo(motorX)
+                getCoords = myXY.getCo(Axis_X)
             Case cY
-                getCoords = myXY.getCo(motorY)
+                getCoords = myXY.getCo(Axis_Y)
             Case Else
         End Select
         
@@ -210,13 +210,19 @@ Option Explicit
     Private Sub setPos(position As atPosition)
     
         Select Case position
-        Case atDrill
-            myPosition = atDrill
-        Case atTap
-            myPosition = atTap
-        Case Else
-            myPosition = atUnk
-    End Select
+            Case atDrill
+                myPosition = atDrill
+            Case atTap
+                myPosition = atTap
+            Case Else
+                myPosition = atUnk
+        End Select
+    
+    End Sub
+    
+    Public Sub clrPos()
+    
+        myPosition = atUnk
     
     End Sub
     
@@ -234,11 +240,11 @@ Option Explicit
     End Function
     
     ''' setVelDefaults - Sets the internal velocity variables for drill/tap movement
-    Public Sub setVelDefaults(JogVel As String, drillVel As String, TapVel As String)
+    Public Sub setVelDefaults(drillVel As String, tapVel As String, jogVel As String)
     
-        V_Jog = CDbl(JogVel)
+        V_Jog = CDbl(jogVel)
         V_Drill = CDbl(drillVel)
-        V_Tap = CDbl(TapVel)
+        V_Tap = CDbl(tapVel)
     
     End Sub
     
@@ -527,7 +533,7 @@ Public Function waitForMove() As Boolean
     
     Dim checkForMove As Integer
     
-    checkForMove = myXY.checkMov
+    checkForMove = myXY.checkMove
     
     'If there is no move currently in progress, return true
     If checkForMove = 0 Then
@@ -559,12 +565,12 @@ Public Function goToPosition(positionX As Double, positionY As Double) As Boolea
     If joyOn Then Exit Function
     
     'If there is currently a move in progress, do not proceed
-    If myXY.checkMov Then Exit Function
+    If myXY.checkMove Then Exit Function
 
     'Set velocity for motion
     myXY.setVel mBoth, V_Jog
     'Move to the drill position
-    myXY.MoveTo positionX, positionY, movYX
+    myXY.moveTo positionX, positionY, movYX
 
 
     myDestination = atUnk
@@ -573,22 +579,22 @@ Public Function goToPosition(positionX As Double, positionY As Double) As Boolea
 
 End Function
 
-Public Function MoveTo(destination As atPosition) As Boolean
+Public Function moveTo(destination As atPosition) As Boolean
 
-    MoveTo = False
+    moveTo = False
 
     If joyOn Then Exit Function
     
     If myPosition = destination Then Exit Function
     
     'If there is currently a move in progress, do not proceed
-    If myXY.checkMov Then Exit Function
+    If myXY.checkMove Then Exit Function
 
     'When the move has been completed, update the current position and set return true
     If myDestination = destination Then
         setPos destination
         myDestination = atIdle
-        MoveTo = True
+        moveTo = True
         Exit Function
     End If
 
@@ -597,11 +603,11 @@ Public Function MoveTo(destination As atPosition) As Boolean
     'Move to the drill position
     Select Case destination
         Case atDrill
-            myXY.MoveTo goDrill.X, goDrill.Y, movY0XY
+            myXY.moveTo goDrill.X, goDrill.Y, movY0XY
         Case atTap
-            myXY.MoveTo goTap.X, goTap.Y, movY0XY
+            myXY.moveTo goTap.X, goTap.Y, movY0XY
         Case atUnk
-            myXY.MoveTo CDbl(frmMaintenance.txtMaintPos(0)), CDbl(frmMaintenance.txtMaintPos(1)), movY0XY
+            myXY.moveTo CDbl(frmMaintenance.txtMaintPos(0)), CDbl(frmMaintenance.txtMaintPos(1)), movY0XY
     End Select
     
     myDestination = destination
@@ -615,7 +621,7 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
     If joyOn Then Exit Function
 
     'If there is currently a move in progress, do not proceed. Else acknowledge prior move
-    If myXY.checkMov Then Exit Function
+    If myXY.checkMove Then Exit Function
 
     Select Case currentCycle
         'On the prep cycle, initialize the drill and coolant if it is not a dry run. Delay 1 second
@@ -647,9 +653,9 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
             'Move to the default position for the selected tool
             Select Case tool
                 Case tDrill
-                    If myXY.MoveTo(0, goDrill.Y, movY) Then runTool = currentCycle + 1
+                    If myXY.moveTo(0, goDrill.Y, movY) Then runTool = currentCycle + 1
                 Case tDrill
-                    If myXY.MoveTo(0, goTap.Y, movY) Then runTool = currentCycle + 1
+                    If myXY.moveTo(0, goTap.Y, movY) Then runTool = currentCycle + 1
             End Select
         
         'If the last cycle has been reached, disable tool and exit

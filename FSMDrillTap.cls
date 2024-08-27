@@ -39,7 +39,7 @@ Public Enum fsmStates
 End Enum
 
 
-Public Enum MoveTo
+Public Enum moveTo
     moveNone
     moveInProgress
     moveToDrillNow
@@ -61,7 +61,7 @@ Private Counter As Integer
 Private joystickMode As Boolean
 Private maintenanceMode As Boolean
 Private runMode As Boolean
-Private moveMode As MoveTo
+Private moveMode As moveTo
 Private clearESTOPnow As Boolean
 
 
@@ -100,7 +100,7 @@ Public Sub setGoStop()
 End Sub
 
 'Set move destination; when possible, move to position
-Public Sub setMoveDest(myDestination As MoveTo)
+Public Sub setMoveDest(myDestination As moveTo)
     
     moveMode = myDestination
 
@@ -228,10 +228,7 @@ Private Sub runState1()
             'If the state does not change, exit sub
             Exit Sub
         End If
-    
-        'Update system speeds before locking down user control of those boxes
-        myDrillTap.setVelDefaults frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
-
+        
 End Sub
 
 Private Sub runState2()
@@ -323,19 +320,23 @@ Private Sub runState4()
     If moveMode > moveInProgress Then
         Select Case moveMode
             Case moveToDrillNow
-                If myDrillTap.MoveTo(atDrill) Then
+                If myDrillTap.moveTo(atDrill) Then
                     moveMode = moveInProgress
+                ElseIf myDrillTap.getPos = atDrill Then
+                    moveMode = moveNone
                 Else
                     Exit Sub
                 End If
             Case moveToTapNow
-                If myDrillTap.MoveTo(atTap) Then
+                If myDrillTap.moveTo(atTap) Then
                     moveMode = moveInProgress
+                ElseIf myDrillTap.getPos = atTap Then
+                    moveMode = moveNone
                 Else
                     Exit Sub
                 End If
             Case moveToPositionNow
-                If myDrillTap.MoveTo(atUnk) Then
+                If myDrillTap.moveTo(atUnk) Then
                     moveMode = moveInProgress
                 Else
                     Exit Sub
@@ -397,7 +398,7 @@ Private Sub runState6()
         
             'If not at drill position, move to drill position
             If myDrillTap.getPos() <> atDrill Then
-                myDrillTap.MoveTo (atDrill)
+                myDrillTap.moveTo (atDrill)
                 Exit Sub
             End If
                     
@@ -448,7 +449,7 @@ Private Sub runState6()
         
             'If not at tap position, move to tap position
             If myDrillTap.getPos() <> atTap Then
-                myDrillTap.MoveTo (atTap)
+                myDrillTap.moveTo (atTap)
                 Exit Sub
             End If
                     

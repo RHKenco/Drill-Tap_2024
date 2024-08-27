@@ -692,6 +692,12 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Sub cmdGoToDrillTap_Click(Index As Integer)
 
+    'Update velocities from form
+    myDrillTap.setVelDefaults frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
+    
+    'Clear position to allow for repeat movements to location
+    myDrillTap.clrPos
+    
     'Request move destination from FSM
     Dim myDestination As moveTo
     
@@ -829,6 +835,9 @@ Private Sub Form_Unload(Cancel As Integer)
 End Sub
 
 Private Sub cmdGO_Click()
+
+    'Update velocities from Form
+    myDrillTap.setVelDefaults frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
 
     myUI.go
 

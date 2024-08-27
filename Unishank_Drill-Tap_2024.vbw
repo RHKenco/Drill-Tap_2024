@@ -1,10 +1,10 @@
 terminal = 78, 78, 1419, 846, 
 frmMain = 45, 31, 1146, 819, , -139, 543, 1202, 1311, C
-ClassDrillTap = 144, 32, 1447, 983, 
-Class6kXY = 246, 138, 1554, 1202, I
+ClassDrillTap = 51, 34, 1354, 862, 
+Class6kXY = 23, 72, 1331, 896, 
 frmUI = 285, 46, 1196, 829, , 54, 6, 902, 794, C
 ClassFSMDrillTap = 94, 59, 1171, 847, 
 ClassUI = 194, -34, 1409, 859, 
-frmMaintenance = 14, 20, 1352, 788, , 16, 60, 1354, 828, C
-Class6kConsole = 208, 208, 1520, 1037, 
+frmMaintenance = 14, 20, 1352, 788, I, 16, 60, 1354, 828, I
+Class6kConsole = 54, 27, 1366, 856, 
 frmConsole = 0, 0, 0, 0, C, 0, 0, 0, 0, C
