@@ -48,6 +48,12 @@ Public Enum moveTo
 End Enum
 
 
+Public Enum boolBehavior
+    boolFalse
+    boolTrue
+    boolToggle
+End Enum
+
 'State Variable
 Private fsmState As fsmStates
 
@@ -84,18 +90,25 @@ Public Sub initializeFSM()
     
 End Sub
 
-Private Sub setState(State As fsmStates)
+Private Sub setState(state As fsmStates)
 
-    fsmState = State
+    fsmState = state
     Counter = 0
     innerState = 0
 
 End Sub
 
 'When Possible, toggle run state
-Public Sub setGoStop()
+Public Sub setGoStop(state As boolBehavior)
 
-    runMode = Not runMode
+    Select Case state
+        Case boolFalse
+            runMode = False
+        Case boolTrue
+            runMode = True
+        Case boolToggle
+            runMode = Not runMode
+    End Select
 
 End Sub
 
@@ -108,14 +121,14 @@ End Sub
 
 
 'When possible, go to Joystick State
-Public Sub setJoystick(State As Integer)
+Public Sub setJoystick(state As boolBehavior)
 
-    Select Case State
-        Case 0
+    Select Case state
+        Case boolFalse
             joystickMode = False
-        Case 1
+        Case boolTrue
             joystickMode = True
-        Case 2
+        Case boolToggle
             joystickMode = Not joystickMode
     End Select
 
@@ -182,6 +195,9 @@ End Sub
 
 
 Private Sub runState0()
+
+    'Wait for simulated move to be cleared before switching from initialize to standby
+    If myDrillTap.waitForMove Then Exit Sub
 
     'Initialize FSM on first run
     myUI.updStatus uiStandby, ""
@@ -311,6 +327,20 @@ Private Sub runState4()
 
     'Move State - Idles the FSM until current move is completed
     
+    
+    If Not CBool(moveMode) Then
+    
+        'Stop motion
+        myDrillTap.stopNow
+        
+        'Go to standby state
+        myUI.updStatus uiStandby, ""
+        moveMode = moveNone
+        setState s1_Stby
+    
+    End If
+    
+    
     If innerState = 0 Then
         myUI.updStatus uiWaiting, ""
         innerState = 1
@@ -346,7 +376,7 @@ Private Sub runState4()
     End If
     
     'When any pending moves have been completed, exit to standby state
-    If myDrillTap.waitForMove() Then
+    If Not myDrillTap.waitForMove() Then
     
         'Go to standby state
         myUI.updStatus uiStandby, ""
@@ -370,6 +400,7 @@ Private Sub runState5()
     myUI.updStatus uiClampOFF, ""
     
     setState s1_Stby
+    setGoStop boolFalse
     
     End If
 
@@ -379,7 +410,20 @@ Private Sub runState6()
 
     'Run State - Runs Drill & Tap Cycles As Requested
             
-    Dim runCycles As Integer
+            
+    If Not runMode Then
+
+        'Stop motion
+        myDrillTap.stopNow
+        
+        'Go to standby state
+        myUI.updStatus uiStandby, ""
+        moveMode = moveNone
+        setState s1_Stby
+    
+    End If
+            
+    Static runCycles As Integer
     
     Select Case innerState
         Case 0  'Initialise Function
@@ -388,131 +432,128 @@ Private Sub runState6()
             'If the system is set to tap-only, then go to tap. Otherwise, go to drill
             If frmUI.optDrillTapAuto(1) Then
                 innerState = 3
-                myUI.updStatus uiWaiting, ""
             Else
                 innerState = 1
-                myUI.updStatus uiWaiting, ""
             End If
             
-        Case 1  'Move-To-Drill - if necessary
+        Case 1, 3 'Move-To-Position - if necessary
         
-            'If not at drill position, move to drill position
-            If myDrillTap.getPos() <> atDrill Then
-                myDrillTap.moveTo (atDrill)
-                Exit Sub
-            End If
+            'Check to ensure the tool is in the correct position
+            Select Case innerState
+                Case 1
+                    'If not at drill position, move to drill position
+                    If myDrillTap.getPos() <> atDrill Then
+                        myDrillTap.moveTo (atDrill)
+                        myUI.updStatus uiWaiting, ""
+                        Exit Sub
+                    End If
+                Case 3
+                    'If not at tap position, move to tap position
+                    If myDrillTap.getPos() <> atTap Then
+                        myDrillTap.moveTo (atTap)
+                        myUI.updStatus uiWaiting, ""
+                        Exit Sub
+                    End If
+            End Select
                     
             'If the counter has not been reset, exit the run state
             If Counter > runCycles Then
             
-                'but only if it isn't set to auto cycle
-                If frmUI.optDrillTapAuto(3).Value Then
+                'Unless the tool has just been moved to the drill and auto cycle is enabled
+                If innerState = 1 And frmUI.optDrillTapAuto(3).Value Then
                     innerState = 5
+                    Counter = 0
                     Exit Sub
                 End If
                 
                 innerState = 6
             
-            'Otherwise, go to drill cycle
+            'Otherwise, go to appropriate tool cycle
             Else
-                innerState = 2
-                runCycles = 8
-            End If
-            
-        Case 2  'Run Drill
-            
-            'While the cycle counter is less than the desired number of cycles, run the tap
-            If Counter <= runCycles Then
-            
-                'First loop, set UI
-                If Counter = 0 Then myUI.updStatus uiRunningDrill, ""
-                
-                Counter = myDrillTap.runTool(tDrill, CDbl(frmUI.txtDeep(0)), Counter, runCycles, frmUI.chkDryRun.Value)
-            
-            'When the cycle counter exceeds the number of desired cycles, wait for current move to finish
-            Else
-                'If the move has been completed, determine next step
-                If myDrillTap.waitForMove Then
-                    'If run drill only has been selected, move to drill then exit state
-                    If frmUI.optDrillTapAuto(0).Value Then
-                        innerState = 1
-                    'If run Cycle or run Auto has been selected, proceed to tap cycle
-                    ElseIf frmUI.optDrillTapAuto(2).Value Or frmUI.optDrillTapAuto(3).Value Then
+                Select Case innerState
+                    Case 1
+                        innerState = 2
+                        '7 cycles + 2 prep cycles (0 and 1) + 2 conclusion cycles
+                        runCycles = 7 + 3
+                    Case 3
                         innerState = 4
-                        Counter = 0
-                    End If
-                End If
+                        '3 cycles + 2 prep cycles (0 and 1) + 2 conclusion cycles
+                        runCycles = 3 + 3
+                End Select
             End If
             
-            
-        Case 3  'Move-To-Tap - if necessary
-        
-            'If not at tap position, move to tap position
-            If myDrillTap.getPos() <> atTap Then
-                myDrillTap.moveTo (atTap)
-                Exit Sub
-            End If
-                    
-            'If the last state was the Run Tap state, and the counter has not been reset, exit the run state
-            If Counter > runCycles Then
-                innerState = 6
-            
-            'Otherwise, go to tap cycle
-            Else
-                innerState = 4
-                runCycles = 3
-            End If
-                
-        Case 4  'Run Tap
+        Case 2, 4  'Run Tool
             
             'While the cycle counter is less than the desired number of cycles, run the tap
             If Counter <= runCycles Then
+                
+                Dim currentTool As myTool
             
-                'First loop, set UI
-                If Counter = 0 Then myUI.updStatus uiRunningDrill, ""
+                Select Case innerState
+                    Case 2
+                        'First loop, set UI
+                        If Counter = 0 Then myUI.updStatus uiRunningDrill, ""
+                        'Identify correct tool
+                        currentTool = tDrill
+                    Case 4
+                        'First loop, set UI
+                        If Counter = 0 Then myUI.updStatus uiRunningTap, ""
+                        'Identify correct tool
+                        currentTool = tTap
+                End Select
                 
-                'Express tap depth as a percentage of drill depth
-                Dim myTapDepth As Double
-                myTapDepth = CDbl(frmUI.txtDeep(0)) * CDbl(frmUI.txtDeep(1)) / 100
-                
-                Counter = myDrillTap.runTool(tTap, myTapDepth, Counter, runCycles, frmUI.chkDryRun.Value)
+                Counter = myDrillTap.runTool(currentTool, CDbl(frmUI.txtDeep(0)), Counter, runCycles, frmUI.chkDryRun.Value)
             
             'When the cycle counter exceeds the number of desired cycles, wait for current move to finish
             Else
                 'If the move has been completed, determine next step
-                If myDrillTap.waitForMove Then
-                    'If run tap only has been selected, move to tap then exit state
-                    If frmUI.optDrillTapAuto(1).Value Then
-                        innerState = 3
-                        myUI.updStatus uiWaiting, ""
-                    'If run cycle or run auto was selected, move to drill
-                    ElseIf frmUI.optDrillTapAuto(2).Value Or frmUI.optDrillTapAuto(3).Value Then
-                        innerState = 1
-                        myUI.updStatus uiWaiting, ""
-                    End If
+                If Not myDrillTap.waitForMove Then
+                    Select Case innerState
+                        Case 2
+                            'If run drill only has been selected, move to drill then exit state
+                            If frmUI.optDrillTapAuto(0).Value Then
+                                innerState = 1
+                            'If run Cycle or run Auto has been selected, proceed to tap cycle
+                            ElseIf frmUI.optDrillTapAuto(2).Value Or frmUI.optDrillTapAuto(3).Value Then
+                                innerState = 3
+                                Counter = 0
+                            End If
+    
+                        Case 4
+                            'If run tap only has been selected, move to tap then exit state
+                            If frmUI.optDrillTapAuto(1).Value Then
+                                innerState = 3
+                            'If run cycle or run auto was selected, move to drill
+                            ElseIf frmUI.optDrillTapAuto(2).Value Or frmUI.optDrillTapAuto(3).Value Then
+                                innerState = 1
+                            End If
+                    End Select
                 End If
             End If
             
         Case 5  'Wait for Clamp, then start new cycle
-            Counter = 0
             
             Select Case Counter
                 Case 0
                     'Update UI Msg
-                    myUI.updStatus uiWaiting, ""
+                    myUI.updStatus uiClampCycle1, ""
                     Counter = 1
                     Exit Sub
                 Case 1
                     'Wait for clamp to be disengaged
-                    If Not myDrillTap.checkClamp Then Counter = 2
+                    If Not myDrillTap.checkClamp Then
+                        Counter = 2
+                        myUI.updStatus uiClampCycle2, ""
+                    End If
+                    
                     Exit Sub
                 Case 2
                     'Wait for clamp to be reengaged
                     If myDrillTap.checkClamp Then
                         Counter = 0
                         innerState = 1
-                        myUI.updStatus uiWaiting, ""
                     End If
+                    
                     Exit Sub
             End Select
                 
@@ -520,7 +561,10 @@ Private Sub runState6()
         Case 6  'Exit State
             
             'When any pending moves have been completed, exit to standby state
-            If myDrillTap.waitForMove() Then
+            If Not myDrillTap.waitForMove() Then
+            
+                'Exit run mode
+                setGoStop False
             
                 'Go to standby state
                 myUI.updStatus uiStandby, ""

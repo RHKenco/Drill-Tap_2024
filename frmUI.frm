@@ -473,7 +473,7 @@ Begin VB.Form frmUI
             Index           =   2
             Left            =   2280
             TabIndex        =   12
-            Text            =   "30.00"
+            Text            =   "3.000"
             Top             =   1560
             Width           =   1095
          End
@@ -492,7 +492,7 @@ Begin VB.Form frmUI
             Index           =   1
             Left            =   2280
             TabIndex        =   11
-            Text            =   "15.00"
+            Text            =   "1.000"
             Top             =   1080
             Width           =   1095
          End
@@ -511,7 +511,7 @@ Begin VB.Form frmUI
             Index           =   0
             Left            =   2280
             TabIndex        =   10
-            Text            =   "0.625"
+            Text            =   "0.250"
             Top             =   600
             Width           =   1095
          End
@@ -739,7 +739,7 @@ Private Sub Form_Load()
     zeroOffsetCoordinate.X = 0.875
     zeroOffsetCoordinate.Y = -0.125
     
-    myDrillTap.initDrillTap 0.625, toolOffsetCoordinate.X, toolOffsetCoordinate.Y, zeroOffsetCoordinate.X, zeroOffsetCoordinate.Y
+    myDrillTap.initDrillTap 0.375, toolOffsetCoordinate.X, toolOffsetCoordinate.Y, zeroOffsetCoordinate.X, zeroOffsetCoordinate.Y
     
     
     
@@ -855,7 +855,7 @@ End Sub
 
 Private Sub topbarJoy_Click()
 
-    myFSM.setJoystick 2
+    myFSM.setJoystick boolTrue
 
 End Sub
 

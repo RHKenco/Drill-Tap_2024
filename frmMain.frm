@@ -171,28 +171,28 @@ Next i
     
     If Option1.Value Then   'ethernet
         ' use this code for Ethernet
-        Dim ipaddr$
-            ipaddr = "192.168.1.30"
+        Dim ipAddr$
+            ipAddr = "192.168.1.30"
     
         'attempt to open file where ip address is stored if file exists
         If Len(Dir$("ipaddr.dat")) Then
             Open "ipaddr.dat" For Input As #fh
-                Line Input #fh, ipaddr
+                Line Input #fh, ipAddr
             Close #fh
         End If
     
         'prompt for ip address using default
-        ipaddr = InputBox("Enter target IP Address.", "Port Setting", ipaddr)
-        If Len(ipaddr) = 0 Then Exit Sub
+        ipAddr = InputBox("Enter target IP Address.", "Port Setting", ipAddr)
+        If Len(ipAddr) = 0 Then Exit Sub
     
         'save user specified ipaddr
         Open "ipaddr.dat" For Output As #fh
-            Print #fh, ipaddr
+            Print #fh, ipAddr
         Close #fh
     
         'now attempt connection
         Set c6k = CreateObject("COM6SRVR.NET")
-        If c6k.Connect(ipaddr) > 0 Then
+        If c6k.Connect(ipAddr) > 0 Then
             c6k.Write "TREV" & vbCr    'send TREV command
             Timer1.Enabled = True       'enable response polling
             connected = True            'set connected flag to true
@@ -399,7 +399,7 @@ On Error GoTo timer1err
 
     'this timer routine polls for response from the controller
     Dim temp$
-    temp = c6k.Read()                           'get response
+    temp = c6k.read()                           'get response
     If Len(temp) Then Text1.SelText = temp      'if not empty then display in the text box
     Exit Sub
     

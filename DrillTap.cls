@@ -43,8 +43,9 @@ Option Explicit
     Const Out_Cool = 6
     
     'Expansion Inputs - Pins 9-16
-    Const In_Clamp_Lim = 12
-    Const In_TravelLim = 13
+    Const In_Clamp_Lim = 11
+    Const In_HomX = 12
+    Const In_HomY = 13
     Const In_Clamp_On = 14
     Const In_ESTOP = 15
     Const In_Clamp_Off = 16
@@ -114,8 +115,9 @@ Option Explicit
     Private PosLastZero As myCoordinate
     
     'Objects to store the offsets for the drill & tap locations.
+    Private stdOffset As Double         'Offset from which the origin point will be determined relative to the surface contact
     Private zeroOffset As myCoordinate  'Location of drill relative to hard stops of machine
-    Private goTap As myCoordinate  'Location of Tap relative to Drill
+    Private goTap As myCoordinate       'Location of Tap relative to Drill
     Private goDrill As myCoordinate
     
     Private maintIO(17) As Boolean
@@ -137,7 +139,7 @@ Option Explicit
 '---===---===---===---===--- Basic Functions - Initialize, Read-Only, Etc. ---===---===---===---===---===---===---===--
 
 '--------------------------- Init & Clear Functions -------------------------------------------------------------------
-    Public Sub initDrillTap(stdOffset As Double, myToolOffsetX As Double, myToolOffsetY As Double, myZeroOffsetX As Double, myZeroOffsetY As Double)
+    Public Sub initDrillTap(myStdOffset As Double, myToolOffsetX As Double, myToolOffsetY As Double, myZeroOffsetX As Double, myZeroOffsetY As Double)
         
         'Initialize class variables
         zeroSet = False
@@ -145,7 +147,7 @@ Option Explicit
         ESTOP_SET = False
             
         'Create 6k movement control object
-        myXY.init6k Axis_X, Axis_Y, In_MoveAck, In_ESTOP, In_TravelLim    'X-axis is motor 2, Y-axis is motor 1, acknowledge input is pin 32
+        myXY.init6k Axis_X, Axis_Y, In_MoveAck, In_ESTOP, In_HomX, In_HomY    'X-axis is motor 2, Y-axis is motor 1, acknowledge input is pin 32
         
         'Store calibration constants
         zeroOffset.X = myZeroOffsetX
@@ -155,6 +157,8 @@ Option Explicit
         goDrill.Y = 0
         goTap.X = myToolOffsetX
         goTap.Y = myToolOffsetY
+        
+        stdOffset = myStdOffset
         
         'Initialize clamp functions
         'myXY.initClamp Out_Clamp_Sol, Out_Clamp_Pump, In_Clamp_On, In_Clamp_Off
@@ -527,57 +531,23 @@ Option Explicit
 '---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---=
 '---===---===---=== Advanced Functions - Drill & Tap cycles; Move to Position ---===---===---===---===---===---===---==
 
+' waitForMove - Returns the myXY check move result
 Public Function waitForMove() As Boolean
 
-    waitForMove = False
-    
-    Dim checkForMove As Integer
-    
-    checkForMove = myXY.checkMove
-    
-    'If there is no move currently in progress, return true
-    If checkForMove = 0 Then
-        GoTo NoMoveInProgress
-    'If there is a move in progress
-    Else
-        'If the move is completed, acknowledge the completion
-        If checkForMove = 2 Then
-            'Do not continue until the acnowledgement is confirmed
-            If Not myXY.ackMov Then Exit Function
-        'If the move is ongoing, or the input errors, exit function
-        Else
-            Exit Function
-        End If
-    End If
-    
-
-    
-NoMoveInProgress:
-    
     waitForMove = True
+    
+    waitForMove = myXY.checkMove
 
 End Function
 
-Public Function goToPosition(positionX As Double, positionY As Double) As Boolean
+Public Sub stopNow()
 
-    goToPosition = False
+    myXY.moveStop
     
-    If joyOn Then Exit Function
-    
-    'If there is currently a move in progress, do not proceed
-    If myXY.checkMove Then Exit Function
+    myDestination = atIdle
+    myPosition = atUnk
 
-    'Set velocity for motion
-    myXY.setVel mBoth, V_Jog
-    'Move to the drill position
-    myXY.moveTo positionX, positionY, movYX
-
-
-    myDestination = atUnk
-    
-    goToPosition = True
-
-End Function
+End Sub
 
 Public Function moveTo(destination As atPosition) As Boolean
 
@@ -644,8 +614,7 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
                 
             End If
             
-            'Delay between turning on the tool and beginning the motion
-            If myXY.moveDelay(1) Then runTool = 1
+            runTool = 1
         
         'Second to last cycle, go to the tool's default position
         Case (totalCycles - 1)
@@ -654,7 +623,7 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
             Select Case tool
                 Case tDrill
                     If myXY.moveTo(0, goDrill.Y, movY) Then runTool = currentCycle + 1
-                Case tDrill
+                Case tTap
                     If myXY.moveTo(0, goTap.Y, movY) Then runTool = currentCycle + 1
             End Select
         
@@ -677,9 +646,18 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
         'All Other Cycles
         Case Else
                 
-            'Compute the drill depth and send drill command
+            'First cycle, delay before running
+            If currentCycle = 1 Then
+                If Not myXY.moveDelay(1) Then Exit Function
+                runTool = 2
+                Exit Function
+            End If
+                
+            'Compute the drill depth and send drill command. Cycles run from cycle 2 to total - 2 as cycle 1 is delay and final 2 cycles return to start
             Dim cycleDeep As Double
-            cycleDeep = (currentCycle / (totalCycles - 1)) * totalDeep
+            cycleDeep = -((((currentCycle - 1) / (totalCycles - 3))) * totalDeep + stdOffset)
+            
+            If tool = tTap Then cycleDeep = cycleDeep + goTap.Y
             
             Dim moveResult As Boolean
             

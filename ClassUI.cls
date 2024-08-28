@@ -36,11 +36,13 @@ End Enum
 
 Public Enum uiStatus
     uiLoading
+    uiHoming
     uiStandby
     uiWaiting
     uiJoystick
     uiClampOFF
-    uiClampOFFcycle
+    uiClampCycle1
+    uiClampCycle2
     uiESTOP
     uiRunningDrill
     uiRunningTap
@@ -231,7 +233,7 @@ Public Sub validate(textbox As uiTxtbxs, inputText As String)
     Dim tmpChk As Boolean
     tmpChk = False
     
-    If IsNumeric(inpuText) Then tmpChk = True
+    If IsNumeric(inputText) Then tmpChk = True
 
     'Determine which textbox is being validated. If the text is numeric, save current state. Else reset to previous
     Select Case textbox
@@ -246,9 +248,9 @@ Public Sub validate(textbox As uiTxtbxs, inputText As String)
         Case txtTapTo
             If tmpChk Then txtbxTapToChk = inputText Else frmUI.txtDeep(1).Text = txtbxTapToChk
         Case txtMaintX
-            If tmpChk Then txtbxMaintXCHK = inputText Else frmUI.txtMaintPos(0).Text = txtbxMaintXCHK
+            If tmpChk Then txtbxMaintXCHK = inputText Else frmMaintenance.txtMaintPos(0).Text = txtbxMaintXCHK
         Case txtMaintY
-            If tmpChk Then txtbxMaintXCHK = inputText Else frmUI.txtMaintPos(1).Text = txtbxMaintXCHK
+            If tmpChk Then txtbxMaintXCHK = inputText Else frmMaintenance.txtMaintPos(1).Text = txtbxMaintXCHK
     End Select
 
 End Sub
@@ -278,10 +280,16 @@ Public Sub go()
         
             If myDrillTap.isJoyOn Then
                 'If the joystick is on, clear joystick
-                myFSM.setJoystick 0
+                myFSM.setJoystick boolFalse
             Else
-                'Call the FSM to go to the run state
-                myFSM.setGoStop
+                If frmUI.cmdGO.Caption = "GO" Then
+                    'Call the FSM to go to the run state
+                    myFSM.setGoStop boolTrue
+                Else
+                    'Otherwise stop the cycle
+                    myFSM.setGoStop boolFalse
+                    myFSM.setMoveDest moveNone
+                End If
             End If
         End If
         
@@ -422,6 +430,12 @@ Public Sub updStatus(myStatus As uiStatus, strInput As String)
             
             btnState btnInit
             
+        Case uiHoming
+        
+            myMsg = "Homing Machine, Please Wait"
+            
+            btnState btnInit
+            
         Case uiStandby
         
             myMsg = "Waiting for Input"
@@ -430,7 +444,7 @@ Public Sub updStatus(myStatus As uiStatus, strInput As String)
             
         Case uiWaiting
         
-            myMsg = "Motion in Progress, Please Wait"
+            myMsg = "Motion in Progress"
             
             btnState btnRunning
             
@@ -446,12 +460,18 @@ Public Sub updStatus(myStatus As uiStatus, strInput As String)
         
             btnState btnStby
         
-        Case uiClampOFFcycle
+        Case uiClampCycle1
             
-            myMsg = "Clamp Off - Remove Shank and Reload"
+            myMsg = "Cycle Complete - Reload Shank for Next Cycle"
         
             btnState btnRunning
+
+        Case uiClampCycle2
             
+            myMsg = "Clamp Off - Reload Shank for Next Cycle"
+        
+            btnState btnRunning
+
         Case uiESTOP
         
             myMsg = "ESTOP Triggered - Check Machine before Clearing"
@@ -536,7 +556,7 @@ Private Sub updCycles()
 
     'Update the UI
     frmUI.lblDrillTapCount(0).Caption = "Drill:     " & Str(drillCycles)
-    frmUI.lblDrillTapCount(0).Caption = "Tap :     " & Str(tapCycles)
+    frmUI.lblDrillTapCount(2).Caption = "Tap :     " & Str(tapCycles)
     
     'Save to file
     Open savePath For Output As #1
@@ -570,7 +590,7 @@ Public Sub resetCounter(resetTool As uiCounter)
     Dim myCounter As Integer
     Dim myCycles As Integer
     
-    Select Case uiCounter
+    Select Case resetTool
         Case countDrill
             myCycles = drillCycles
             myAvg = drillAvg
@@ -597,7 +617,7 @@ Public Sub resetCounter(resetTool As uiCounter)
         
         
         'Reset the counter
-        Select Case uiCounter
+        Select Case resetTool
             Case countDrill
                 drillCycles = 0
                 drillAvg = myAvg

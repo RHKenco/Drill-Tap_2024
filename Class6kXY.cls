@@ -67,7 +67,8 @@ Option Explicit
         
         Private zeroOffset As myCoordinate
         
-        Private YlimitInput As Integer      'Input Pin for Y-Travel Limit Switch
+        Private YHomeIn As Integer      'Input Pin for Y-Travel Limit Switch
+        Private XHomeIn As Integer
         Private ESTOPpin As Integer         'Input Pin for ESTOP
         
 
@@ -91,7 +92,7 @@ Option Explicit
 '---===---===---===---===--- Basic Functions - Initialize, Read-Only, Etc. ---===---===---===---===---===---===---===--
 
 '--------------------------- Init & Clear Functions -------------------------------------------------------------------
-    Public Sub init6k(myMotorX As myMotors, myMotorY As myMotors, movAcknInpt As Integer, ESTOP_Input_Pin As Integer, Y_Limit_Input_Pin As Integer)
+    Public Sub init6k(myMotorX As myMotors, myMotorY As myMotors, movAcknInpt As Integer, ESTOP_Input_Pin As Integer, X_Home_Pin As Integer, Y_Home_Pin As Integer)
         
     'Initialize 6k:
     
@@ -130,15 +131,16 @@ Option Explicit
             
         'Set up IO
             
-            YlimitInput = Y_Limit_Input_Pin
+            YHomeIn = Y_Home_Pin
+            XHomeIn = X_Home_Pin
             
             'Set up Y-Axis negative limit switch
             'Dim strLimitSwitch As String
             
             'If myMotorY = m1 Then
-                'strLimitSwitch = Str(YlimitInput) & "-1S:"
+                'strLimitSwitch = Str(YHomeIn) & "-1S:"
             'Else
-                'strLimitSwitch = Str(YlimitInput) & "-2S:"
+                'strLimitSwitch = Str(YHomeIn) & "-2S:"
             'End If
             
             'myCns.write6k "1INFNC" & strLimitSwitch
@@ -183,7 +185,7 @@ Option Explicit
         myCns.write6k "COMEXC1:"
         
         'Set default velocity to 0, Set initial values for Acceleration, Tie Decell to accel
-        myCns.write6k "V0,0:A10,10:AD0,0:"
+        myCns.write6k "@D0:@V0:@A3:@AD0:"
         
         'Ensure acknowledge pin is set low for future motion
         setAckPin False
@@ -461,12 +463,12 @@ Option Explicit
     
     End Function
     
-    Private Sub setAckPin(State As Boolean)
+    Private Sub setAckPin(state As Boolean)
     
         Dim cmdStr As String
         cmdStr = "INEN." & Str(movComplete)
         
-        If State Then cmdStr = cmdStr & "-1:" Else cmdStr = cmdStr & "-0:"
+        If state Then cmdStr = cmdStr & "-1:" Else cmdStr = cmdStr & "-0:"
     
         myCns.write6k cmdStr
     
@@ -642,9 +644,6 @@ Option Explicit
             End If
             
         End If
-        
-        'By default, return false
-        ackMov = False
     
     End Function
     
@@ -677,6 +676,17 @@ Option Explicit
         cmdStr = genCmd("GO", mBoth, (CStr(newPos.X) & "," & CStr(newPos.Y)))
         
         myCns.write6k cmdStr
+        
+    End Sub
+    
+    Public Sub moveStop()
+        
+        'Stop 6k
+        myCns.write6k "!S:"
+        
+        'Clear all movement variables
+        moveInProgress = False
+        setAckPin False
         
     End Sub
     
@@ -724,7 +734,7 @@ Option Explicit
         movePeck = False
     
         'If there is either a currently pending movement or a completed-not-acknowledged movement, abort
-        If checkMov Then Exit Function
+        If checkMove Then Exit Function
         
         'Set move started flag
         moveInProgress = True
@@ -732,14 +742,14 @@ Option Explicit
         'Set advance velocity
         setVel motorY, peckVel
         
-        'Clear moving flag and set completion flag
-        completeMov
+        'Advance axis
+        move motorY, peckDeep
         
         'Set retract velocity
         setVel motorY, peckVel
         
         'Retract axis
-        move motorY, (peckDeep - peckBack)
+        move motorY, (peckDeep + peckBack)
         
         'set completion flag
         setAckPin True
@@ -753,13 +763,15 @@ Option Explicit
         moveDelay = False
     
         'If there is either a currently pending movement or a completed-not-acknowledged movement, abort
-        If checkMov Then Exit Function
+        If checkMove Then Exit Function
         
         'Set move started flag
         moveInProgress = True
         
-            'Delay the 6k by the indicated time
-            myCns.write6k "T" & Str(delayTime) & ":"
+        'Delay the 6k by the indicated time
+        myCns.write6k "T" & Str(delayTime) & ":"
+        
+        setAckPin True
         
         moveDelay = True
     

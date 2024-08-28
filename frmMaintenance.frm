@@ -200,7 +200,7 @@ Begin VB.Form frmMaintenance
          Width           =   5055
       End
       Begin VB.CommandButton cmdMaintIO 
-         Caption         =   "13 - Input:    Y-Travel Limit ======================"
+         Caption         =   "13 - Input:    Y-HOME Limit ======================"
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   8.25
@@ -219,7 +219,7 @@ Begin VB.Form frmMaintenance
          Width           =   5055
       End
       Begin VB.CommandButton cmdMaintIO 
-         Caption         =   "12 - Input:    Joystick Y- ========================"
+         Caption         =   "12 - Input:    X-HOME Limit ======================"
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   8.25
@@ -238,7 +238,7 @@ Begin VB.Form frmMaintenance
          Width           =   5055
       End
       Begin VB.CommandButton cmdMaintIO 
-         Caption         =   "11 - Input:    Joystick Y+ ========================"
+         Caption         =   "11 - Input:    Clamp Limit ========================"
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   8.25
@@ -257,7 +257,7 @@ Begin VB.Form frmMaintenance
          Width           =   5055
       End
       Begin VB.CommandButton cmdMaintIO 
-         Caption         =   "10 - Input:    Joystick X- ========================="
+         Caption         =   "10 - Input:    UNUSED =========================="
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   8.25
@@ -276,7 +276,7 @@ Begin VB.Form frmMaintenance
          Width           =   5055
       End
       Begin VB.CommandButton cmdMaintIO 
-         Caption         =   " 9 - Input:    Joystick X+ ========================="
+         Caption         =   " 9 - Input:    UNUSED =========================="
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   8.25
