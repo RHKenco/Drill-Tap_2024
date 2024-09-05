@@ -77,7 +77,7 @@ Public Enum uiCounter
     countBoth
 End Enum
 
-Const savePath = "C:\Drill-Tap_2024\savedData\cycles.txt"
+Const dataSavePath = "C:\Drill-Tap_2024\savedData\drillTapData.txt"
 
 
 'Keypress booleans to track the state of multiple keys
@@ -94,6 +94,12 @@ Private tapAvg As Double
 Private drillAvgCy As Integer
 Private tapAvgCy As Integer
 
+'Drill & Tap positions for local coordinate system
+Private stdOffset
+Private DrilloffX
+Private DrilloffY
+Private TapoffX
+Private TapoffY
 
 'Validation strings for textbox numeric entry
 Private txtbxDrillSpeedCHK As String
@@ -329,6 +335,8 @@ Private Sub btnState(newState As btnState)
             frmUI.topbarJoy.Enabled = False
             frmUI.topbarMaint.Enabled = False
             frmUI.topbarSet0.Enabled = False
+            frmUI.topbarSetDrill.Enabled = False
+            frmUI.topbarSetTap.Enabled = False
             frmMaintenance.topbarEnIO.Enabled = True
             
         Case btnStby
@@ -345,6 +353,8 @@ Private Sub btnState(newState As btnState)
             frmUI.topbarJoy.Enabled = True
             frmUI.topbarMaint.Enabled = True
             frmUI.topbarSet0.Enabled = True
+            frmUI.topbarSetDrill.Enabled = True
+            frmUI.topbarSetTap.Enabled = True
             frmMaintenance.topbarEnIO.Enabled = True
             
         Case btnRunning
@@ -361,6 +371,8 @@ Private Sub btnState(newState As btnState)
             frmUI.topbarJoy.Enabled = False
             frmUI.topbarMaint.Enabled = False
             frmUI.topbarSet0.Enabled = False
+            frmUI.topbarSetDrill.Enabled = False
+            frmUI.topbarSetTap.Enabled = False
             frmMaintenance.topbarEnIO.Enabled = True
             
         Case btnJoystick
@@ -376,7 +388,9 @@ Private Sub btnState(newState As btnState)
             
             frmUI.topbarJoy.Enabled = False
             frmUI.topbarMaint.Enabled = True
-            frmUI.topbarSet0.Enabled = True
+            frmUI.topbarSet0.Enabled = False
+            frmUI.topbarSetDrill.Enabled = True
+            frmUI.topbarSetTap.Enabled = True
             frmMaintenance.topbarEnIO.Enabled = True
             
         Case btnESTOP
@@ -393,6 +407,8 @@ Private Sub btnState(newState As btnState)
             frmUI.topbarJoy.Enabled = False
             frmUI.topbarMaint.Enabled = False
             frmUI.topbarSet0.Enabled = False
+            frmUI.topbarSetDrill.Enabled = False
+            frmUI.topbarSetTap.Enabled = False
             frmMaintenance.topbarEnIO.Enabled = True
             
         Case btnMaintOn
@@ -409,6 +425,8 @@ Private Sub btnState(newState As btnState)
             frmUI.topbarJoy.Enabled = True
             frmUI.topbarMaint.Enabled = False
             frmUI.topbarSet0.Enabled = True
+            frmUI.topbarSetDrill.Enabled = False
+            frmUI.topbarSetTap.Enabled = False
             frmMaintenance.topbarEnIO.Enabled = False
             
         Case Else
@@ -432,7 +450,7 @@ Public Sub updStatus(myStatus As uiStatus, strInput As String)
             
         Case uiHoming
         
-            myMsg = "Homing Machine, Please Wait"
+            myMsg = "Homing " & strInput & " Axis, Please Wait"
             
             btnState btnInit
             
@@ -526,16 +544,37 @@ frmUI.lblDRO(1).Caption = "Y:     " & Format(currentPosition.Y, "###0.000") & " 
 
 End Sub
 
-Private Sub loadCycles()
-
-    'If a previously saved drill / tap cycle file exists, then load data
-    If Dir(savePath) <> "" Then
+Private Function loadData() As Boolean
+    
+    If Dir(dataSavePath) <> "" Then
         
         'Load previous data
         Open savePath For Input As #1
-        Input #1, drillCycles, tapCycles, drillAvg, drillAvgCy, tapAvg, tapAvgCy
+        Input #1, drillCycles, tapCycles, drillAvg, drillAvgCy, tapAvg, tapAvgCy, DrilloffX, DrilloffY, TapoffX, TapoffY
         Close #1
         
+        loadData = True
+    Else
+        loadData = False
+    End If
+
+End Function
+
+Private Function saveData() As Boolean
+
+    'Save to file
+    Open savePath For Output As #1
+    Write #1, drillCycles, tapCycles, drillAvg, drillAvgCy, tapAvg, tapAvgCy, DrilloffX, DrilloffY, TapoffX, TapoffY
+    Close #1
+
+End Function
+
+Private Sub loadCycles()
+
+    'If a previously saved drill / tap cycle file exists, then load data
+    If loadData Then
+        
+        'Update the cycle display
         updCycles
             
     'If the file doesn't exist, ensure variables are cleared.
@@ -558,12 +597,39 @@ Private Sub updCycles()
     frmUI.lblDrillTapCount(0).Caption = "Drill:     " & Str(drillCycles)
     frmUI.lblDrillTapCount(2).Caption = "Tap :     " & Str(tapCycles)
     
-    'Save to file
-    Open savePath For Output As #1
-    Write #1, drillCycles, tapCycles, drillAvg, drillAvgCy, tapAvg, tapAvgCy
-    Close #1
+    saveData
 
 End Sub
+
+Private Sub loadOffsets()
+
+    If Not loadData Then
+        
+        stdOffset = 0.375
+        DrilloffX = 0.875
+        DrilloffY = -0.125
+        TapoffX = 5.625
+        TapoffY = -1.375
+        
+    End If
+    
+    myDrillTap.updOffsets stdOffset, DrilloffX, DrilloffY, TapoffX, TapoffY
+        
+End Sub
+
+Public Sub updOffsets(Standard As Double, DrillX As Double, DrillY As Double, TapX As Double, TapY As Double)
+
+    stdOffset = Standard
+    DrilloffX = DrillX
+    DrilloffY = DrillY
+    TapoffX = TapX
+    TapoffY = TapY
+    
+    saveData
+
+End Sub
+
+
 
 Public Sub increment(myTool As uiCounter)
     

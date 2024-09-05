@@ -679,7 +679,13 @@ Begin VB.Form frmUI
       Caption         =   "Joystick"
    End
    Begin VB.Menu topbarSet0 
-      Caption         =   "Set Home"
+      Caption         =   "Home Machine"
+   End
+   Begin VB.Menu topbarSetDrill 
+      Caption         =   "Set Drill Position"
+   End
+   Begin VB.Menu topbarSetTap 
+      Caption         =   "Set Tap Position"
    End
    Begin VB.Menu topbarMaint 
       Caption         =   "Maintenance"
@@ -724,23 +730,7 @@ Private Sub Form_Load()
     'Initialize UI
     myUI.initUI
     
-    
-    
-    'Initialize 6k
-    Dim toolOffsetCoordinate As myCoordinate
-    Dim zeroOffsetCoordinate As myCoordinate
-    
-    'The relationship between the drill and tap in local coordinates.
-    toolOffsetCoordinate.X = 5.625
-    toolOffsetCoordinate.Y = -1.375
-    
-    'The relationahip between global and local coordinates. This location corresponds to the drill location.
-    'True Distances are X: 1", Y: 5/16"
-    zeroOffsetCoordinate.X = 0.875
-    zeroOffsetCoordinate.Y = -0.125
-    
-    myDrillTap.initDrillTap 0.375, toolOffsetCoordinate.X, toolOffsetCoordinate.Y, zeroOffsetCoordinate.X, zeroOffsetCoordinate.Y
-    
+    myDrillTap.initDrillTap
     
     
     'Load maintenance form
@@ -869,6 +859,10 @@ End Sub
 
 Private Sub topbarSet0_Click()
 
+End Sub
+
+Private Sub topbarSetDrill()
+
     Dim currentPos As myCoordinate
     Dim lastZero As myCoordinate
 
@@ -894,6 +888,14 @@ Private Sub topbarSet0_Click()
         'Set Home
         myDrillTap.setHome
     End If
+
+
+End Sub
+
+Private Sub topbarSetTap()
+
+
+
 End Sub
 
 Private Sub txtDeep_Change(Index As Integer)

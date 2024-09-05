@@ -199,6 +199,16 @@ Private Sub runState0()
     'Wait for simulated move to be cleared before switching from initialize to standby
     If myDrillTap.waitForMove Then Exit Sub
 
+    If innerState = 0 Then
+        If myDrillTap.Home("X") Then Exit Sub
+        innerState = 1
+        myUI.updStatus uiHoming, "X"
+    ElseIf innerState = 1 Then
+        If myDrillTap.Home("Y") Then Exit Sub
+        innerState = 2
+        myUI.updStatus uiHoming, "Y"
+    End If
+
     'Initialize FSM on first run
     myUI.updStatus uiStandby, ""
     setState s1_Stby

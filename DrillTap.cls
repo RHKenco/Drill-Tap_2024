@@ -55,6 +55,8 @@ Option Explicit
     
     Const Axis_X = 2
     Const Axis_Y = 1
+    
+    Const savePath = "C:\Drill-Tap_2024\savedData\offsets.txt"
 
     Public Enum dtCo
         dNULL
@@ -139,7 +141,7 @@ Option Explicit
 '---===---===---===---===--- Basic Functions - Initialize, Read-Only, Etc. ---===---===---===---===---===---===---===--
 
 '--------------------------- Init & Clear Functions -------------------------------------------------------------------
-    Public Sub initDrillTap(myStdOffset As Double, myToolOffsetX As Double, myToolOffsetY As Double, myZeroOffsetX As Double, myZeroOffsetY As Double)
+    Public Sub initDrillTap()
         
         'Initialize class variables
         zeroSet = False
@@ -149,19 +151,10 @@ Option Explicit
         'Create 6k movement control object
         myXY.init6k Axis_X, Axis_Y, In_MoveAck, In_ESTOP, In_HomX, In_HomY    'X-axis is motor 2, Y-axis is motor 1, acknowledge input is pin 32
         
-        'Store calibration constants
-        zeroOffset.X = myZeroOffsetX
-        zeroOffset.Y = myZeroOffsetY
-        
-        goDrill.X = 0
-        goDrill.Y = 0
-        goTap.X = myToolOffsetX
-        goTap.Y = myToolOffsetY
+        'Pull saved offsets from data file; will set defaults if file does not exist
+        myUI.updOffsets
         
         stdOffset = myStdOffset
-        
-        'Initialize clamp functions
-        'myXY.initClamp Out_Clamp_Sol, Out_Clamp_Pump, In_Clamp_On, In_Clamp_Off
             
     End Sub
     
@@ -182,6 +175,34 @@ Option Explicit
         zeroSet = True
         
     End Function
+    
+    Public Sub updToolOffset(offX As Double, offY As Double)
+    
+        zeroOffset.X = zeroOffset.X + offX
+        zeroOffset.Y = zeroOffset.Y + offY
+        
+        myUI.updOffset stdOffset, zeroOffset.X, zeroOffset.Y, goTap.X, goTap.Y
+        
+    End Sub
+    
+    Public Sub updTapOffset(offX As Double, offY As Double)
+    
+        goTap.X = offX
+        goTap.Y = offY
+        
+        myUI.updOffset stdOffset, zeroOffset.X, zeroOffset.Y, goTap.X, goTap.Y
+    
+    End Sub
+    
+    Private Sub updOffsets(Standard As Double, DrillX As Double, DrillY As Double, TapX As Double, TapY As Double)
+    
+        stdOffset = Standard
+        zeroOffset.X = DrillX
+        zeroOffset.Y = DrillY
+        goTap.X = TapX
+        goTap.Y = TapY
+    
+    End Sub
 
 '---------------------------- Read-Only Set & Returns -----------------------------------------------------------------
         
@@ -404,11 +425,44 @@ Option Explicit
     
     End Sub
  
-    Public Sub setClamp(clampState As Boolean)
+    Public Function setClamp(clampState As Boolean) As Boolean
     
-        If clampState Then myXY.virtualPress In_Clamp_On, 0.25 Else myXY.virtualPress In_Clamp_Off, 0.25
+        Static cmdSent As Boolean
+    
+        'If the clamp is requested to close but is already closed, (and a command is not already in progress), open clamp
+        If (clampState And checkClamp) And Not cmdSent Then clampState = False
+            
+        'If the clamp is requested to open
+        If Not clampState Then
+            'If it is not already open
+            If checkClamp Then
+                'Send the command if it has not already been given
+                If Not cmdSent Then
+                    'TODO - ADD CLAMP OPEN COMMAND
+                    cmdSent = True
+                End If
+            'If the clamp is open, exit function and return true
+            Else
+                cmdSent = False
+                setClamp = True
+            End If
+        'If the clamp is requested to be closed
+        Else
+            'If the clamp is open
+            If Not checkClamp Then
+                'Send the close command if it has not already been given
+                If Not cmdSent Then
+                    'TODO - ADD CLAMP CLOSE COMMAND
+                    cmdSent = True
+                End If
+            'If the clamp is closed, exit function and return true
+            Else
+                cmdSent = False
+                setClamp = True
+            End If
+        End If
         
-    End Sub
+    End Function
     
     Public Function checkClamp() As Boolean
     
@@ -457,11 +511,11 @@ Option Explicit
 
     End Sub
     
-    Public Sub joy(direction As joyDirection)
+    Public Sub joy(Direction As joyDirection)
     
         If Not joyOn Then Exit Sub
     
-        Select Case direction
+        Select Case Direction
             Case joyNeutral  'No Movement
                 myXY.setJogIn In_Joy_X1, False
                 myXY.setJogIn In_Joy_X2, False
@@ -548,6 +602,26 @@ Public Sub stopNow()
     myPosition = atUnk
 
 End Sub
+
+Public Function Home(motor As String) As Boolean
+
+    Home = False
+
+    'If there is currently a move in progress, do not proceed
+    If myXY.checkMove Then Exit Function
+
+    'Home the appropriate motor; exit function if the move does not start
+    Select Case motor
+        Case "X"
+            If Not myXY.moveTo(0, 0, movHomeX) Then Exit Function
+        Case "Y"
+            If Not myXY.moveTo(0, 0, movHomeY) Then Exit Function
+    End Select
+    
+    'If homing motion has been started, return true
+    Home = True
+    
+End Function
 
 Public Function moveTo(destination As atPosition) As Boolean
 

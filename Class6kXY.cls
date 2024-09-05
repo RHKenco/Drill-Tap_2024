@@ -47,6 +47,8 @@ Option Explicit
         movY
         movYX
         movY0XY
+        movHomeX
+        movHomeY
     End Enum
       
 '--------------------------- Class Variables --------------------------------------------------------------------------
@@ -109,6 +111,11 @@ Option Explicit
             myCns.write6k "@MA1:"
         
         'Set up axes
+            
+            'Set initialized internal variables
+            motorX = myMotorX
+            motorY = myMotorY
+            
             'Set axes to behave as steppers
             myCns.write6k "@AXSDEF0:@DRFEN0:"
             
@@ -118,7 +125,7 @@ Option Explicit
             
             strDriveScale = Str(myDriveScale) & "," & Str(myDriveScale)
             
-            If myMotorX = m1 Then
+            If motorX = m1 Then
                 strResScale = Str(myScaleX) & "," & Str(myScaleY)
             Else
                 strResScale = Str(myScaleY) & "," & Str(myScaleX)
@@ -129,45 +136,36 @@ Option Explicit
             'Enable Scaling
             myCns.write6k "SCALE1:@MC0:"
             
-        'Set up IO
+        'Set up Home Limits
+            
+            movComplete = movAcknInpt
             
             YHomeIn = Y_Home_Pin
             XHomeIn = X_Home_Pin
             
             'Set up Y-Axis negative limit switch
-            'Dim strLimitSwitch As String
+            Dim strHomeX As String
+            Dim strHomeY As String
             
-            'If myMotorY = m1 Then
-                'strLimitSwitch = Str(YHomeIn) & "-1S:"
-            'Else
-                'strLimitSwitch = Str(YHomeIn) & "-2S:"
-            'End If
+            If motorX = m1 Then
+                strHomeX = Str(XHomeIn) & "-1T:"
+                strHomeY = Str(YHomeIn) & "-2T:"
+            Else
+                strHomeX = Str(XHomeIn) & "-2T:"
+                strHomeY = Str(YHomeIn) & "-1T:"
+            End If
             
-            'myCns.write6k "1INFNC" & strLimitSwitch
+            myCns.write6k "1INFNC" & strHomeX & "1INFNC" & strHomeY
+            myCns.Write "@LIMLVL1:@HOMV0.25:@HOMBAC1:@HOMVF0.125:"
             
-            'Enable EOT Limit for negative Y-Axis
-            'Dim strEOT As String
+        'Set up estop button
+            ESTOPpin = ESTOP_Input_Pin
             
-            'If myMotorY = m1 Then strEOT = "0,1" Else strEOT = "1,0"
-            
-            'myCns.write6k "@LH0:LH" & strEOT & ":LHAD100,100:LHLVL1:"
-            
-            
-            'Set up estop button
-            'ESTOPpin = ESTOP_Input_Pin
-            
-            'myCns.write6k "1INLVL" & Str(ESTOPpin) & "-1:1INFNC" & Str(ESTOPpin) & "-D:"
+            myCns.write6k "1INFNC" & Str(ESTOPpin) & "-D:"
             
             
         'Initialize the 6k's motion parameters
         reset6k
-        
-        
-        'Set initialized internal variables
-        motorX = myMotorX
-        motorY = myMotorY
-        
-        movComplete = movAcknInpt
         
         'Simulate move to delay UI initialization until the 6k initialization is complete
         moveInProgress = True
@@ -196,30 +194,6 @@ Option Explicit
         'myCns.write6k "JOGA10,5:JOGAD300,150:JOGVH6,3:JOGVL30,15:"
     
     End Sub
-    
-    'Function specifically for operating the hydraulic clamp on the Drill-Tap
-    'Public Sub initClamp(mySol As Integer, myPump As Integer, myOnInput As Integer, myOffInput As Integer)
-    
-        'myCns.write6k "DEL COFF:DEF COFF:"
-            'setOut mySol, True
-        'myCns.write6k "END:"
-        
-        'myCns.write6k "DEL CON:DEF CON:"
-        
-            'setOut mySol, True
-            'setOut myPump, True
-            'myCns.write6k "T1.9:"
-            'setOut mySol, False
-            'myCns.write6k "T.5:"
-            'setOut myPump, False
-    
-        'myCns.write6k "END:"
-        
-        'myCns.write6k "1INFNC" & Str(myOffInput) & "-P1:"
-        'myCns.write6k "1INFNC" & Str(myOnInput) & "-P2:"
-    
-    'End Sub
-    
     
     'chkESTOP - Checks ESTOP pin and stops all motion if it is raised
     '   - INPUTS:
@@ -690,6 +664,24 @@ Option Explicit
         
     End Sub
     
+    Private Sub moveHome(motor As Integer, Direction As Boolean)
+    
+        Dim cmdStr As String
+        
+        cmdStr = "HOM"
+        
+        Select Case motor
+            Case 1
+                If Direction Then cmdStr = cmdStr & "0X:" Else cmdStr = cmdStr & "1X:"
+            Case 2
+                If Direction Then cmdStr = cmdStr & "X0:" Else cmdStr = cmdStr & "X1:"
+        End Select
+    
+        'Initiate Home Motion
+        myCns.write6k cmdStr
+    
+    End Sub
+    
     Public Function moveTo(newPosX As Double, newPosY As Double, moveOption As moveType) As Boolean
         
         moveTo = False
@@ -719,6 +711,10 @@ Option Explicit
                 move motorY, 10
                 move motorX, newPosX
                 move motorY, newPosY
+            Case movHomeX
+                moveHome motorX, True
+            Case movHomeY
+                moveHome motorY, False
         End Select
     
         'set completion flag
