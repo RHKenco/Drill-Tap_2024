@@ -198,14 +198,21 @@ Private Sub runState0()
 
     'Wait for simulated move to be cleared before switching from initialize to standby
     If myDrillTap.waitForMove Then Exit Sub
-
+    
     If innerState = 0 Then
-        If myDrillTap.Home("X") Then Exit Sub
-        innerState = 1
-        myUI.updStatus uiHoming, "X"
+        Dim msgRtn As VbMsgBoxResult
+        msgRtn = MsgBox("Preparing to Home machine. Check for obstructions!" & vbCrLf & "Clear to proceed?", vbYesNo, "Check Machine")
+        If msgRtn = vbNo Then
+            Unload frmUI
+            Exit Sub
+        End If
     ElseIf innerState = 1 Then
-        If myDrillTap.Home("Y") Then Exit Sub
+        If myDrillTap.Home("X") Then Exit Sub
         innerState = 2
+        myUI.updStatus uiHoming, "X"
+    ElseIf innerState = 2 Then
+        If myDrillTap.Home("Y") Then Exit Sub
+        innerState = 3
         myUI.updStatus uiHoming, "Y"
     End If
 
@@ -222,6 +229,11 @@ Private Sub runAlways()
     
     'Check ESTOP Unless in Active Maintenance Mode
     myDrillTap.checkESTOP ((Not frmMaintenance.frameMaintIO.Enabled))
+    
+    'Check user inputs
+    Dim isRunning As Boolean
+    If Not ((fsmState = s1_Stby) Or (fsmState = s2_Joy) Or (fsmState = s3_Maint)) Then isRunning = True
+    myDrillTap.checkInputs (isRunning)
     
     'Update the DRO
     myUI.updDRO

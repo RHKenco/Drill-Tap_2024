@@ -210,18 +210,21 @@ Option Explicit
         'If ESTOP pin is not raised, exit
         If Not chkIn(ESTOPpin) Then Exit Function
         
-        If Active Then
-            'Imediate stop command, imediate shut down all outputs, disable motors
-            myCns.write6k "!AD100,100:!S:!OUTALL1,32,0:WAIT(MOV=b00):@DRIVE0:"
-            
-            'Set move in progress flag to cause move commands to abort
-            moveInProgress = True
-            
-        End If
+        If Active Then callESTOPnow
         
         chkESTOP = True
     
     End Function
+    
+    Public Sub callESTOPnow()
+    
+        'Imediate stop command, imediate shut down all outputs, disable motors
+        myCns.write6k "!AD100,100:!S:!OUTALL1,32,0:WAIT(MOV=b00):@DRIVE0:"
+        
+        'Set move in progress flag to cause move commands to abort
+        moveInProgress = True
+        
+    End Sub
     
 
 '---------------------------- Internal Functions ----------------------------------------------------------------------
@@ -526,6 +529,36 @@ Option Explicit
 
 '---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---=
 '---===---===---===---===- Advanced Functions - Move to Position, etc. ---===---===---===---===---===---===---===---===
+    
+    Public Sub setClamp(Pump_Pin As Integer, Sol_Pin As Integer, clampSet As Boolean)
+    
+        'If the request is to release the clamp
+        If Not clampSet Then
+        
+            'Open the clamp solenoid valve
+            setOut CStr(Sol_Pin), True
+        
+        'Otherwise, close the clamp
+        Else
+            
+            'Start by opening the clamp solenoid
+            setOut CStr(Sol_Pin), True
+            'Wait for 0.3 seconds
+            myCns.write6k "T.3:"
+            'Start the pump motor
+            setOut CStr(Pump_Pin), True
+            'Wait 1.9 Seconds
+            myCns.write6k "T1.9:"
+            'Close Solenoid
+            setOut CStr(Sol_Pin), False
+            'Wait half a second
+            myCns.write6k "T.5:"
+            'Then stop the pump
+            setOut CStr(Pump_Pin), False
+        
+        End If
+    
+    End Sub
     
     Public Sub setJogIn(myPin As Integer, myState As Boolean)
         

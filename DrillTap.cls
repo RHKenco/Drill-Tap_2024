@@ -438,7 +438,7 @@ Option Explicit
             If checkClamp Then
                 'Send the command if it has not already been given
                 If Not cmdSent Then
-                    'TODO - ADD CLAMP OPEN COMMAND
+                    myXY.setClamp Out_Clamp_Pump, Out_Clamp_Sol, False
                     cmdSent = True
                 End If
             'If the clamp is open, exit function and return true
@@ -452,7 +452,7 @@ Option Explicit
             If Not checkClamp Then
                 'Send the close command if it has not already been given
                 If Not cmdSent Then
-                    'TODO - ADD CLAMP CLOSE COMMAND
+                    myXY.setClamp Out_Clamp_Pump, Out_Clamp_Sol, True
                     cmdSent = True
                 End If
             'If the clamp is closed, exit function and return true
@@ -467,6 +467,58 @@ Option Explicit
     Public Function checkClamp() As Boolean
     
         checkClamp = myXY.chkIn(In_Clamp_Lim)
+    
+    End Function
+    
+    'checkInputs - Checks the state of all user inputs each FSM loop, and acts accordingly.
+    Public Function checkInputs(passActive As Boolean) As Boolean
+    
+        Static InputState As Integer
+    
+        'Return false by default
+        checkInputs = False
+        
+        'Check clamp - if pin low, see if a pass is in progress
+        If Not checkClamp Then
+        
+            'If pass is in progress, then set estop
+            If passActive Then
+                myXY.callESTOPnow
+                myFSM.setESTOP
+                Exit Sub
+            End If
+            
+        End If
+        
+        'If the pass is not in progress and the clamp-on button is pressed, engage the clamp
+        If (myXY.chkIn(In_Clamp_On) Or InputState) And Not passActive Then
+            
+            'Verify that clamp-off is not in progress
+            If InputState <> 2 Then
+                'Set InputState variable to indicate that a clamp-on operation is in progress
+                If InputState = 0 Then InputState = 1
+                
+                'Call the set-Clamp function. This will return true when the clamp is confirmed to have been set, clearing the input state
+                If setClamp(True) Then InputState = 0
+            
+            End If
+        End If
+        
+        'If the pass is not in progress and the clamp-on button is pressed, engage the clamp
+        If (myXY.chkIn(In_Clamp_Off) Or InputState) And Not passActive Then
+            
+            'Verify that clamp-off is not in progress
+            If InputState <> 1 Then
+                'Set InputState variable to indicate that a clamp-on operation is in progress
+                If InputState = 0 Then InputState = 2
+                
+                'Call the set-Clamp function. This will return true when the clamp is confirmed to have been Released, clearing the input state
+                If setClamp(False) Then InputState = 0
+            
+            End If
+        End If
+        
+        checkInputs = True
     
     End Function
     
