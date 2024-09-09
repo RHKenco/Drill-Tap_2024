@@ -147,6 +147,7 @@ Option Explicit
         zeroSet = False
         joyOn = False
         ESTOP_SET = False
+        
             
         'Create 6k movement control object
         myXY.init6k Axis_X, Axis_Y, In_MoveAck, In_ESTOP, In_HomX, In_HomY    'X-axis is motor 2, Y-axis is motor 1, acknowledge input is pin 32
@@ -287,12 +288,12 @@ Option Explicit
     '       - Boolean containing ESTOP State - True -> ESTOP Active, False -> ESTOP not Active
     '   - ACTIONS:
     '       - If ESTOP is set; sets class flag, ignores pin until cleared, sets FSM Estop state
-    Public Function checkESTOP(Active As Boolean) As Boolean
+    Public Function checkESTOP(Active As Boolean, Optional IsFSMcall As Boolean) As Boolean
                        
         'If estop flag set, pin data irrelevant. If it is not set, check estop pin
         If Not ESTOP_SET Then ESTOP_SET = myXY.chkESTOP(Active)
         
-        If ESTOP_SET Then myFSM.setESTOP
+        If ESTOP_SET Then If Not IsFSMcall Then myFSM.setESTOP
         
         'Return value of ESTOP SET
         checkESTOP = ESTOP_SET
@@ -465,7 +466,8 @@ Option Explicit
     
     Public Function checkClamp() As Boolean
     
-        checkClamp = myXY.chkIn(In_Clamp_Lim)
+        'Check clamp pin. Invert due to pin being normally closed
+        checkClamp = Not myXY.chkIn(In_Clamp_Lim)
     
     End Function
     
@@ -477,12 +479,11 @@ Option Explicit
         'Return false by default
         checkInputs = False
         
-        'Check clamp - if pin low, see if a pass is in progress
+        'Check clamp - if the clamp is not set, see if a pass is in progress
         If Not checkClamp Then
         
             'If pass is in progress, then set estop
             If passActive Then
-                myXY.callESTOPnow
                 myFSM.setESTOP
                 Exit Function
             End If
@@ -490,7 +491,7 @@ Option Explicit
         End If
         
         'If the pass is not in progress and the clamp-on button is pressed, engage the clamp
-        If (myXY.chkIn(In_Clamp_On) Or inputState) And Not passActive Then
+        If (myXY.chkIn(In_Clamp_On) Or (inputState = 1)) And Not passActive Then
             
             'Verify that clamp-off is not in progress
             If inputState <> 2 Then
@@ -501,10 +502,8 @@ Option Explicit
                 If setClamp(True) Then inputState = 0
             
             End If
-        End If
-        
         'If the pass is not in progress and the clamp-on button is pressed, engage the clamp
-        If (myXY.chkIn(In_Clamp_Off) Or inputState) And Not passActive Then
+        ElseIf (myXY.chkIn(In_Clamp_Off) Or (inputState = 2)) And Not passActive Then
             
             'Verify that clamp-off is not in progress
             If inputState <> 1 Then

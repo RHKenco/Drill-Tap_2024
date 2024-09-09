@@ -145,6 +145,14 @@ End Sub
 'Immediately go to ESTOP State
 Public Sub setESTOP()
 
+    myDrillTap.checkESTOP True, True
+    
+    
+    'Clear FSM so it goes back to Standby after ESTOP is cleared
+    joystickMode = False
+    runMode = False
+    moveMode = moveNone
+
     myUI.updStatus uiESTOP, ""
 
     setState s7_ESTOP
@@ -158,7 +166,11 @@ Public Sub clearESTOP()
 End Sub
 
 
+Public Sub setHome()
 
+    setState s0_Init
+
+End Sub
 
 
 
@@ -234,7 +246,8 @@ Private Sub runAlways()
     
     'Check user inputs
     Dim isRunning As Boolean
-    If Not ((fsmState = s1_Stby) Or (fsmState = s2_Joy) Or (fsmState = s3_Maint)) Then isRunning = True
+    If (fsmState = s6_Run) Then isRunning = True
+    
     myDrillTap.checkInputs (isRunning)
     
     'Update the DRO
@@ -556,7 +569,9 @@ Private Sub runState6()
             End If
             
         Case 5  'Wait for Clamp, then start new cycle
-            
+        
+            myDrillTap.checkInputs False
+        
             Select Case Counter
                 Case 0
                     'Update UI Msg

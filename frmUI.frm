@@ -858,6 +858,15 @@ Private Sub topbarMaint_Click()
 
 End Sub
 
+Private Sub topbarSet0_Click()
+    
+    Dim response As VbMsgBoxResult
+    response = MsgBox("Would you like to home the machine?", vbYesNo, "Home Machine?")
+    
+    If response = vbYes Then myFSM.setHome
+
+End Sub
+
 Private Sub topbarSetDrill_Click()
 
     Dim currentPos As myCoordinate

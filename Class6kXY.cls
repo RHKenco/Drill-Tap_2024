@@ -28,8 +28,11 @@ Option Explicit
 '--------------------------- Class Enumerations & Constants -----------------------------------------------------------
 
     Const myDriveScale = 5000   'Steps per Revolution - Check Dip Switches on Drives
-    Const myScaleX = 5000  'Steps per Inch - Ball screw & 1"/Rev + 10:1 transmission -> DriveScale * 10
-    Const myScaleY = 5000
+    Const myScaleX = 50000  'Steps per Inch - Ball screw & 1"/Rev + 10:1 transmission -> DriveScale * 10
+    Const myScaleY = 50000
+
+    Const x_Max = 6.5
+    Const y_Min = -2.5
 
     Enum myMotors
         mNull
@@ -62,7 +65,6 @@ Option Explicit
         Private movComplete As Integer
         'Variable that indicates that a move has been initiated,but not completed
         Private moveInProgress As Boolean
-        
         
         Private motorX As Integer
         Private motorY As Integer
@@ -156,7 +158,7 @@ Option Explicit
             End If
             
             myCns.write6k "1INFNC" & strHomeX & "1INFNC" & strHomeY
-            myCns.write6k "@LIMLVL1:@HOMV0.25:@HOMBAC1:@HOMVF0.125:"
+            myCns.write6k "@LIMLVL1:@HOMV1:@HOMBAC1:@HOMVF0.5:"
             
         'Set up estop button
             ESTOPpin = ESTOP_Input_Pin
@@ -219,7 +221,7 @@ Option Explicit
     Public Sub callESTOPnow()
     
         'Imediate stop command, imediate shut down all outputs, disable motors
-        myCns.write6k "!AD100,100:!S:!OUTALL1,32,0:WAIT(MOV=b00):@DRIVE0:"
+        myCns.write6k "!1OUTALL1,8,0:!AD100,100:!S:WAIT(MOV=b00):@DRIVE0:"
         
         'Set move in progress flag to cause move commands to abort
         moveInProgress = True
@@ -247,8 +249,10 @@ Option Explicit
         Select Case motor
             Case motorX
                 If globalPos < 0 Then globalPos = 0
+                If globalPos > x_Max Then globalPos = x_Max
             Case motorY
                 If globalPos > 0 Then globalPos = 0
+                If globalPos < y_Min Then globalPos = y_Min
         End Select
         
         coGlobal = globalPos

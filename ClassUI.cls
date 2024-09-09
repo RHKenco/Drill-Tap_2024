@@ -563,7 +563,7 @@ End Function
 Private Function saveData() As Boolean
 
     'Save to file
-    Open savePath For Output As #1
+    Open dataSavePath For Output As #1
     Write #1, drillCycles, tapCycles, drillAvg, drillAvgCy, tapAvg, tapAvgCy, DrilloffX, DrilloffY, TapoffX, TapoffY
     Close #1
 
