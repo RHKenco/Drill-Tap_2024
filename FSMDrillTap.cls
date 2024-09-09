@@ -205,20 +205,22 @@ Private Sub runState0()
         If msgRtn = vbNo Then
             Unload frmUI
             Exit Sub
+        Else
+            innerState = 1
         End If
     ElseIf innerState = 1 Then
-        If myDrillTap.Home("Y") Then Exit Sub
+        If Not myDrillTap.Home("Y") Then Exit Sub
         innerState = 2
         myUI.updStatus uiHoming, "Y"
     ElseIf innerState = 2 Then
-        If myDrillTap.Home("X") Then Exit Sub
+        If Not myDrillTap.Home("X") Then Exit Sub
         innerState = 3
         myUI.updStatus uiHoming, "X"
+    ElseIf innerState = 3 Then
+        'Initialize FSM on first run
+        myUI.updStatus uiStandby, ""
+        setState s1_Stby
     End If
-
-    'Initialize FSM on first run
-    myUI.updStatus uiStandby, ""
-    setState s1_Stby
 
 End Sub
 

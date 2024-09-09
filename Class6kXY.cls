@@ -28,8 +28,8 @@ Option Explicit
 '--------------------------- Class Enumerations & Constants -----------------------------------------------------------
 
     Const myDriveScale = 5000   'Steps per Revolution - Check Dip Switches on Drives
-    Const myScaleX = 50000  'Steps per Inch - Ball screw & 1"/Rev + 10:1 transmission -> DriveScale * 10
-    Const myScaleY = 50000
+    Const myScaleX = 5000  'Steps per Inch - Ball screw & 1"/Rev + 10:1 transmission -> DriveScale * 10
+    Const myScaleY = 5000
 
     Enum myMotors
         mNull
@@ -156,7 +156,7 @@ Option Explicit
             End If
             
             myCns.write6k "1INFNC" & strHomeX & "1INFNC" & strHomeY
-            myCns.Write "@LIMLVL1:@HOMV0.25:@HOMBAC1:@HOMVF0.125:"
+            myCns.write6k "@LIMLVL1:@HOMV0.25:@HOMBAC1:@HOMVF0.125:"
             
         'Set up estop button
             ESTOPpin = ESTOP_Input_Pin
@@ -443,7 +443,7 @@ Option Explicit
     Private Sub setAckPin(state As Boolean)
     
         Dim cmdStr As String
-        cmdStr = "INEN." & Str(movComplete)
+        cmdStr = "WAIT(MOV=b00):INEN." & Str(movComplete)
         
         If state Then cmdStr = cmdStr & "-1:" Else cmdStr = cmdStr & "-0:"
     
@@ -625,25 +625,25 @@ Option Explicit
     Public Function ackMov() As Integer
     
         'Prevent repeated acknowlege commands to the 6k by raising a static boolean when the command is sent to lower the pin
-        Static cmdSent As Boolean
+        Static CmdSent As Boolean
         
         If Not moveInProgress Then
             ackMov = 0
         Else
             ackMov = 1
             
-            If chkAckPin And Not cmdSent Then
+            If chkAckPin And Not CmdSent Then
                 
                 'Send command to reset acnkowledge pin
                 setAckPin False
-                cmdSent = True
+                CmdSent = True
                 
                 ackMov = 2
                 
-            ElseIf Not chkAckPin And cmdSent Then
+            ElseIf Not chkAckPin And CmdSent Then
                 
                 'Clear variables and return state
-                cmdSent = False
+                CmdSent = False
                 moveInProgress = False
                 
                 ackMov = 3
@@ -701,14 +701,37 @@ Option Explicit
     
         Dim cmdStr As String
         
-        cmdStr = "HOM"
+
         
         Select Case motor
             Case 1
-                If Direction Then cmdStr = cmdStr & "0X:" Else cmdStr = cmdStr & "1X:"
+                'Determine home direction - True is Positive, False is Negative
+                If Direction Then
+                    'Start with Home motion paramters:
+                    'Home final direction should be the same as the initial direction
+                    cmdStr = cmdStr & "HIMDF0X:"
+                    'Home should end on the edge closest to the initial direction (therefore opposite edge - home negative, positive edge)
+                    cmdStr = cmdStr & "HOMEDG1X:"
+                    'Begin Home Motion
+                    cmdStr = cmdStr & "HOM0X:"
+                Else
+                    cmdStr = cmdStr & "HOMDF1X:"
+                    cmdStr = cmdStr & "HOMEDG0X:"
+                    cmdStr = cmdStr & "HOM1X:"
+                End If
             Case 2
-                If Direction Then cmdStr = cmdStr & "X0:" Else cmdStr = cmdStr & "X1:"
+                If Direction Then
+                    cmdStr = cmdStr & "HOMDFX0:"
+                    cmdStr = cmdStr & "HOMEDGX1:"
+                    cmdStr = cmdStr & "HOMX0:"
+                Else
+                    cmdStr = cmdStr & "HOMDFX1:"
+                    cmdStr = cmdStr & "HOMEDGX0:"
+                    cmdStr = cmdStr & "HOMX1:"
+                End If
         End Select
+    
+    
     
         'Initiate Home Motion
         myCns.write6k cmdStr

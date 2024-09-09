@@ -9,6 +9,16 @@ Begin VB.Form frmConsole
    ScaleHeight     =   5655
    ScaleWidth      =   10980
    StartUpPosition =   3  'Windows Default
+   Begin VB.CheckBox chkShowCons 
+      BackColor       =   &H00800000&
+      Caption         =   "Show Console on Startup"
+      ForeColor       =   &H8000000E&
+      Height          =   375
+      Left            =   8040
+      TabIndex        =   7
+      Top             =   840
+      Width           =   2295
+   End
    Begin VB.TextBox txtConsole 
       BackColor       =   &H00800000&
       BeginProperty Font 
@@ -239,8 +249,11 @@ Private Sub cmdConnect_Click(Index As Integer)
         
             cmdConnect(1).Enabled = False
             cmdConnect(2).Enabled = False
-        
-            Me.Hide
+            
+            If Not CBool(Me.chkShowCons.Value) Then
+                Me.Hide
+            End If
+            Me.chkShowCons.Visible = False
             timer6kRead.Enabled = False
             frmUI.Show
             

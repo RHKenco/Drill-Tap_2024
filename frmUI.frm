@@ -819,6 +819,7 @@ Private Sub Form_Unload(Cancel As Integer)
     'Stop UI form timer and re-enable console only timer
     frmUI.tmrFSM.Enabled = False
     
+    frmConsole.chkShowCons.Visible = True
     frmConsole.timer6kRead.Enabled = True
     frmConsole.Show
 

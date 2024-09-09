@@ -95,11 +95,11 @@ Private drillAvgCy As Integer
 Private tapAvgCy As Integer
 
 'Drill & Tap positions for local coordinate system
-Private stdOffset
-Private DrilloffX
-Private DrilloffY
-Private TapoffX
-Private TapoffY
+Private stdOffset As Double
+Private DrilloffX As Double
+Private DrilloffY As Double
+Private TapoffX As Double
+Private TapoffY As Double
 
 'Validation strings for textbox numeric entry
 Private txtbxDrillSpeedCHK As String

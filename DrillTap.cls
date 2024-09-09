@@ -426,23 +426,23 @@ Option Explicit
  
     Public Function setClamp(clampState As Boolean) As Boolean
     
-        Static cmdSent As Boolean
+        Static CmdSent As Boolean
     
         'If the clamp is requested to close but is already closed, (and a command is not already in progress), open clamp
-        If (clampState And checkClamp) And Not cmdSent Then clampState = False
+        If (clampState And checkClamp) And Not CmdSent Then clampState = False
             
         'If the clamp is requested to open
         If Not clampState Then
             'If it is not already open
             If checkClamp Then
                 'Send the command if it has not already been given
-                If Not cmdSent Then
+                If Not CmdSent Then
                     myXY.setClamp Out_Clamp_Pump, Out_Clamp_Sol, False
-                    cmdSent = True
+                    CmdSent = True
                 End If
             'If the clamp is open, exit function and return true
             Else
-                cmdSent = False
+                CmdSent = False
                 setClamp = True
             End If
         'If the clamp is requested to be closed
@@ -450,13 +450,13 @@ Option Explicit
             'If the clamp is open
             If Not checkClamp Then
                 'Send the close command if it has not already been given
-                If Not cmdSent Then
+                If Not CmdSent Then
                     myXY.setClamp Out_Clamp_Pump, Out_Clamp_Sol, True
-                    cmdSent = True
+                    CmdSent = True
                 End If
             'If the clamp is closed, exit function and return true
             Else
-                cmdSent = False
+                CmdSent = False
                 setClamp = True
             End If
         End If
@@ -657,10 +657,11 @@ End Sub
 Public Function Home(motor As String) As Boolean
 
     Home = False
+    Static CmdSent As Boolean
 
-    'If there is currently a move in progress, do not proceed
+    'If there is currently a move in progress
     If myXY.checkMove Then Exit Function
-
+        
     'Home the appropriate motor; exit function if the move does not start
     Select Case motor
         Case "X"
