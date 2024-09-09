@@ -549,7 +549,7 @@ Private Function loadData() As Boolean
     If Dir(dataSavePath) <> "" Then
         
         'Load previous data
-        Open savePath For Input As #1
+        Open dataSavePath For Input As #1
         Input #1, drillCycles, tapCycles, drillAvg, drillAvgCy, tapAvg, tapAvgCy, DrilloffX, DrilloffY, TapoffX, TapoffY
         Close #1
         
@@ -612,8 +612,6 @@ Private Sub loadOffsets()
         TapoffY = -1.375
         
     End If
-    
-    myDrillTap.updOffsets stdOffset, DrilloffX, DrilloffY, TapoffX, TapoffY
         
 End Sub
 
@@ -626,6 +624,18 @@ Public Sub updOffsets(Standard As Double, DrillX As Double, DrillY As Double, Ta
     TapoffY = TapY
     
     saveData
+
+End Sub
+
+Public Sub getOffsets()
+
+    'If the offsets have not been loaded then
+    If stdOffset = 0 Then
+        loadOffsets
+    End If
+
+    'Send the offsets to the Drill&Tap Class
+    myDrillTap.updOffsets stdOffset, DrilloffX, DrilloffY, TapoffX, TapoffY
 
 End Sub
 

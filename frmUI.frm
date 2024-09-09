@@ -857,11 +857,7 @@ Private Sub topbarMaint_Click()
 
 End Sub
 
-Private Sub topbarSet0_Click()
-
-End Sub
-
-Private Sub topbarSetDrill()
+Private Sub topbarSetDrill_Click()
 
     Dim currentPos As myCoordinate
     Dim lastZero As myCoordinate
@@ -888,12 +884,6 @@ Private Sub topbarSetDrill()
         'Set Home
         myDrillTap.setHome
     End If
-
-
-End Sub
-
-Private Sub topbarSetTap()
-
 
 
 End Sub
