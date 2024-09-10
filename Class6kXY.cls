@@ -141,27 +141,13 @@ Option Explicit
             'Enable Scaling
             myCns.write6k "SCALE1:@MC0:"
             
-        'Set up Home Limits
+        'Set up Home Limits & initialize EOT Limits
             
             movComplete = movAcknInpt
             
             YHomeIn = Y_Home_Pin
             XHomeIn = X_Home_Pin
-            
-            'Set up Y-Axis negative limit switch
-            Dim strHomeX As String
-            Dim strHomeY As String
-            
-            If motorX = m1 Then
-                strHomeX = Str(XHomeIn) & "-1T:"
-                strHomeY = Str(YHomeIn) & "-2T:"
-            Else
-                strHomeX = Str(XHomeIn) & "-2T:"
-                strHomeY = Str(YHomeIn) & "-1T:"
-            End If
-            
-            myCns.write6k "1INFNC" & strHomeX & "1INFNC" & strHomeY
-            myCns.write6k "1INLVL." & CStr(XHomeIn) & "-1:1INFNC." & CStr(YHomeIn) & "-1:"
+    
             myCns.write6k "@HOMV1:@HOMBAC1:@HOMVF0.5:"
             
         'Set up estop button
@@ -686,7 +672,9 @@ Option Explicit
     Private Sub moveHome(motor As Integer, Direction As Boolean)
     
         'Ensure limits are disabled such that 6k can use the limits as home limits
-        myCns.write6k "@LH0:"
+        myCns.write6k "@LH0:LIMLVL0,0,0,0,0,0:"
+    
+        myCns.write6k "1INLVL." & CStr(XHomeIn) & "-1:1INLVL." & CStr(YHomeIn) & "-1:"
     
         Dim cmdStr As String
     
@@ -760,8 +748,10 @@ Option Explicit
         Else
             strLimX = Str(XHomeIn) & "-2S:"
             strLimY = Str(YHomeIn) & "-1R:"
-            strLimAxes = "LH2,1:"
+            strLimAxes = "LH2,1:LIMLVL1,1,1,1,1,1:"
         End If
+        
+        myCns.write6k "1INLVL." & CStr(XHomeIn) & "-0:1INLVL." & CStr(YHomeIn) & "-0:"
         
         'Set input function for those inputs as home-limit inputs
         myCns.write6k "1INFNC" & strLimX & "1INFNC" & strLimY & strLimAxes

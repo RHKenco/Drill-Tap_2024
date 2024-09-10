@@ -5,6 +5,6 @@ Class6kXY = 100, 100, 1050, 833,
 frmUI = 75, 75, 1025, 808, , 54, 6, 902, 794, C
 ClassFSMDrillTap = 50, 50, 1000, 783, 
 ClassUI = 633, 119, 1583, 852, 
-frmMaintenance = 14, 20, 1352, 788, I, 16, 60, 1354, 828, I
+frmMaintenance = 14, 20, 1352, 788, I, 16, 60, 1354, 828, 
 Class6kConsole = 25, 25, 975, 758, 
 frmConsole = 0, 0, 950, 733, , 132, 127, 1196, 790, C
