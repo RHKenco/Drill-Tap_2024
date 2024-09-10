@@ -33,7 +33,7 @@ Public Enum fsmStates
     s2_Joy
     s3_Maint
     s4_Move
-    s5_Prep
+    s5_Clamp
     s6_Run
     s7_ESTOP
 End Enum
@@ -68,6 +68,7 @@ Private joystickMode As Boolean
 Private maintenanceMode As Boolean
 Private runMode As Boolean
 Private moveMode As moveTo
+Private clampCycle As Boolean
 Private clearESTOPnow As Boolean
 
 
@@ -81,12 +82,16 @@ Public Sub initializeFSM()
     maintenanceMode = False
     runMode = False
     moveMode = moveNone
+    clampCycle = False
     clearESTOPnow = False
     
-    clearESTOPnow = False
     
     'Set state variable to 0
     fsmState = 0
+    
+    'Set inner state variables to 0
+    innerState = 0
+    Counter = 0
     
 End Sub
 
@@ -193,7 +198,7 @@ Public Sub runFSM()
             runState3
         Case s4_Move
             runState4
-        Case s5_Prep
+        Case s5_Clamp
             runState5
         Case s6_Run
             runState6
@@ -275,7 +280,7 @@ Private Sub runState1()
         
         ElseIf runMode Then
         
-            setState s5_Prep
+            setState s5_Clamp
             
         Else
             'If the state does not change, exit sub
@@ -343,8 +348,12 @@ Private Sub runState3()
     If maintenanceMode Then
 
         'If joystick is also enabled, cycle to joystick state
-        If joystickMode Then fsmState = s2_Joy
-
+        If joystickMode Then
+            fsmState = s2_Joy
+        'If the joystick is not enabled but the go-to button has been pushed, go to move state.
+        ElseIf moveMode = moveToPositionNow Then
+            fsmState = s4_Move
+        End If
     
     'When maintenance mode is disabled, shut down maintenance and exit state
     Else
@@ -415,21 +424,60 @@ Private Sub runState4()
     'When any pending moves have been completed, exit to standby state
     If Not myDrillTap.waitForMove() Then
     
-        'Go to standby state
-        myUI.updStatus uiStandby, ""
-        moveMode = moveNone
-        setState s1_Stby
+        'Unless mainteneance mode is active; then go to maintenance state
+        If maintenanceMode Then
+            fsmState = s3_Maint
+            innerState = 1
+        Else
+            'Go to standby state
+            myUI.updStatus uiStandby, ""
+            moveMode = moveNone
+            setState s1_Stby
+        End If
     End If
 
 End Sub
 
 Private Sub runState5()
 
-    'Prep State - Verifies that the clamp is set
+    'Clamp State - Verifies that the clamp is set; Cycles clamp in auto-cycle mode
+    
+    'If the clamp-cycle flag is raised
+    If clampCycle Then
+    
+        Select Case Counter
+            'The first time this cycle runs, update the UI, set next state, and exit sub
+            Case 0
+                'Update UI Msg
+                myUI.updStatus uiClampCycle1, ""
+                Counter = 1
+                Exit Sub
+            'Next, wait until the clamp has been opened. Once that occurs, update the UI, set next state, and exit sub
+            Case 1
+                'Wait for clamp to be disengaged
+                If Not myDrillTap.checkClamp Then
+                    Counter = 2
+                    myUI.updStatus uiClampCycle2, ""
+                End If
+                
+                Exit Sub
+            'Finally, wait for the clamp to be re-engaged, at which point the clamp-cycle flag is cleared such that the State may proceed
+            Case 2
+                'Wait for clamp to be reengaged
+                If myDrillTap.checkClamp Then
+                    Counter = 0
+                    clampCycle = False
+                End If
+                
+                Exit Sub
+        End Select
+    End If
+    
     
     'If the clamp is set, go to run state
     If myDrillTap.checkClamp Then
         setState s6_Run
+        clampCycle = False
         
     'If it is not set, update status message and return to standby
     Else
@@ -440,6 +488,35 @@ Private Sub runState5()
     setGoStop boolFalse
     
     End If
+
+            'OLD CODE --------------------------------------------------------
+            myDrillTap.checkInputs False
+        
+            Select Case Counter
+                Case 0
+                    'Update UI Msg
+                    myUI.updStatus uiClampCycle1, ""
+                    Counter = 1
+                    Exit Sub
+                Case 1
+                    'Wait for clamp to be disengaged
+                    If Not myDrillTap.checkClamp Then
+                        Counter = 2
+                        myUI.updStatus uiClampCycle2, ""
+                    End If
+                    
+                    Exit Sub
+                Case 2
+                    'Wait for clamp to be reengaged
+                    If myDrillTap.checkClamp Then
+                        Counter = 0
+                        innerState = 1
+                    End If
+                    
+                    Exit Sub
+            End Select
+            'OLD CODE ----------------------------------------------------------
+
 
 End Sub
 
@@ -568,34 +645,14 @@ Private Sub runState6()
                 End If
             End If
             
-        Case 5  'Wait for Clamp, then start new cycle
+        Case 5  'Exit to clamp state and wait for clamp to cycle
         
-            myDrillTap.checkInputs False
-        
-            Select Case Counter
-                Case 0
-                    'Update UI Msg
-                    myUI.updStatus uiClampCycle1, ""
-                    Counter = 1
-                    Exit Sub
-                Case 1
-                    'Wait for clamp to be disengaged
-                    If Not myDrillTap.checkClamp Then
-                        Counter = 2
-                        myUI.updStatus uiClampCycle2, ""
-                    End If
-                    
-                    Exit Sub
-                Case 2
-                    'Wait for clamp to be reengaged
-                    If myDrillTap.checkClamp Then
-                        Counter = 0
-                        innerState = 1
-                    End If
-                    
-                    Exit Sub
-            End Select
-                
+            'Set clamp cycle boolean to tell the clamp state to wait for a cycle
+            clampCycle = True
+            
+            'Go to clamp state
+            setState s5_Clamp
+            
             
         Case 6  'Exit State
             

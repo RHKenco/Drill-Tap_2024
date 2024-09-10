@@ -348,7 +348,7 @@ Private Sub btnState(newState As btnState)
             frmUI.frameDRO.Enabled = True
             frmUI.frameToolCount.Enabled = True
             frmMaintenance.frameMaintIO.Enabled = False
-            frmMaintenance.frameMaintPos.Enabled = False
+            frmMaintenance.frameMaintPos.Enabled = True
 
             frmUI.topbarJoy.Enabled = True
             frmUI.topbarMaint.Enabled = True
