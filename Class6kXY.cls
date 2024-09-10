@@ -148,20 +148,9 @@ Option Explicit
             YHomeIn = Y_Home_Pin
             XHomeIn = X_Home_Pin
             
-            'Set up Y-Axis negative limit switch
-            Dim strHomeX As String
-            Dim strHomeY As String
             
-            If motorX = m1 Then
-                strHomeX = Str(XHomeIn) & "-1T:"
-                strHomeY = Str(YHomeIn) & "-2T:"
-            Else
-                strHomeX = Str(XHomeIn) & "-2T:"
-                strHomeY = Str(YHomeIn) & "-1T:"
-            End If
+            myCns.write6k "@LH0:@LIMLVL1:1INLVL." & CStr(YHomeIn) & "-1:1INLVL." & CStr(XHomeIn) & "-1:@HOMV1:@HOMBAC1:@HOMVF0.5:"
             
-            myCns.write6k "1INFNC" & strHomeX & "1INFNC" & strHomeY
-            myCns.write6k "@LIMLVL1:@HOMV1:@HOMBAC1:@HOMVF0.5:"
             
         'Set up estop button
             ESTOPpin = ESTOP_Input_Pin
@@ -684,9 +673,35 @@ Option Explicit
     
     Private Sub moveHome(motor As Integer, Direction As Boolean)
     
+        'Ensure limits are disabled such that 6k can use the limits as home limits
+        myCns.write6k "@LH0:"
+    
         Dim cmdStr As String
+    
+        'Set limit switches to appropriate axis
+        Dim strLimX As String
+        Dim strLimY As String
         
-
+        If motorX = m1 Then
+            strLimX = Str(XHomeIn) & "-1T:"
+            strLimY = Str(YHomeIn) & "-2T:"
+        Else
+            strLimX = Str(XHomeIn) & "-2T:"
+            strLimY = Str(YHomeIn) & "-1T:"
+        End If
+        
+        'Set input function for those inputs as home-limit inputs
+        myCns.write6k "1INFNC" & strLimX & "1INFNC" & strLimY
+        
+        Dim deadzone1 As Double
+        Dim deadzone2 As Double
+        If motorX = m1 Then
+            deadzone1 = myDeadzoneX
+            deadzone2 = myDeadzoneY
+        Else
+            deadzone2 = myDeadzoneX
+            deadzone1 = myDeadzoneY
+        End If
         
         Select Case motor
             Case 1
@@ -705,7 +720,7 @@ Option Explicit
                     cmdStr = cmdStr & "HOM1X:"
                 End If
                 
-                cmdStr = cmdStr & "WAIT(MOV = b00):PSET" & CStr(myDeadzoneX) & ":"
+                cmdStr = cmdStr & "WAIT(MOV = b00):PSET" & CStr(deadzone1) & ":"
             Case 2
                 If Direction Then
                     cmdStr = cmdStr & "HOMDFX0:"
@@ -717,14 +732,28 @@ Option Explicit
                     cmdStr = cmdStr & "HOMX1:"
                 End If
                 
-                cmdStr = cmdStr & "WAIT(MOV = b00):PSET," & CStr(myDeadzoneY) & ":"
+                cmdStr = cmdStr & "WAIT(MOV = b00):PSET," & CStr(deadzone2) & ":"
         End Select
-    
-    
     
         'Initiate Home Motion
         myCns.write6k cmdStr
     
+        Dim strLimAxes As String
+        
+        'Convert the Home limts to EOT limits
+        If motorX = m1 Then
+            strLimX = Str(XHomeIn) & "-1S:"
+            strLimY = Str(YHomeIn) & "-2R:"
+            strLimAxes = "LH1,2:"
+        Else
+            strLimX = Str(XHomeIn) & "-2S:"
+            strLimY = Str(YHomeIn) & "-1R:"
+            strLimAxes = "LH2,1:"
+        End If
+        
+        'Set input function for those inputs as home-limit inputs
+        myCns.write6k "1INFNC" & strLimX & "1INFNC" & strLimY & strLimAxes
+        
     End Sub
     
     Public Function moveTo(newPosX As Double, newPosY As Double, moveOption As moveType) As Boolean
