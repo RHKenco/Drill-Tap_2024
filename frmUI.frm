@@ -803,7 +803,7 @@ Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
 
     Dim msgBoxResponse As VbMsgBoxResult
     
-    msgBoxResponse = MsgBox("Would you like to close the program?", vbOKCancel, "Close Drill & Tap?")
+    msgBoxResponse = MsgBox("Would you like to exit to the console?", vbOKCancel, "Close Drill & Tap?")
     
     If msgBoxResponse = vbCancel Then Cancel = 1
 

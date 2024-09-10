@@ -252,6 +252,8 @@ Private Sub cmdConnect_Click(Index As Integer)
             
             If Not CBool(Me.chkShowCons.Value) Then
                 Me.Hide
+            Else
+                maintenanceOpen = True
             End If
             Me.chkShowCons.Visible = False
             timer6kRead.Enabled = False
