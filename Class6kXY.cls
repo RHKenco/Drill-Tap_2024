@@ -552,7 +552,7 @@ Option Explicit
             'Start the pump motor
             setOut CStr(Pump_Pin), True
             'Wait 1.9 Seconds
-            myCns.write6k "T1.9:"
+            myCns.write6k "T0.5:"
             'Close Solenoid
             setOut CStr(Sol_Pin), False
             'Wait half a second

@@ -748,6 +748,8 @@ Private Sub Form_Load()
     
     'Start UI form timer
     frmUI.tmrFSM.Enabled = True
+    
+    Me.KeyPreview = True
 
 
 End Sub
@@ -788,17 +790,7 @@ Private Sub Form_Unload(Cancel As Integer)
 
 End Sub
 
-Private Sub cmdGO_Click()
-
-    'Update velocities from Form
-    If Me.cmdGO.Caption = "GO" Then myDrillTap.setVelDefaults frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
-
-    myUI.go
-        
-End Sub
-
-
-Private Sub cmdGO_KeyDown(KeyCode As Integer, Shift As Integer)
+Private Sub form_KeyDown(KeyCode As Integer, Shift As Integer)
     
     'Capture joystick presses when the command has focus
     If myDrillTap.isJoyOn Then
@@ -817,7 +809,7 @@ Private Sub cmdGO_KeyDown(KeyCode As Integer, Shift As Integer)
 
 End Sub
 
-Private Sub cmdGO_KeyUp(KeyCode As Integer, Shift As Integer)
+Private Sub form_KeyUp(KeyCode As Integer, Shift As Integer)
 
     'Capture joystick releases when the command has focus
     If myDrillTap.isJoyOn Then
@@ -835,6 +827,15 @@ Private Sub cmdGO_KeyUp(KeyCode As Integer, Shift As Integer)
     End If
 
 End Sub
+Private Sub cmdGO_Click()
+
+    'Update velocities from Form
+    If Me.cmdGO.Caption = "GO" Then myDrillTap.setVelDefaults frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
+
+    myUI.go
+        
+End Sub
+
 
 Private Sub cmdGO_LostFocus()
 
