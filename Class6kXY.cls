@@ -148,9 +148,21 @@ Option Explicit
             YHomeIn = Y_Home_Pin
             XHomeIn = X_Home_Pin
             
+            'Set up Y-Axis negative limit switch
+            Dim strHomeX As String
+            Dim strHomeY As String
             
-            myCns.write6k "@LH0:@LIMLVL1:1INLVL." & CStr(YHomeIn) & "-1:1INLVL." & CStr(XHomeIn) & "-1:@HOMV1:@HOMBAC1:@HOMVF0.5:"
+            If motorX = m1 Then
+                strHomeX = Str(XHomeIn) & "-1T:"
+                strHomeY = Str(YHomeIn) & "-2T:"
+            Else
+                strHomeX = Str(XHomeIn) & "-2T:"
+                strHomeY = Str(YHomeIn) & "-1T:"
+            End If
             
+            myCns.write6k "1INFNC" & strHomeX & "1INFNC" & strHomeY
+            myCns.write6k "1INLVL." & CStr(XHomeIn) & "-1:1INFNC." & CStr(YHomeIn) & "-1:"
+            myCns.write6k "@HOMV1:@HOMBAC1:@HOMVF0.5:"
             
         'Set up estop button
             ESTOPpin = ESTOP_Input_Pin

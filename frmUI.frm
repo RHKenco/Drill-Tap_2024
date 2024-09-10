@@ -26,7 +26,7 @@ Begin VB.Form frmUI
       ForeColor       =   &H8000000E&
       Height          =   3975
       Left            =   8880
-      TabIndex        =   16
+      TabIndex        =   9
       Top             =   2880
       Width           =   2655
       Begin VB.CommandButton cmdResetCount 
@@ -43,7 +43,7 @@ Begin VB.Form frmUI
          Height          =   975
          Index           =   1
          Left            =   1440
-         TabIndex        =   21
+         TabIndex        =   14
          Top             =   2760
          Width           =   975
       End
@@ -61,7 +61,7 @@ Begin VB.Form frmUI
          Height          =   975
          Index           =   0
          Left            =   240
-         TabIndex        =   20
+         TabIndex        =   13
          Top             =   2760
          Width           =   975
       End
@@ -81,7 +81,7 @@ Begin VB.Form frmUI
          Height          =   495
          Index           =   1
          Left            =   1200
-         TabIndex        =   19
+         TabIndex        =   12
          Top             =   720
          Width           =   1335
       End
@@ -101,7 +101,7 @@ Begin VB.Form frmUI
          Height          =   495
          Index           =   0
          Left            =   360
-         TabIndex        =   18
+         TabIndex        =   11
          Top             =   1200
          Width           =   2175
       End
@@ -121,7 +121,7 @@ Begin VB.Form frmUI
          Height          =   495
          Index           =   2
          Left            =   360
-         TabIndex        =   17
+         TabIndex        =   10
          Top             =   1800
          Width           =   2175
       End
@@ -141,7 +141,7 @@ Begin VB.Form frmUI
       ForeColor       =   &H8000000E&
       Height          =   2415
       Left            =   8880
-      TabIndex        =   13
+      TabIndex        =   6
       Top             =   240
       Width           =   2655
       Begin VB.Label lblDRO 
@@ -160,7 +160,7 @@ Begin VB.Form frmUI
          Height          =   495
          Index           =   1
          Left            =   360
-         TabIndex        =   15
+         TabIndex        =   8
          Top             =   1440
          Width           =   2175
       End
@@ -180,7 +180,7 @@ Begin VB.Form frmUI
          Height          =   495
          Index           =   0
          Left            =   360
-         TabIndex        =   14
+         TabIndex        =   7
          Top             =   720
          Width           =   2175
       End
@@ -218,8 +218,8 @@ Begin VB.Form frmUI
          ForeColor       =   &H8000000E&
          Height          =   495
          Left            =   360
-         TabIndex        =   33
-         Top             =   2640
+         TabIndex        =   26
+         Top             =   2040
          Width           =   2535
       End
       Begin VB.Frame frmSystemStatus 
@@ -237,7 +237,7 @@ Begin VB.Form frmUI
          ForeColor       =   &H8000000E&
          Height          =   2775
          Left            =   3000
-         TabIndex        =   31
+         TabIndex        =   24
          Top             =   360
          Width           =   5055
          Begin VB.Label lblSystemStatus 
@@ -256,7 +256,7 @@ Begin VB.Form frmUI
             ForeColor       =   &H8000000E&
             Height          =   735
             Left            =   480
-            TabIndex        =   32
+            TabIndex        =   25
             Top             =   600
             Width           =   4095
          End
@@ -275,10 +275,146 @@ Begin VB.Form frmUI
          EndProperty
          ForeColor       =   &H8000000E&
          Height          =   3135
-         Left            =   4560
-         TabIndex        =   24
+         Left            =   240
+         TabIndex        =   17
          Top             =   3240
-         Width           =   3495
+         Width           =   7815
+         Begin VB.Frame frameSpeeds 
+            BackColor       =   &H00400000&
+            Caption         =   "  System Speeds  "
+            BeginProperty Font 
+               Name            =   "MS Sans Serif"
+               Size            =   13.5
+               Charset         =   0
+               Weight          =   700
+               Underline       =   0   'False
+               Italic          =   0   'False
+               Strikethrough   =   0   'False
+            EndProperty
+            ForeColor       =   &H8000000E&
+            Height          =   2535
+            Left            =   3720
+            TabIndex        =   27
+            Top             =   480
+            Width           =   3975
+            Begin VB.TextBox txtSpeeds 
+               Alignment       =   1  'Right Justify
+               BeginProperty Font 
+                  Name            =   "MS Sans Serif"
+                  Size            =   13.5
+                  Charset         =   0
+                  Weight          =   700
+                  Underline       =   0   'False
+                  Italic          =   0   'False
+                  Strikethrough   =   0   'False
+               EndProperty
+               Height          =   405
+               Index           =   0
+               Left            =   2160
+               TabIndex        =   30
+               Text            =   "0.250"
+               Top             =   600
+               Width           =   1095
+            End
+            Begin VB.TextBox txtSpeeds 
+               Alignment       =   1  'Right Justify
+               BeginProperty Font 
+                  Name            =   "MS Sans Serif"
+                  Size            =   13.5
+                  Charset         =   0
+                  Weight          =   700
+                  Underline       =   0   'False
+                  Italic          =   0   'False
+                  Strikethrough   =   0   'False
+               EndProperty
+               Height          =   405
+               Index           =   1
+               Left            =   2160
+               TabIndex        =   29
+               Text            =   "1.000"
+               Top             =   1200
+               Width           =   1095
+            End
+            Begin VB.TextBox txtSpeeds 
+               Alignment       =   1  'Right Justify
+               BeginProperty Font 
+                  Name            =   "MS Sans Serif"
+                  Size            =   13.5
+                  Charset         =   0
+                  Weight          =   700
+                  Underline       =   0   'False
+                  Italic          =   0   'False
+                  Strikethrough   =   0   'False
+               EndProperty
+               Height          =   405
+               Index           =   2
+               Left            =   2160
+               TabIndex        =   28
+               Text            =   "3.000"
+               Top             =   1800
+               Width           =   1095
+            End
+            Begin VB.Label lblSpeeds 
+               BackStyle       =   0  'Transparent
+               Caption         =   "Jog Speed:                 ips"
+               BeginProperty Font 
+                  Name            =   "MS Sans Serif"
+                  Size            =   13.5
+                  Charset         =   0
+                  Weight          =   700
+                  Underline       =   0   'False
+                  Italic          =   0   'False
+                  Strikethrough   =   0   'False
+               EndProperty
+               ForeColor       =   &H00FFFFFF&
+               Height          =   375
+               Index           =   2
+               Left            =   120
+               TabIndex        =   33
+               Top             =   1800
+               Width           =   3735
+            End
+            Begin VB.Label lblSpeeds 
+               BackStyle       =   0  'Transparent
+               Caption         =   "Tap Speed:                 ips"
+               BeginProperty Font 
+                  Name            =   "MS Sans Serif"
+                  Size            =   13.5
+                  Charset         =   0
+                  Weight          =   700
+                  Underline       =   0   'False
+                  Italic          =   0   'False
+                  Strikethrough   =   0   'False
+               EndProperty
+               ForeColor       =   &H00FFFFFF&
+               Height          =   375
+               Index           =   1
+               Left            =   120
+               TabIndex        =   32
+               Top             =   1200
+               Width           =   3735
+            End
+            Begin VB.Label lblSpeeds 
+               BackStyle       =   0  'Transparent
+               Caption         =   "Drill Speed:                 ips"
+               BeginProperty Font 
+                  Name            =   "MS Sans Serif"
+                  Size            =   13.5
+                  Charset         =   0
+                  Weight          =   700
+                  Underline       =   0   'False
+                  Italic          =   0   'False
+                  Strikethrough   =   0   'False
+               EndProperty
+               ForeColor       =   &H00FFFFFF&
+               Height          =   375
+               Index           =   0
+               Left            =   120
+               TabIndex        =   31
+               Top             =   600
+               Width           =   3735
+            End
+         End
          Begin VB.TextBox txtDeep 
             Alignment       =   1  'Right Justify
             BeginProperty Font 
@@ -293,7 +429,7 @@ Begin VB.Form frmUI
             Height          =   405
             Index           =   1
             Left            =   1200
-            TabIndex        =   27
+            TabIndex        =   20
             Text            =   "80"
             Top             =   2400
             Width           =   1335
@@ -312,8 +448,8 @@ Begin VB.Form frmUI
             Height          =   405
             Index           =   0
             Left            =   1200
-            TabIndex        =   25
-            Text            =   "2.000"
+            TabIndex        =   18
+            Text            =   "1.5"
             Top             =   1200
             Width           =   1335
          End
@@ -333,7 +469,7 @@ Begin VB.Form frmUI
             Height          =   375
             Index           =   3
             Left            =   2640
-            TabIndex        =   30
+            TabIndex        =   23
             Top             =   2400
             Width           =   495
          End
@@ -353,7 +489,7 @@ Begin VB.Form frmUI
             Height          =   375
             Index           =   2
             Left            =   2640
-            TabIndex        =   29
+            TabIndex        =   22
             Top             =   1200
             Width           =   495
          End
@@ -373,7 +509,7 @@ Begin VB.Form frmUI
             Height          =   375
             Index           =   1
             Left            =   240
-            TabIndex        =   28
+            TabIndex        =   21
             Top             =   1920
             Width           =   2055
          End
@@ -393,13 +529,13 @@ Begin VB.Form frmUI
             Height          =   375
             Index           =   0
             Left            =   240
-            TabIndex        =   26
+            TabIndex        =   19
             Top             =   720
             Width           =   2055
          End
       End
       Begin VB.CommandButton cmdGoToDrillTap 
-         Caption         =   "Go to Tap"
+         Caption         =   "To Tap"
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   12
@@ -411,13 +547,13 @@ Begin VB.Form frmUI
          EndProperty
          Height          =   495
          Index           =   1
-         Left            =   2280
-         TabIndex        =   23
-         Top             =   3480
-         Width           =   1935
+         Left            =   1680
+         TabIndex        =   16
+         Top             =   2640
+         Width           =   1215
       End
       Begin VB.CommandButton cmdGoToDrillTap 
-         Caption         =   "Go to Drill"
+         Caption         =   "To Drill"
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   12
@@ -430,151 +566,15 @@ Begin VB.Form frmUI
          Height          =   495
          Index           =   0
          Left            =   240
-         TabIndex        =   22
-         Top             =   3480
-         Width           =   1935
+         TabIndex        =   15
+         Top             =   2640
+         Width           =   1335
       End
       Begin VB.Timer tmrFSM 
          Enabled         =   0   'False
          Interval        =   50
-         Left            =   120
-         Top             =   360
-      End
-      Begin VB.Frame frameSpeeds 
-         BackColor       =   &H00400000&
-         Caption         =   "  System Speeds  "
-         BeginProperty Font 
-            Name            =   "MS Sans Serif"
-            Size            =   13.5
-            Charset         =   0
-            Weight          =   700
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         ForeColor       =   &H8000000E&
-         Height          =   2295
-         Left            =   240
-         TabIndex        =   6
-         Top             =   4080
-         Width           =   3975
-         Begin VB.TextBox txtSpeeds 
-            Alignment       =   1  'Right Justify
-            BeginProperty Font 
-               Name            =   "MS Sans Serif"
-               Size            =   13.5
-               Charset         =   0
-               Weight          =   700
-               Underline       =   0   'False
-               Italic          =   0   'False
-               Strikethrough   =   0   'False
-            EndProperty
-            Height          =   405
-            Index           =   2
-            Left            =   2280
-            TabIndex        =   12
-            Text            =   "3.000"
-            Top             =   1560
-            Width           =   1095
-         End
-         Begin VB.TextBox txtSpeeds 
-            Alignment       =   1  'Right Justify
-            BeginProperty Font 
-               Name            =   "MS Sans Serif"
-               Size            =   13.5
-               Charset         =   0
-               Weight          =   700
-               Underline       =   0   'False
-               Italic          =   0   'False
-               Strikethrough   =   0   'False
-            EndProperty
-            Height          =   405
-            Index           =   1
-            Left            =   2280
-            TabIndex        =   11
-            Text            =   "1.000"
-            Top             =   1080
-            Width           =   1095
-         End
-         Begin VB.TextBox txtSpeeds 
-            Alignment       =   1  'Right Justify
-            BeginProperty Font 
-               Name            =   "MS Sans Serif"
-               Size            =   13.5
-               Charset         =   0
-               Weight          =   700
-               Underline       =   0   'False
-               Italic          =   0   'False
-               Strikethrough   =   0   'False
-            EndProperty
-            Height          =   405
-            Index           =   0
-            Left            =   2280
-            TabIndex        =   10
-            Text            =   "0.250"
-            Top             =   600
-            Width           =   1095
-         End
-         Begin VB.Label lblSpeeds 
-            BackStyle       =   0  'Transparent
-            Caption         =   "Drill Speed:                 ips"
-            BeginProperty Font 
-               Name            =   "MS Sans Serif"
-               Size            =   13.5
-               Charset         =   0
-               Weight          =   700
-               Underline       =   0   'False
-               Italic          =   0   'False
-               Strikethrough   =   0   'False
-            EndProperty
-            ForeColor       =   &H00FFFFFF&
-            Height          =   375
-            Index           =   0
-            Left            =   240
-            TabIndex        =   9
-            Top             =   600
-            Width           =   3735
-         End
-         Begin VB.Label lblSpeeds 
-            BackStyle       =   0  'Transparent
-            Caption         =   "Tap Speed:                 ips"
-            BeginProperty Font 
-               Name            =   "MS Sans Serif"
-               Size            =   13.5
-               Charset         =   0
-               Weight          =   700
-               Underline       =   0   'False
-               Italic          =   0   'False
-               Strikethrough   =   0   'False
-            EndProperty
-            ForeColor       =   &H00FFFFFF&
-            Height          =   375
-            Index           =   1
-            Left            =   240
-            TabIndex        =   8
-            Top             =   1080
-            Width           =   3735
-         End
-         Begin VB.Label lblSpeeds 
-            BackStyle       =   0  'Transparent
-            Caption         =   "Jog Speed:                 ips"
-            BeginProperty Font 
-               Name            =   "MS Sans Serif"
-               Size            =   13.5
-               Charset         =   0
-               Weight          =   700
-               Underline       =   0   'False
-               Italic          =   0   'False
-               Strikethrough   =   0   'False
-            EndProperty
-            ForeColor       =   &H00FFFFFF&
-            Height          =   375
-            Index           =   2
-            Left            =   240
-            TabIndex        =   7
-            Top             =   1560
-            Width           =   3735
-         End
+         Left            =   7920
+         Top             =   240
       End
       Begin VB.OptionButton optDrillTapAuto 
          BackColor       =   &H00400000&
@@ -593,7 +593,7 @@ Begin VB.Form frmUI
          Index           =   3
          Left            =   360
          TabIndex        =   5
-         Top             =   2160
+         Top             =   1560
          Width           =   2415
       End
       Begin VB.OptionButton optDrillTapAuto 
@@ -613,7 +613,7 @@ Begin VB.Form frmUI
          Index           =   2
          Left            =   360
          TabIndex        =   4
-         Top             =   1680
+         Top             =   1200
          Value           =   -1  'True
          Width           =   2775
       End
@@ -634,7 +634,7 @@ Begin VB.Form frmUI
          Index           =   1
          Left            =   360
          TabIndex        =   3
-         Top             =   1200
+         Top             =   840
          Width           =   2415
       End
       Begin VB.OptionButton optDrillTapAuto 
@@ -654,7 +654,7 @@ Begin VB.Form frmUI
          Index           =   0
          Left            =   360
          TabIndex        =   2
-         Top             =   720
+         Top             =   480
          Width           =   2415
       End
    End
@@ -741,7 +741,8 @@ Private Sub Form_Load()
     'Clear maintenance Form Open flag
     maintenanceOpen = False
     
-    
+    'Load default settings
+    myUI.loadSettings
     
     'Initialize FSM
     myFSM.initializeFSM
@@ -780,6 +781,9 @@ Private Sub Form_Unload(Cancel As Integer)
     frmConsole.cmdConnect(2).Enabled = True
 
     Unload frmMaintenance
+    
+    'Save settings
+    myUI.saveSettings
     
     'Stop UI form timer and re-enable console only timer
     frmUI.tmrFSM.Enabled = False

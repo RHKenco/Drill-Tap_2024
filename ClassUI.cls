@@ -80,6 +80,9 @@ End Enum
 'Path to stored data pertaining to Drill/Tap Cycles
 Const dataSavePath = "C:\Drill-Tap_2024\savedData\cycles.txt"
 
+'Path to stored default operational settings
+Const cfgSavePath = "C:\Drill-Tap_2024\savedData\settings.txt"
+
 'Keypress booleans to track the state of multiple keys
 Public uiKeyUp As Boolean
 Public uiKeyRight As Boolean
@@ -543,6 +546,36 @@ currentPosition.Y = myDrillTap.getCoords(cY)
 
 frmUI.lblDRO(0).Caption = "X:     " & Format(currentPosition.X, "###0.000") & " in"
 frmUI.lblDRO(1).Caption = "Y:     " & Format(currentPosition.Y, "###0.000") & " in"
+
+End Sub
+
+Public Sub loadSettings()
+
+    Dim drillDeep As String
+    Dim tapDeep As String
+    Dim drillSpd As String
+    Dim tapSpd As String
+    Dim jogSpd As String
+
+    If Dir(cfgSavePath) <> "" Then
+        Open cfgSavePath For Input As #1
+        Input #1, drillDeep, tapDeep, drillSpd, tapSpd, jogSpd
+        Close #1
+    End If
+    
+    frmUI.txtDeep(0).Text = drillDeep
+    frmUI.txtDeep(1).Text = tapDeep
+    frmUI.txtSpeeds(0).Text = drillSpd
+    frmUI.txtSpeeds(1).Text = tapSpd
+    frmUI.txtSpeeds(2).Text = jogSpd
+    
+End Sub
+
+Public Sub saveSettings()
+    
+    Open cfgSavePath For Output As #1
+    Write #1, frmUI.txtDeep(0).Text, frmUI.txtDeep(1).Text, frmUI.txtSpeeds(0).Text, frmUI.txtSpeeds(1).Text, frmUI.txtSpeeds(2).Text
+    Close #1
 
 End Sub
 
