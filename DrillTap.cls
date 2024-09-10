@@ -152,6 +152,7 @@ Option Explicit
         
         'Pull saved offsets from data file; will set defaults if file does not exist
         loadOffsets
+        myXY.setZero zeroOffset.X, zeroOffset.Y
         
         'Pull velocity defaults from the UI
         setVelDefaults frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
@@ -180,12 +181,15 @@ Option Explicit
         If Not loadData Then
             
             stdOffset = 0.375
-            DrilloffX = 0.875
-            DrilloffY = -0.125
-            TapoffX = 5.625
-            TapoffY = -1.375
+            zeroOffset.X = 0.875
+            zeroOffset.Y = -0.125
+            goTap.X = 5.625
+            goTap.Y = -1.375
             
         End If
+        
+        goDrill.X = 0
+        goDrill.Y = 0
         
     End Sub
     
