@@ -442,62 +442,20 @@ Private Sub runState5()
 
     'Clamp State - Verifies that the clamp is set; Cycles clamp in auto-cycle mode
     
-    'If the clamp-cycle flag is raised
-    If clampCycle Then
+    'Determine if run-mode is still enabled
+    If runMode Then
     
-        Select Case Counter
-            'The first time this cycle runs, update the UI, set next state, and exit sub
-            Case 0
-                'Update UI Msg
-                myUI.updStatus uiClampCycle1, ""
-                Counter = 1
-                Exit Sub
-            'Next, wait until the clamp has been opened. Once that occurs, update the UI, set next state, and exit sub
-            Case 1
-                'Wait for clamp to be disengaged
-                If Not myDrillTap.checkClamp Then
-                    Counter = 2
-                    myUI.updStatus uiClampCycle2, ""
-                End If
-                
-                Exit Sub
-            'Finally, wait for the clamp to be re-engaged, at which point the clamp-cycle flag is cleared such that the State may proceed
-            Case 2
-                'Wait for clamp to be reengaged
-                If myDrillTap.checkClamp Then
-                    Counter = 0
-                    clampCycle = False
-                End If
-                
-                Exit Sub
-        End Select
-    End If
-    
-    
-    'If the clamp is set, go to run state
-    If myDrillTap.checkClamp Then
-        setState s6_Run
-        clampCycle = False
-        
-    'If it is not set, update status message and return to standby
-    Else
-    
-    myUI.updStatus uiClampOFF, ""
-    
-    setState s1_Stby
-    setGoStop boolFalse
-    
-    End If
-
-            'OLD CODE --------------------------------------------------------
-            myDrillTap.checkInputs False
+        'If the clamp-cycle flag is raised
+        If clampCycle Then
         
             Select Case Counter
+                'The first time this cycle runs, update the UI, set next state, and exit sub
                 Case 0
                     'Update UI Msg
                     myUI.updStatus uiClampCycle1, ""
                     Counter = 1
                     Exit Sub
+                'Next, wait until the clamp has been opened. Once that occurs, update the UI, set next state, and exit sub
                 Case 1
                     'Wait for clamp to be disengaged
                     If Not myDrillTap.checkClamp Then
@@ -506,17 +464,34 @@ Private Sub runState5()
                     End If
                     
                     Exit Sub
+                'Finally, wait for the clamp to be re-engaged, at which point the clamp-cycle flag is cleared such that the State may proceed
                 Case 2
                     'Wait for clamp to be reengaged
                     If myDrillTap.checkClamp Then
                         Counter = 0
-                        innerState = 1
+                        clampCycle = False
                     End If
                     
                     Exit Sub
             End Select
-            'OLD CODE ----------------------------------------------------------
+        End If
+        
+        
+        'If the clamp is set, go to run state
+        If myDrillTap.checkClamp Then
+            setState s6_Run
+            clampCycle = False
+            
+            Exit Sub
+        End If
 
+    End If
+
+    'If clamp is not set, or if run mode has been disabled, go to standby mode
+    myUI.updStatus uiClampOFF, ""
+    
+    setState s1_Stby
+    setGoStop boolFalse
 
 End Sub
 

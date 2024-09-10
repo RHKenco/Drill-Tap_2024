@@ -282,6 +282,8 @@ Public Sub go()
         If frmMaintenance.frameMaintIO.Enabled Then
             'Disable active maintenance mode
             myDrillTap.maintActive 0, mActiveOff
+            
+        'If Not in active maintenance mode, determine course of action
         Else
         
             If myDrillTap.isJoyOn Then
@@ -300,7 +302,7 @@ Public Sub go()
         End If
         
         
-    'If estip is set
+    'If estop is set
     Else
         'Query the user to reset the ESTOP flag
         Dim messageReturn As VbMsgBoxResult

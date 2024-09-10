@@ -660,6 +660,7 @@ Begin VB.Form frmUI
    End
    Begin VB.CommandButton cmdGO 
       Caption         =   "GO"
+      Default         =   -1  'True
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   24
@@ -747,9 +748,6 @@ Private Sub Form_Load()
     
     'Start UI form timer
     frmUI.tmrFSM.Enabled = True
-    
-    'Turn on key preview for joystick operation
-    Me.KeyPreview = True
 
 
 End Sub
@@ -763,41 +761,6 @@ myUI.uiKeyLeft = False
 
 End Sub
 
-Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
-    
-    If myDrillTap.isJoyOn Then
-        Select Case KeyCode
-            Case vbKeyUp, vbKeyNumpad8
-                myUI.uiKeyUp = True
-            Case vbKeyRight, vbKeyNumpad6
-                myUI.uiKeyRight = True
-            Case vbKeyDown, vbKeyNumpad2
-                myUI.uiKeyDown = True
-            Case vbKeyLeft, vbKeyNumpad4
-                myUI.uiKeyLeft = True
-            Case Else
-        End Select
-    End If
-
-End Sub
-
-Private Sub Form_KeyUp(KeyCode As Integer, Shift As Integer)
-
-    If myDrillTap.isJoyOn Then
-        Select Case KeyCode
-            Case vbKeyUp, vbKeyNumpad8
-                myUI.uiKeyUp = False
-            Case vbKeyRight, vbKeyNumpad6
-                myUI.uiKeyRight = False
-            Case vbKeyDown, vbKeyNumpad2
-                myUI.uiKeyDown = False
-            Case vbKeyLeft, vbKeyNumpad4
-                myUI.uiKeyLeft = False
-            Case Else
-        End Select
-    End If
-
-End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
 
@@ -828,9 +791,58 @@ End Sub
 Private Sub cmdGO_Click()
 
     'Update velocities from Form
-    myDrillTap.setVelDefaults frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
+    If Me.cmdGO.Caption = "GO" Then myDrillTap.setVelDefaults frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
 
     myUI.go
+        
+End Sub
+
+
+Private Sub cmdGO_KeyDown(KeyCode As Integer, Shift As Integer)
+    
+    'Capture joystick presses when the command has focus
+    If myDrillTap.isJoyOn Then
+        Select Case KeyCode
+            Case vbKeyUp, vbKeyNumpad8
+                myUI.uiKeyUp = True
+            Case vbKeyRight, vbKeyNumpad6
+                myUI.uiKeyRight = True
+            Case vbKeyDown, vbKeyNumpad2
+                myUI.uiKeyDown = True
+            Case vbKeyLeft, vbKeyNumpad4
+                myUI.uiKeyLeft = True
+            Case Else
+        End Select
+    End If
+
+End Sub
+
+Private Sub cmdGO_KeyUp(KeyCode As Integer, Shift As Integer)
+
+    'Capture joystick releases when the command has focus
+    If myDrillTap.isJoyOn Then
+        Select Case KeyCode
+            Case vbKeyUp, vbKeyNumpad8
+                myUI.uiKeyUp = False
+            Case vbKeyRight, vbKeyNumpad6
+                myUI.uiKeyRight = False
+            Case vbKeyDown, vbKeyNumpad2
+                myUI.uiKeyDown = False
+            Case vbKeyLeft, vbKeyNumpad4
+                myUI.uiKeyLeft = False
+            Case Else
+        End Select
+    End If
+
+End Sub
+
+Private Sub cmdGO_LostFocus()
+
+    'Clear all variables if the command loses focus
+    myUI.uiKeyUp = False
+    myUI.uiKeyDown = False
+    myUI.uiKeyLeft = False
+    myUI.uiKeyRight = False
 
 End Sub
 

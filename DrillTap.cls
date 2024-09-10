@@ -646,8 +646,15 @@ End Function
 
 Public Sub stopNow()
 
+    'Disable Drill, Tap, and Coolant Pump
+    myXY.setOut Out_Drill, False
+    myXY.setOut Out_Tap, False
+    myXY.setOut Out_Cool, False
+
+    'Stop motion
     myXY.moveStop
     
+    'Set location variables to unknown position
     myDestination = atIdle
     myPosition = atUnk
 
@@ -752,9 +759,11 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
                     If myXY.moveTo(0, goTap.Y, movY) Then runTool = currentCycle + 1
             End Select
         
-        'If the last cycle has been reached, disable tool and exit
+        'If the last cycle has been reached, disable tool; delay for 1 second then exit
         Case totalCycles
-
+            
+            Static delayBool As Boolean
+            
             If Not dryRun Then
                 Select Case tool
                     Case tDrill
@@ -766,6 +775,13 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
                 myXY.setOut Out_Cool, False
             End If
             
+            'Delay for 1 second before proceeding
+            If Not delayBool Then
+                If myXY.moveDelay(1) Then delayBool = True
+                Exit Function
+            End If
+            
+            delayBool = False
             runTool = currentCycle + 1
             
         'All Other Cycles
