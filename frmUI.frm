@@ -893,7 +893,7 @@ Private Sub topbarSetDrill_Click()
     lastZero.Y = myDrillTap.getLastZero(dY)
     
     myMsg = "Current position differs from zero by:" & vbCrLf & "X: " & currentPos.X & vbCrLf & "Y: " & currentPos.Y & vbCrLf & vbCrLf
-    myMsg = myMsg & "And from the prior zero by:" & vbCrLf & "X: " & lastZero.X & vbCrLf & "Y: " & lastZero.Y & vbCrLf & vbCrLf
+    myMsg = myMsg & "And from the prior zero by:" & vbCrLf & "X: " & (lastZero.X + currentPos.X) & vbCrLf & "Y: " & (lastZero.Y + currentPos.Y) & vbCrLf & vbCrLf
     myMsg = myMsg & "Would you like to reset the Zero position?"
     
     userReturn = MsgBox(myMsg, vbYesNo, "Set Zero?")
@@ -905,7 +905,7 @@ Private Sub topbarSetDrill_Click()
         myFSM.setJoystick boolFalse
     
         'Set Home
-        myUI.updOffsets currentPos.X, currentPos.Y, True
+        myDrillTap.setHome
     End If
 
 
@@ -920,17 +920,12 @@ Private Sub topbarSetTap_Click()
     userReturn = MsgBox(myMsg, vbYesNo, "Set Zero?")
     
     If userReturn = vbYes Then
-    
-        Dim newPos As myCoordinate
         
-        newPos.X = myDrillTap.getCoords(dX)
-        newPos.Y = myDrillTap.getCoords(dY)
-    
         myDrillTap.joyState False
         myFSM.setJoystick boolFalse
     
         'Set tap offsets
-        myUI.updOffsets newPos.X, newPos.Y, False
+        myDrillTap.setToolOffset
     
     End If
 

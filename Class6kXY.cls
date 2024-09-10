@@ -342,7 +342,7 @@ Option Explicit
     
     
     'getPos - Function to get the position of the specified axis
-    Public Function getCo(motor As Integer) As Double
+    Public Function getCo(motor As Integer, Optional coGlobal As Boolean = False) As Double
         
         Dim globalPos As Double
         Dim localPos As Double
@@ -354,7 +354,7 @@ Option Explicit
                 globalPos = (c6k.MotorPos(motorY) / myScaleY)
         End Select
         
-        localPos = coLocal(motor, globalPos)
+        If Not coGlobal Then localPos = coLocal(motor, globalPos)
         
         getCo = localPos
         

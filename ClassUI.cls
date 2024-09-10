@@ -77,8 +77,8 @@ Public Enum uiCounter
     countBoth
 End Enum
 
-Const dataSavePath = "C:\Drill-Tap_2024\savedData\drillTapData.txt"
-
+'Path to stored data pertaining to Drill/Tap Cycles
+Const dataSavePath = "C:\Drill-Tap_2024\savedData\cycles.txt"
 
 'Keypress booleans to track the state of multiple keys
 Public uiKeyUp As Boolean
@@ -552,7 +552,7 @@ Private Function loadData() As Boolean
         
         'Load previous data
         Open dataSavePath For Input As #1
-        Input #1, drillCycles, tapCycles, drillAvg, drillAvgCy, tapAvg, tapAvgCy, DrilloffX, DrilloffY, TapoffX, TapoffY
+        Input #1, drillCycles, tapCycles, drillAvg, drillAvgCy, tapAvg, tapAvgCy
         Close #1
         
         loadData = True
@@ -566,7 +566,7 @@ Private Function saveData() As Boolean
 
     'Save to file
     Open dataSavePath For Output As #1
-    Write #1, drillCycles, tapCycles, drillAvg, drillAvgCy, tapAvg, tapAvgCy, DrilloffX, DrilloffY, TapoffX, TapoffY
+    Write #1, drillCycles, tapCycles, drillAvg, drillAvgCy, tapAvg, tapAvgCy
     Close #1
 
 End Function
@@ -602,57 +602,6 @@ Private Sub updCycles()
     saveData
 
 End Sub
-
-Private Sub loadOffsets()
-
-    If Not loadData Then
-        
-        stdOffset = 0.375
-        DrilloffX = 0.875
-        DrilloffY = -0.125
-        TapoffX = 5.625
-        TapoffY = -1.375
-        
-    End If
-        
-End Sub
-
-Public Sub updOffsets(PosX As Double, PosY As Double, DrillorTap As Boolean)
-
-    If DrillorTap Then
-        myDrillTap.setHome
-        DrilloffX = PosX
-        DrilloffY = PosY
-    Else
-        myDrillTap.updToolOffset PosX, PosY
-        TapoffX = PosX
-        TapoffY = PosY
-    End If
-    
-    
-    saveData
-
-End Sub
-
-Public Sub saveOffsets()
-
-    saveData
-
-End Sub
-
-Public Sub getOffsets()
-
-    'If the offsets have not been loaded then
-    If stdOffset = 0 Then
-        loadOffsets
-    End If
-
-    'Send the offsets to the Drill&Tap Class
-    myDrillTap.updOffsets stdOffset, DrilloffX, DrilloffY, TapoffX, TapoffY
-
-End Sub
-
-
 
 Public Sub increment(myTool As uiCounter)
     

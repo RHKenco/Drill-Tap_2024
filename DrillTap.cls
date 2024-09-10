@@ -50,13 +50,11 @@ Option Explicit
     Const In_ESTOP = 15
     Const In_Clamp_Off = 16
     
-
-    
+    'Path to stored data pertaining to Offsets
+    Const dataSavePath = "C:\Drill-Tap_2024\savedData\offsets.txt"
     
     Const Axis_X = 2
     Const Axis_Y = 1
-    
-    Const savePath = "C:\Drill-Tap_2024\savedData\offsets.txt"
 
     Public Enum dtCo
         dNULL
@@ -153,7 +151,7 @@ Option Explicit
         myXY.init6k Axis_X, Axis_Y, In_MoveAck, In_ESTOP, In_HomX, In_HomY    'X-axis is motor 2, Y-axis is motor 1, acknowledge input is pin 32
         
         'Pull saved offsets from data file; will set defaults if file does not exist
-        myUI.getOffsets
+        loadOffsets
         
         'Pull velocity defaults from the UI
         setVelDefaults frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
@@ -161,50 +159,83 @@ Option Explicit
             
     End Sub
     
+    Private Function loadData() As Boolean
+        
+        If Dir(dataSavePath) <> "" Then
+            
+            'Load previous data
+            Open dataSavePath For Input As #1
+            Input #1, zeroOffset.X, zeroOffset.Y, goTap.X, goTap.Y
+            Close #1
+            
+            loadData = True
+        Else
+            loadData = False
+        End If
+    
+    End Function
+    
+    Private Sub loadOffsets()
+
+        If Not loadData Then
+            
+            stdOffset = 0.375
+            DrilloffX = 0.875
+            DrilloffY = -0.125
+            TapoffX = 5.625
+            TapoffY = -1.375
+            
+        End If
+        
+    End Sub
+    
+    Private Function saveData() As Boolean
+    
+        'Save to file
+        Open dataSavePath For Output As #1
+        Write #1, zeroOffset.X, zeroOffset.Y, goTap.X, goTap.Y
+        Close #1
+    
+    End Function
+    
     Public Function setHome()
     
         'Used to set ONLY the global coordinate offsets to calibrate the local coordinate system.
     
         'Get current position, and store it as the last zero location
-        PosLastZero.X = getCoords(cX)
-        PosLastZero.Y = getCoords(cY)
-        
-        'Update the zero offset to be the current position
-        zeroOffset = PosLastZero
-        
-        'Set zero using the zeroOffset
-        myXY.setZero zeroOffset.X, zeroOffset.Y
+        PosLastZero.X = getCoords(dX)
+        PosLastZero.Y = getCoords(dY)
         
         'Invert the coordinates so the last zero is stored relative to the current zero (not the other way around)
         PosLastZero.X = -PosLastZero.X
         PosLastZero.Y = -PosLastZero.Y
+        
+        'Get the current position in global coordinates to update the zeroOffset
+        zeroOffset.X = myXY.getCo(Axis_X, True)
+        zeroOffset.Y = myXY.getCo(Axis_Y, True)
+        
+        'Set zero using the zeroOffset
+        myXY.setZero zeroOffset.X, zeroOffset.Y
+        
+        'Save the new offsets
+        saveData
         
         'Indicate that the zero is properly set
         zeroSet = True
         
     End Function
     
-    Public Sub updToolOffset(offX As Double, offY As Double)
+    Public Sub setToolOffset()
     
         'Used to set ONLY the offset between the drill and the tap.
     
-        goTap.X = offX
-        goTap.Y = offY
+        'Update the offsets to the current local position
+        goTap.X = getCoords(dX)
+        goTap.Y = getCoords(dY)
         
-    End Sub
-    
-    Public Sub updOffsets(Standard As Double, DrillX As Double, DrillY As Double, TapX As Double, TapY As Double)
-    
-        'Load new offsets into class variables. Used for a complete load of vars from the UI Class
-        stdOffset = Standard
-        zeroOffset.X = DrillX
-        zeroOffset.Y = DrillY
-        goTap.X = TapX
-        goTap.Y = TapY
-    
-        'Update the local/global coordinate offset in 6k class
-        myXY.setZero DrillX, DrillY
-    
+        'Save the new offsets
+        saveData
+        
     End Sub
 
 '---------------------------- Read-Only Set & Returns -----------------------------------------------------------------
