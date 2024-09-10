@@ -178,6 +178,7 @@ Option Explicit
     
     Private Sub loadOffsets()
 
+        'Attempt to load the offsets from the saved file. If no file exists, use defaults
         If Not loadData Then
             
             stdOffset = 0.375
@@ -188,8 +189,12 @@ Option Explicit
             
         End If
         
+        'The local coordinate of the drill will always be 0,0
         goDrill.X = 0
         goDrill.Y = 0
+        
+        'Load the local coordinate system offsets into the 6k control class
+        myXY.setZero zeroOffset.X, zeroOffset.Y
         
     End Sub
     

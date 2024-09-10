@@ -332,8 +332,6 @@ Option Explicit
     
     'setZero - Function to set the zero location of the 6k
     Public Sub setZero(offsetX As Double, offsetY As Double)
-    
-        Dim cmdStr As String
         
         zeroOffset.X = offsetX
         zeroOffset.Y = offsetY
