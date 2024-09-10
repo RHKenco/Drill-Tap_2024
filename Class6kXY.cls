@@ -31,6 +31,9 @@ Option Explicit
     Const myScaleX = 50000  'Steps per Inch - Ball screw & 1"/Rev + 10:1 transmission -> DriveScale * 10
     Const myScaleY = 50000
 
+    Const myDeadzoneX = -0.25   'Offsets for X and Y from home/EOT limit release to limit close
+    Const myDeadzoneY = 0.25    '  - Limit trigger threshold is exceeded before being released with current limit switches
+
     Const x_Max = 6.5
     Const y_Min = -2.5
 
@@ -344,6 +347,7 @@ Option Explicit
         
         Dim globalPos As Double
         Dim localPos As Double
+        Dim returnPos As Double
         
         Select Case motor
             Case motorX
@@ -352,9 +356,9 @@ Option Explicit
                 globalPos = (c6k.MotorPos(motorY) / myScaleY)
         End Select
         
-        If Not coGlobal Then localPos = coLocal(motor, globalPos)
+        If Not coGlobal Then returnPos = coLocal(motor, globalPos) Else returnPos = globalPos
         
-        getCo = localPos
+        getCo = returnPos
         
     End Function
     
@@ -700,6 +704,8 @@ Option Explicit
                     cmdStr = cmdStr & "HOMEDG0X:"
                     cmdStr = cmdStr & "HOM1X:"
                 End If
+                
+                cmdStr = cmdStr & "WAIT(MOV = b00):PSET" & CStr(myDeadzoneX) & ":"
             Case 2
                 If Direction Then
                     cmdStr = cmdStr & "HOMDFX0:"
@@ -710,6 +716,8 @@ Option Explicit
                     cmdStr = cmdStr & "HOMEDGX0:"
                     cmdStr = cmdStr & "HOMX1:"
                 End If
+                
+                cmdStr = cmdStr & "WAIT(MOV = b00):PSET," & CStr(myDeadzoneY) & ":"
         End Select
     
     
