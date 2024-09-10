@@ -902,12 +902,37 @@ Private Sub topbarSetDrill_Click()
     
         'Disable Joystick
         myDrillTap.joyState False
-        myFSM.setJoystick 0
+        myFSM.setJoystick boolFalse
     
         'Set Home
-        myDrillTap.setHome
+        myUI.updOffsets currentPos.X, currentPos.Y, True
     End If
 
+
+End Sub
+
+Private Sub topbarSetTap_Click()
+
+    Dim userReturn As VbMsgBoxResult
+
+    myMsg = "Would you like to reset the Tap Offset position?"
+    
+    userReturn = MsgBox(myMsg, vbYesNo, "Set Zero?")
+    
+    If userReturn = vbYes Then
+    
+        Dim newPos As myCoordinate
+        
+        newPos.X = myDrillTap.getCoords(dX)
+        newPos.Y = myDrillTap.getCoords(dY)
+    
+        myDrillTap.joyState False
+        myFSM.setJoystick boolFalse
+    
+        'Set tap offsets
+        myUI.updOffsets newPos.X, newPos.Y, False
+    
+    End If
 
 End Sub
 

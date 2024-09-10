@@ -234,9 +234,9 @@ Private Sub runState0()
         innerState = 3
         myUI.updStatus uiHoming, "X"
     ElseIf innerState = 3 Then
-        'Initialize FSM on first run
-        myUI.updStatus uiStandby, ""
-        setState s1_Stby
+        'Move to drill after homing
+        moveMode = moveToDrillNow
+        setState s4_Move
     End If
 
 End Sub
@@ -350,8 +350,8 @@ Private Sub runState3()
         'If joystick is also enabled, cycle to joystick state
         If joystickMode Then
             fsmState = s2_Joy
-        'If the joystick is not enabled but the go-to button has been pushed, go to move state.
-        ElseIf moveMode = moveToPositionNow Then
+        'If the joystick is not enabled and the go-to button has been pushed, go to move state.
+        ElseIf (moveMode = moveToPositionNow) Or (moveMode = moveInProgress) Then
             fsmState = s4_Move
         End If
     
@@ -388,7 +388,16 @@ Private Sub runState4()
     
     
     If innerState = 0 Then
-        myUI.updStatus uiWaiting, ""
+        Dim uiStr As String
+        Select Case moveMode
+            Case moveToDrillNow
+                uiStr = " - To Drill"
+            Case moveToTapNow
+                uiStr = " - To Tap"
+            Case moveToPositionNow
+                uiStr = " - To " & frmMaintenance.txtMaintPos(0).Text & " - " & frmMaintenance.txtMaintPos(1).Text
+        End Select
+        myUI.updStatus uiWaiting, uiStr
         innerState = 1
     End If
     

@@ -160,6 +160,8 @@ Option Explicit
     
     Public Function setHome()
     
+        'Used to set ONLY the global coordinate offsets to calibrate the local coordinate system.
+    
         'Get current position, and store it as the last zero location
         PosLastZero.X = getCoords(cX)
         PosLastZero.Y = getCoords(cY)
@@ -178,29 +180,24 @@ Option Explicit
     
     Public Sub updToolOffset(offX As Double, offY As Double)
     
+        'Used to set ONLY the offset between the drill and the tap.
+    
         zeroOffset.X = zeroOffset.X + offX
         zeroOffset.Y = zeroOffset.Y + offY
         
-        myUI.updOffset stdOffset, zeroOffset.X, zeroOffset.Y, goTap.X, goTap.Y
-        
-    End Sub
-    
-    Public Sub updTapOffset(offX As Double, offY As Double)
-    
-        goTap.X = offX
-        goTap.Y = offY
-        
-        myUI.updOffset stdOffset, zeroOffset.X, zeroOffset.Y, goTap.X, goTap.Y
-    
     End Sub
     
     Public Sub updOffsets(Standard As Double, DrillX As Double, DrillY As Double, TapX As Double, TapY As Double)
     
+        'Load new offsets into class variables. Used for a complete load of vars from the UI Class
         stdOffset = Standard
         zeroOffset.X = DrillX
         zeroOffset.Y = DrillY
         goTap.X = TapX
         goTap.Y = TapY
+    
+        'Update the local/global coordinate offset in 6k class
+        myXY.setZero DrillX, DrillY
     
     End Sub
 
@@ -414,7 +411,7 @@ Option Explicit
 
 '---------------------------- Output Enable/Disable -------------------------------------------------------------------
  
-    Public Sub setDrillTap(drillState As Boolean, tapState As Boolean, coolantState As Boolean)
+    Private Sub setDrillTap(drillState As Boolean, tapState As Boolean, coolantState As Boolean)
     
         myXY.setOut Out_Drill, drillState
         
@@ -428,7 +425,19 @@ Option Explicit
     Public Function setClamp(clampState As Boolean) As Boolean
     
         Static CmdSent As Boolean
-    
+        Static sendCounter As Integer
+        Dim commandMaximum As Integer
+        commandMaximum = 40    'Cycles at 50ms = 20 hz therefore 40 cycles = 2 second
+        
+        'Increment counter each loop after the command is sent; resend if the command does not get executed after 2 seconds
+        If CmdSent Then
+            sendCounter = sendCounter + 1
+            If sendCounter > commandMaximum Then
+                sendCounter = 0
+                CmdSent = False
+            End If
+        End If
+        
         'If the clamp is requested to close but is already closed, (and a command is not already in progress), open clamp
         If (clampState And checkClamp) And Not CmdSent Then clampState = False
             
@@ -440,6 +449,7 @@ Option Explicit
                 If Not CmdSent Then
                     myXY.setClamp Out_Clamp_Pump, Out_Clamp_Sol, False
                     CmdSent = True
+                    sendCounter = 0
                 End If
             'If the clamp is open, exit function and return true
             Else
@@ -454,6 +464,7 @@ Option Explicit
                 If Not CmdSent Then
                     myXY.setClamp Out_Clamp_Pump, Out_Clamp_Sol, True
                     CmdSent = True
+                    sendCounter = 0
                 End If
             'If the clamp is closed, exit function and return true
             Else
@@ -635,6 +646,7 @@ Option Explicit
 '---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---===---=
 '---===---===---=== Advanced Functions - Drill & Tap cycles; Move to Position ---===---===---===---===---===---===---==
 
+
 ' waitForMove - Returns the myXY check move result
 Public Function waitForMove() As Boolean
 
@@ -647,9 +659,7 @@ End Function
 Public Sub stopNow()
 
     'Disable Drill, Tap, and Coolant Pump
-    myXY.setOut Out_Drill, False
-    myXY.setOut Out_Tap, False
-    myXY.setOut Out_Cool, False
+    setDrillTap False, False, False
 
     'Stop motion
     myXY.moveStop
@@ -734,15 +744,12 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
                 'Enable the appropriate tool and increment the use counter
                 Select Case tool
                     Case tDrill
-                        myXY.setOut Out_Drill, True
+                        setDrillTap True, False, True
                         myUI.increment (countDrill)
                     Case tTap
-                        myXY.setOut Out_Tap, True
+                        setDrillTap False, True, True
                         myUI.increment (countTap)
                 End Select
-                
-                'Enable the coolant pump
-                myXY.setOut Out_Cool, True
                 
             End If
             
@@ -765,14 +772,7 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
             Static delayBool As Boolean
             
             If Not dryRun Then
-                Select Case tool
-                    Case tDrill
-                        myXY.setOut Out_Drill, False
-                    Case tTap
-                        myXY.setOut Out_Tap, False
-                End Select
-                
-                myXY.setOut Out_Cool, False
+                setDrillTap False, False, False
             End If
             
             'Delay for 1 second before proceeding

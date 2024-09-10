@@ -165,8 +165,8 @@ Public Function getDir() As joyDirection
     'Establish directional integers
     If uiKeyUp Xor uiKeyDown Then
 
-        If uiKeyUp Then upDown = 3
-        If uiKeyDown Then upDown = 6
+        If uiKeyDown Then upDown = 3
+        If uiKeyUp Then upDown = 6
         
     End If
     
@@ -464,7 +464,7 @@ Public Sub updStatus(myStatus As uiStatus, strInput As String)
             
         Case uiWaiting
         
-            myMsg = "Motion in Progress"
+            myMsg = "Motion in Progress" & strInput
             
             btnState btnRunning
             
@@ -617,14 +617,25 @@ Private Sub loadOffsets()
         
 End Sub
 
-Public Sub updOffsets(Standard As Double, DrillX As Double, DrillY As Double, TapX As Double, TapY As Double)
+Public Sub updOffsets(PosX As Double, PosY As Double, DrillorTap As Boolean)
 
-    stdOffset = Standard
-    DrilloffX = DrillX
-    DrilloffY = DrillY
-    TapoffX = TapX
-    TapoffY = TapY
+    If DrillorTap Then
+        myDrillTap.setHome
+        DrilloffX = PosX
+        DrilloffY = PosY
+    Else
+        myDrillTap.updToolOffset PosX, PosY
+        TapoffX = PosX
+        TapoffY = PosY
+    End If
     
+    
+    saveData
+
+End Sub
+
+Public Sub saveOffsets()
+
     saveData
 
 End Sub

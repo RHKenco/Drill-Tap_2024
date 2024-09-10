@@ -338,27 +338,6 @@ Option Explicit
         zeroOffset.X = offsetX
         zeroOffset.Y = offsetY
     
-        'Sets zero to the offset location
-        cmdStr = "PSET"
-        
-        If motorX = 1 Then
-            cmdStr = cmdStr & Str(offsetX) & "," & Str(offsetY)
-        Else
-            cmdStr = cmdStr & Str(offsetY) & "," & Str(offsetX)
-        End If
-        
-        cmdStr = cmdStr & ":"
-        
-        myCns.write6k cmdStr
-    
-    End Sub
-    
-    'setZero - Function to set the zero location of the 6k to the current location
-    Public Sub setZeroHere()
-    
-        'Sets zero to the offset location
-        myCns.write6k "PSET0,0:"
-    
     End Sub
     
     
