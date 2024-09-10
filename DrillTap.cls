@@ -154,6 +154,9 @@ Option Explicit
         
         'Pull saved offsets from data file; will set defaults if file does not exist
         myUI.getOffsets
+        
+        'Pull velocity defaults from the UI
+        setVelDefaults frmUI.txtSpeeds(0), frmUI.txtSpeeds(1), frmUI.txtSpeeds(2)
             
             
     End Sub
@@ -166,12 +169,15 @@ Option Explicit
         PosLastZero.X = getCoords(cX)
         PosLastZero.Y = getCoords(cY)
         
-        'Invert the coordinates so the last zero is stored relative to the current zero (not the other way around)
-        PosLastZero.X = -PosLastZero.X
-        PosLastZero.Y = -PosLastZero.Y
+        'Update the zero offset to be the current position
+        zeroOffset = PosLastZero
         
         'Set zero using the zeroOffset
         myXY.setZero zeroOffset.X, zeroOffset.Y
+        
+        'Invert the coordinates so the last zero is stored relative to the current zero (not the other way around)
+        PosLastZero.X = -PosLastZero.X
+        PosLastZero.Y = -PosLastZero.Y
         
         'Indicate that the zero is properly set
         zeroSet = True
@@ -182,8 +188,8 @@ Option Explicit
     
         'Used to set ONLY the offset between the drill and the tap.
     
-        zeroOffset.X = zeroOffset.X + offX
-        zeroOffset.Y = zeroOffset.Y + offY
+        goTap.X = offX
+        goTap.Y = offY
         
     End Sub
     
