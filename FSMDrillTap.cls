@@ -586,6 +586,7 @@ Private Sub runState6()
             If Counter <= runCycles Then
                 
                 Dim currentTool As myTool
+                Dim desiredDepth As Double
             
                 Select Case innerState
                     Case 2
@@ -593,14 +594,16 @@ Private Sub runState6()
                         If Counter = 0 Then myUI.updStatus uiRunningDrill, ""
                         'Identify correct tool
                         currentTool = tDrill
+                        desiredDepth = CDbl(frmUI.txtDeep(0).Text)
                     Case 4
                         'First loop, set UI
                         If Counter = 0 Then myUI.updStatus uiRunningTap, ""
                         'Identify correct tool
                         currentTool = tTap
+                        desiredDepth = CDbl(frmUI.txtDeep(0).Text) * (CDbl(frmUI.txtDeep(1).Text) / 100)
                 End Select
                 
-                Counter = myDrillTap.runTool(currentTool, CDbl(frmUI.txtDeep(0)), Counter, runCycles, frmUI.chkDryRun.Value)
+                Counter = myDrillTap.runTool(currentTool, desiredDepth, Counter, runCycles, frmUI.chkDryRun.Value)
             
             'When the cycle counter exceeds the number of desired cycles, wait for current move to finish
             Else

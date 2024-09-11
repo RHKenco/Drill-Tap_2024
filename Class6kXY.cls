@@ -31,11 +31,11 @@ Option Explicit
     Const myScaleX = 50000  'Steps per Inch - Ball screw & 1"/Rev + 10:1 transmission -> DriveScale * 10
     Const myScaleY = 50000
 
-    Const myDeadzoneX = -0.25   'Offsets for X and Y from home/EOT limit release to limit close
-    Const myDeadzoneY = 0.25    '  - Limit trigger threshold is exceeded before being released with current limit switches
-
+    Const myDeadzoneX = -0.025   'Offsets for X and Y from 0,0 triggers to ensure a command to global (0,0) does not trigger limits
+    Const myDeadzoneY = 0.025
+    
     Const x_Max = 6.5
-    Const y_Min = -2.5
+    Const y_Min = -2.6
 
     Enum myMotors
         mNull
@@ -175,7 +175,7 @@ Option Explicit
         myCns.write6k "COMEXC1:"
         
         'Set default velocity to 0, Set initial values for Acceleration, Tie Decell to accel
-        myCns.write6k "@D0:@V0:@A3:@AD0:"
+        myCns.write6k "@D0:@V0:@A2:@AD0:"
         
         'Ensure acknowledge pin is set low for future motion
         setAckPin False
@@ -520,7 +520,7 @@ Option Explicit
             'Start the pump motor
             setOut CStr(Pump_Pin), True
             'Wait 1.9 Seconds
-            myCns.write6k "T0.5:"
+            myCns.write6k "T1:"
             'Close Solenoid
             setOut CStr(Sol_Pin), False
             'Wait half a second
@@ -709,7 +709,7 @@ Option Explicit
                 If Direction Then
                     'Start with Home motion paramters:
                     'Home final direction should be the same as the initial direction
-                    cmdStr = cmdStr & "HIMDF0X:"
+                    cmdStr = cmdStr & "HOMDF0X:"
                     'Home should end on the edge closest to the initial direction (therefore opposite edge - home negative, positive edge)
                     cmdStr = cmdStr & "HOMEDG1X:"
                     'Begin Home Motion
@@ -788,9 +788,9 @@ Option Explicit
                 move motorX, newPosX
                 move motorY, newPosY
             Case movHomeX
-                moveHome motorX, True
+                moveHome motorX, False
             Case movHomeY
-                moveHome motorY, False
+                moveHome motorY, True
         End Select
     
         'set completion flag
@@ -818,7 +818,7 @@ Option Explicit
         move motorY, peckDeep
         
         'Set retract velocity
-        setVel motorY, peckVel
+        setVel motorY, returnVel
         
         'Retract axis
         move motorY, (peckDeep + peckBack)

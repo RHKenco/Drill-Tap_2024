@@ -166,7 +166,7 @@ Option Explicit
             
             'Load previous data
             Open dataSavePath For Input As #1
-            Input #1, zeroOffset.X, zeroOffset.Y, goTap.X, goTap.Y
+            Input #1, stdOffset, zeroOffset.X, zeroOffset.Y, goTap.X, goTap.Y
             Close #1
             
             loadData = True
@@ -202,7 +202,7 @@ Option Explicit
     
         'Save to file
         Open dataSavePath For Output As #1
-        Write #1, zeroOffset.X, zeroOffset.Y, goTap.X, goTap.Y
+        Write #1, stdOffset, zeroOffset.X, zeroOffset.Y, goTap.X, goTap.Y
         Close #1
     
     End Function
@@ -842,17 +842,32 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
                 
             'Compute the drill depth and send drill command. Cycles run from cycle 2 to total - 2 as cycle 1 is delay and final 2 cycles return to start
             Dim cycleDeep As Double
-            cycleDeep = -((((currentCycle - 1) / (totalCycles - 3))) * totalDeep + stdOffset)
+            Dim cycleRatio As Double
             
-            If tool = tTap Then cycleDeep = cycleDeep + goTap.Y
+            'The current cycle / total cycles, corrected for starting and ending cycles.
+            cycleRatio = (currentCycle - 1) / (totalCycles - 3)
+            
+            'Determine the appropriate depth for the current cycle
+            Select Case tool
+                Case tDrill
+                
+                    'Drill is a simple ratio multiple of the total depth, plus the standard offset
+                    cycleDeep = -(cycleRatio * totalDeep + stdOffset)
+            
+                Case tTap
+                    
+                    'Tap total depth will be adjusted outside of this sub. For this section, the tap offset needs to be added.
+                    cycleDeep = -(cycleRatio * totalDeep + stdOffset) + goTap.Y
+            
+            End Select
             
             Dim moveResult As Boolean
             
             Select Case tool
                 Case tDrill
-                    moveResult = myXY.movePeck(cycleDeep, 0.125, V_Drill, V_Jog)
+                    moveResult = myXY.movePeck(cycleDeep, 0.125, V_Drill, (1.5 * V_Drill))
                 Case tTap
-                    moveResult = myXY.movePeck(cycleDeep, 10, V_Tap, V_Tap)
+                    moveResult = myXY.movePeck(cycleDeep, 10, V_Tap, (1.25 * V_Tap))
             End Select
             
             
