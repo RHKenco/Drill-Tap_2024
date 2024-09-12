@@ -34,8 +34,8 @@ Option Explicit
     Const myDeadzoneX = -0.025   'Offsets for X and Y from 0,0 triggers to ensure a command to global (0,0) does not trigger limits
     Const myDeadzoneY = 0.025
     
-    Const x_Max = 6.5
-    Const y_Min = -2.6
+    Const x_Max = 7.1
+    Const y_Min = -2.9
 
     Enum myMotors
         mNull
