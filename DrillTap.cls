@@ -220,8 +220,8 @@ Option Explicit
         PosLastZero.Y = -PosLastZero.Y
         
         'Get the current position in global coordinates to update the zeroOffset
-        zeroOffset.X = myXY.getCo(Axis_X, True)
-        zeroOffset.Y = myXY.getCo(Axis_Y, True)
+        zeroOffset.X = myXY.getCo(Axis_X, False, True)
+        zeroOffset.Y = myXY.getCo(Axis_Y, True, True)
         
         'Set zero using the zeroOffset
         myXY.setZero zeroOffset.X, zeroOffset.Y

@@ -36,6 +36,15 @@ Option Explicit
     
     Const x_Max = 7.1
     Const y_Min = -2.9
+    
+    Const encCal = 225.6        'Calibration constant for the encoder, in pulses per inch. This ignores quatrature (i.e. a 56.4ppi encoder would be 225.6)
+    Const c6kCycleMax = 50      'Maximum number of cycles in which the 6k tries to reach the encoder position
+
+    '6k Variables:
+    'VAR1 - Stores Encoder Position
+    'VAR2 - Stores Desired Position
+    'VAR3 - Stores Number of Failed Cycles
+    'VAR4 - Stores Number of Failed Moves (i.e. max cycles reached)
 
     Enum myMotors
         mNull
@@ -267,7 +276,7 @@ Option Explicit
     
     End Function
     
-    Private Function genCmd(myCmd As String, motor As Integer, argument As String) As String
+    Private Function genCmd(myCmd As String, motor As Integer, argument As String, Optional isEncoder As Boolean = False) As String
 
         Dim rtnCmd As String
 
@@ -292,7 +301,36 @@ Option Explicit
                         Exit Function
                 End Select
                 
-                rtnCmd = "D" & posStr & ":" & myCmd & goStr & ":WAIT(MOV = b" & wtStr & "):"
+                If Not isEncoder Then
+                    'Simply tell the controller to go to the position and wait for command execution to resume after the position is reached
+                    rtnCmd = "D" & posStr & ":GO" & goStr & ":WAIT(MOV = b" & wtStr & "):"
+                Else
+                    'Define the desired position and tell the controller to go
+                    rtnCmd = "D" & posStr & ":GO" & goStr & ":"
+                    'Repeat the following check
+                    rtnCmd = rtnCmd & "REPEAT:"
+                        'Wait until motion has stopped
+                        rtnCmd = rtnCmd & "WAIT(MOV = b" & wtStr & "):"
+                        'Store the encoder position (corrected to reference inches) and the desired position as variables for comparison
+                        rtnCmd = rtnCmd & "VAR1=" & CStr(motor) & "PE:VAR1=VAR1/" & CStr(encCal) & ":VAR2=" & CStr(motor) & "D:"
+                        'Compare the encoder and commanded positions. If they differ
+                        rtnCmd = rtnCmd & "IF(VAR1<>VAR2):"
+                            'correct the stepper position in the controller
+                            rtnCmd = rtnCmd & "PSET(VAR1):"
+                            'If the 6k has not run through this cycle more times than the cycle max
+                            rtnCmd = rtnCmd & "IF(VAR3 < " & CStr(c6kCycleMax) & "):"
+                                'Repeat the Go command and increment the cycle counter
+                                rtnCmd = rtnCmd & "GO" & goStr & ":VAR3 = VAR3+1:"
+                            rtnCmd = rtnCmd & "ELSE:"
+                                'Exit the repeat cycle and increment the failed cycle counter
+                                rtnCmd = rtnCmd & "VAR2=VAR1:VAR4 = VAR4+1:VAR3=0:"
+                            rtnCmd = rtnCmd & "NIF:"
+                        rtnCmd = rtnCmd & "ELSE:"
+                            rtnCmd = rtnCmd & "VAR3=0"
+                        rtnCmd = rtnCmd & "NIF:"
+                    'Repeat the loop until the motor reaches the desired position or the cycle counter has been exceeded
+                    rtnCmd = rtnCmd & "UNTIL(VAR1=VAR2):"
+                End If
                 
             Case "V", "D", "A"
             
@@ -330,7 +368,7 @@ Option Explicit
     
     
     'getPos - Function to get the position of the specified axis
-    Public Function getCo(motor As Integer, Optional coGlobal As Boolean = False) As Double
+    Public Function getCo(motor As Integer, Optional isEncoder As Boolean = False, Optional coGlobal As Boolean = False) As Double
         
         Dim globalPos As Double
         Dim localPos As Double
@@ -340,7 +378,11 @@ Option Explicit
             Case motorX
                 globalPos = (c6k.MotorPos(motorX) / myScaleX)
             Case motorY
-                globalPos = (c6k.MotorPos(motorY) / myScaleY)
+                If isEncoder Then
+                    globalPos = (c6k.EncoderPos(motorY) / encCal)
+                Else
+                    globalPos = (c6k.MotorPos(motorY) / myScaleY)
+                End If
         End Select
         
         If Not coGlobal Then returnPos = coLocal(motor, globalPos) Else returnPos = globalPos
@@ -627,7 +669,7 @@ Option Explicit
     End Function
     
     'Generic single-axis move command for any input axis.
-    Private Sub move(motor As Integer, localPos As Double)
+    Private Sub move(motor As Integer, localPos As Double, Optional isEncoder As Boolean = False)
     
         'Create temporary location var
         Dim globalPos As Double
@@ -636,7 +678,8 @@ Option Explicit
         'Ensure that the motion does not exceed acceptable bounds
         globalPos = coGlobal(motor, localPos)
         
-        cmdStr = genCmd("GO", motor, Format(globalPos, "###0.000"))
+        'Generate the initial GO command
+        cmdStr = genCmd("GO", motor, Format(globalPos, "###0.000"), isEncoder)
         
         'Send to 6k
         myCns.write6k cmdStr
@@ -720,7 +763,7 @@ Option Explicit
                     cmdStr = cmdStr & "HOM1X:"
                 End If
                 
-                cmdStr = cmdStr & "WAIT(MOV = b00):PSET" & CStr(deadzone1) & ":"
+                cmdStr = cmdStr & "WAIT(MOV = b00):PSET" & CStr(deadzone1) & ":PESET," & CStr(deadzone2 * encCal) & ":"
             Case 2
                 If Direction Then
                     cmdStr = cmdStr & "HOMDFX0:"
@@ -732,7 +775,7 @@ Option Explicit
                     cmdStr = cmdStr & "HOMX1:"
                 End If
                 
-                cmdStr = cmdStr & "WAIT(MOV = b00):PSET," & CStr(deadzone2) & ":"
+                cmdStr = cmdStr & "WAIT(MOV = b00):PSET," & CStr(deadzone2) & ":PESET," & CStr(deadzone2 * encCal) & ":"
         End Select
     
         'Initiate Home Motion
@@ -758,7 +801,7 @@ Option Explicit
         
     End Sub
     
-    Public Function moveTo(newPosX As Double, newPosY As Double, moveOption As moveType) As Boolean
+    Public Function moveTo(newPosX As Double, newPosY As Double, moveOption As moveType, Optional isEncoder As Boolean = False) As Boolean
         
         moveTo = False
         
@@ -777,16 +820,16 @@ Option Explicit
                 move motorX, newPosX
             Case movXY  'Move X first
                 move motorX, newPosX
-                move motorY, newPosY
+                move motorY, newPosY, isEncoder
             Case movY
-                move motorY, newPosY
+                move motorY, newPosY, isEncoder
             Case movYX  'Move Y first
-                move motorY, newPosY
+                move motorY, newPosY, isEncoder
                 move motorX, newPosX
             Case movY0XY  'Back-Over-Front
-                move motorY, 10
+                move motorY, 10, isEncoder
                 move motorX, newPosX
-                move motorY, newPosY
+                move motorY, newPosY, isEncoder
             Case movHomeX
                 moveHome motorX, False
             Case movHomeY
