@@ -807,9 +807,9 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
             'Move to the default position for the selected tool
             Select Case tool
                 Case tDrill
-                    If myXY.moveTo(0, goDrill.Y, movY) Then runTool = currentCycle + 1
+                    If myXY.moveTo(0, goDrill.Y, movY, True) Then runTool = currentCycle + 1
                 Case tTap
-                    If myXY.moveTo(0, goTap.Y, movY) Then runTool = currentCycle + 1
+                    If myXY.moveTo(0, goTap.Y, movY, True) Then runTool = currentCycle + 1
             End Select
         
         'If the last cycle has been reached, disable tool; delay for 1 second then exit
@@ -865,9 +865,9 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
             
             Select Case tool
                 Case tDrill
-                    moveResult = myXY.movePeck(cycleDeep, 0.125, V_Drill, (1.5 * V_Drill))
+                    moveResult = myXY.movePeck(cycleDeep, 0.125, V_Drill, (1.5 * V_Drill), True)
                 Case tTap
-                    moveResult = myXY.movePeck(cycleDeep, 10, V_Tap, (1.25 * V_Tap))
+                    moveResult = myXY.movePeck(cycleDeep, 10, V_Tap, (1.25 * V_Tap), True)
             End Select
             
             

@@ -159,6 +159,15 @@ Option Explicit
     
             myCns.write6k "@HOMV1:@HOMBAC1:@HOMVF0.5:"
             
+            
+        'Initialize Encoder
+            
+            Dim motorStr As String
+        
+            If myMotorY = m1 Then motorStr = "10" Else motorStr = "01"
+            
+            myCns.write6k "ENCCNT" & motorStr & ":@ENCPOL0:"
+            
         'Set up estop button
             ESTOPpin = ESTOP_Input_Pin
             
@@ -844,7 +853,7 @@ Option Explicit
     End Function
     
     'movePeck - Moves front then back, at separate velocities
-    Public Function movePeck(peckDeep As Double, peckBack As Double, peckVel As Double, returnVel As Double) As Boolean
+    Public Function movePeck(peckDeep As Double, peckBack As Double, peckVel As Double, returnVel As Double, Optional isEncoder As Boolean = False) As Boolean
     
         movePeck = False
     
@@ -858,13 +867,13 @@ Option Explicit
         setVel motorY, peckVel
         
         'Advance axis
-        move motorY, peckDeep
+        move motorY, peckDeep, isEncoder
         
         'Set retract velocity
         setVel motorY, returnVel
         
         'Retract axis
-        move motorY, (peckDeep + peckBack)
+        move motorY, (peckDeep + peckBack), True
         
         'set completion flag
         setAckPin True
