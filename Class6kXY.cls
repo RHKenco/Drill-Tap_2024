@@ -31,8 +31,8 @@ Option Explicit
     Const myScaleX = 50000  'Steps per Inch - Ball screw & 1"/Rev + 10:1 transmission -> DriveScale * 10
     Const myScaleY = 50000
 
-    Const myDeadzoneX = -0.025   'Offsets for X and Y from 0,0 triggers to ensure a command to global (0,0) does not trigger limits
-    Const myDeadzoneY = 0.025
+    Const myDeadzoneX = 0.025       'Offsets for X and Y from 0,0 triggers limit the motion such that the limits are not triggered
+    Const myDeadzoneY = -0.025
     
     Const x_Max = 7.1
     Const y_Min = -2.9
@@ -166,7 +166,11 @@ Option Explicit
         
             If myMotorY = m1 Then motorStr = "10" Else motorStr = "01"
             
-            myCns.write6k "ENCCNT" & motorStr & ":@ENCPOL0:"
+            'Enable the encoder and set it to the correct polarity
+            myCns.write6k "ENCCNT" & motorStr & ":@ENCPOL0:ERES" & Abs(encCal) & ":"
+            
+            'Call a function to define the encoder position correcting function
+            initEncoder
             
         'Set up estop button
             ESTOPpin = ESTOP_Input_Pin
@@ -236,6 +240,70 @@ Option Explicit
         
     End Sub
     
+    Private Sub initEncoder()
+    
+        Dim goStr As String
+        Dim wtStr As String
+        
+        Select Case motorY
+            Case m1
+                goStr = "10"
+                wtStr = "0X"
+            Case m2
+                goStr = "01"
+                wtStr = "X0"
+        End Select
+    
+        'Define the function in the controller
+        rtnCmd = "DEL ENCHK: DEF ENCHK:"
+            
+            'For this function, it will be assumed that it will always be called directly after a "DXX:GOXX:WAIT(MOV=bXX)" command
+            
+            'Repeat the following check
+            rtnCmd = rtnCmd & "REPEAT:"
+            
+                'Wait until the current motion has stopped
+                rtnCmd = rtnCmd & "WAIT(MOV = b" & wtStr & "):"
+                
+                'Store the encoder position (corrected to reference inches) and the desired position as variables for comparison
+                rtnCmd = rtnCmd & "VAR1=" & CStr(motorY) & "PE:VAR1=VAR1/" & CStr(encCal) & ":VAR2=" & CStr(motorY) & "D:"
+                
+                'Compare the encoder and commanded positions. If they differ
+                rtnCmd = rtnCmd & "IF(VAR1<>VAR2):"
+                
+                    'correct the stepper position in the controller
+                    rtnCmd = rtnCmd & "PSET(VAR1):"
+                    
+                    'If the 6k has not run through this cycle more times than the cycle max
+                    rtnCmd = rtnCmd & "IF(VAR3 < " & CStr(c6kCycleMax) & "):"
+                    
+                        'Repeat the Go command and increment the cycle counter
+                        rtnCmd = rtnCmd & "GO" & goStr & ":VAR3 = VAR3+1:"
+                        
+                    'If the 6k has reached the cycle maximum
+                    rtnCmd = rtnCmd & "ELSE:"
+                        
+                        'Exit the repeat cycle and increment the failed cycle counter
+                        rtnCmd = rtnCmd & "VAR2=VAR1:VAR4 = VAR4+1:VAR3=0:"
+                        
+                    rtnCmd = rtnCmd & "NIF:"
+                    
+                'If the command position and the encoder position are the same
+                rtnCmd = rtnCmd & "ELSE:"
+                
+                    'Reset the cycle counter before exiting
+                    rtnCmd = rtnCmd & "VAR3=0"
+                    
+                rtnCmd = rtnCmd & "NIF:"
+                
+            'Repeat the loop until the motor reaches the desired position or the cycle counter has been exceeded
+            rtnCmd = rtnCmd & "UNTIL(VAR1=VAR2):"
+            
+        rtnCmd = rtnCmd & "END:"
+        
+        
+    End Sub
+    
 
 '---------------------------- Internal Functions ----------------------------------------------------------------------
     
@@ -256,10 +324,10 @@ Option Explicit
                 
         Select Case motor
             Case motorX
-                If globalPos < 0 Then globalPos = 0
+                If globalPos < deadzoneX Then globalPos = deadzoneX
                 If globalPos > x_Max Then globalPos = x_Max
             Case motorY
-                If globalPos > 0 Then globalPos = 0
+                If globalPos > deadzoneY Then globalPos = deadzoneY
                 If globalPos < y_Min Then globalPos = y_Min
         End Select
         
@@ -285,6 +353,7 @@ Option Explicit
     
     End Function
     
+    
     Private Function genCmd(myCmd As String, motor As Integer, argument As String, Optional isEncoder As Boolean = False) As String
 
         Dim rtnCmd As String
@@ -294,7 +363,7 @@ Option Explicit
                 
                 Dim posStr As String
                 Dim goStr As String
-                Dim wtStr
+                Dim wtStr As String
                 
                 Select Case motor
                     Case m1
@@ -310,36 +379,12 @@ Option Explicit
                         Exit Function
                 End Select
                 
-                If Not isEncoder Then
-                    'Simply tell the controller to go to the position and wait for command execution to resume after the position is reached
-                    rtnCmd = "D" & posStr & ":GO" & goStr & ":WAIT(MOV = b" & wtStr & "):"
-                Else
-                    'Define the desired position and tell the controller to go
-                    rtnCmd = "D" & posStr & ":GO" & goStr & ":"
-                    'Repeat the following check
-                    rtnCmd = rtnCmd & "REPEAT:"
-                        'Wait until motion has stopped
-                        rtnCmd = rtnCmd & "WAIT(MOV = b" & wtStr & "):"
-                        'Store the encoder position (corrected to reference inches) and the desired position as variables for comparison
-                        rtnCmd = rtnCmd & "VAR1=" & CStr(motor) & "PE:VAR1=VAR1/" & CStr(encCal) & ":VAR2=" & CStr(motor) & "D:"
-                        'Compare the encoder and commanded positions. If they differ
-                        rtnCmd = rtnCmd & "IF(VAR1<>VAR2):"
-                            'correct the stepper position in the controller
-                            rtnCmd = rtnCmd & "PSET(VAR1):"
-                            'If the 6k has not run through this cycle more times than the cycle max
-                            rtnCmd = rtnCmd & "IF(VAR3 < " & CStr(c6kCycleMax) & "):"
-                                'Repeat the Go command and increment the cycle counter
-                                rtnCmd = rtnCmd & "GO" & goStr & ":VAR3 = VAR3+1:"
-                            rtnCmd = rtnCmd & "ELSE:"
-                                'Exit the repeat cycle and increment the failed cycle counter
-                                rtnCmd = rtnCmd & "VAR2=VAR1:VAR4 = VAR4+1:VAR3=0:"
-                            rtnCmd = rtnCmd & "NIF:"
-                        rtnCmd = rtnCmd & "ELSE:"
-                            rtnCmd = rtnCmd & "VAR3=0"
-                        rtnCmd = rtnCmd & "NIF:"
-                    'Repeat the loop until the motor reaches the desired position or the cycle counter has been exceeded
-                    rtnCmd = rtnCmd & "UNTIL(VAR1=VAR2):"
-                End If
+                'Tell the controller to go to the position and wait for command execution to resume after the position is reached
+                rtnCmd = "D" & posStr & ":GO" & goStr & ":WAIT(MOV = b" & wtStr & "):"
+               
+                'If the encoder is enabled, run the encoder command
+                If isEncoder Then rtnCmd = rtnCmd & "ENCHK:"
+               
                 
             Case "V", "D", "A"
             
@@ -772,7 +817,7 @@ Option Explicit
                     cmdStr = cmdStr & "HOM1X:"
                 End If
                 
-                cmdStr = cmdStr & "WAIT(MOV = b00):PSET" & CStr(deadzone1) & ":PESET," & CStr(deadzone2 * encCal) & ":"
+                cmdStr = cmdStr & "WAIT(MOV = b00):PESET0:"
             Case 2
                 If Direction Then
                     cmdStr = cmdStr & "HOMDFX0:"
@@ -784,7 +829,7 @@ Option Explicit
                     cmdStr = cmdStr & "HOMX1:"
                 End If
                 
-                cmdStr = cmdStr & "WAIT(MOV = b00):PSET," & CStr(deadzone2) & ":PESET," & CStr(deadzone2 * encCal) & ":"
+                cmdStr = cmdStr & "WAIT(MOV = b00):PESET,0:"
         End Select
     
         'Initiate Home Motion
