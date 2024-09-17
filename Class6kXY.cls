@@ -925,7 +925,7 @@ Option Explicit
         setVel motorY, returnVel
         
         'Retract axis
-        move motorY, (peckDeep + peckBack), True
+        move motorY, (peckDeep + peckBack), isEncoder
         
         'set completion flag
         setAckPin True

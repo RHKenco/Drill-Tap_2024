@@ -571,12 +571,10 @@ Private Sub runState6()
                 Select Case innerState
                     Case 1
                         innerState = 2
-                        '7 cycles + 2 prep cycles (0 and 1) + 2 conclusion cycles
-                        runCycles = 7 + 3
+                        runCycles = 7
                     Case 3
                         innerState = 4
-                        '3 cycles + 2 prep cycles (0 and 1) + 2 conclusion cycles
-                        runCycles = 3 + 3
+                        runCycles = 3
                 End Select
             End If
             

@@ -98,6 +98,8 @@ Option Explicit
     Private myPosition As atPosition
     Private myDestination As atPosition
     Private ESTOP_SET As Boolean
+    
+    Private subCycle As Integer     'Integer to store sub-cycle of drill/tap routine. This allows the total-cycles entered to be a true cycle count
      
 '--------------------------- Class Variables --------------------------------------------------------------------------
 
@@ -145,6 +147,8 @@ Option Explicit
         zeroSet = False
         joyOn = False
         ESTOP_SET = False
+        
+        subCycle = 0
         
             
         'Create 6k movement control object
@@ -350,6 +354,7 @@ Option Explicit
     Public Function resetESTOP()
         myXY.reset6k
         ESTOP_SET = False
+        subCycle = 0
     End Function
 
 
@@ -772,7 +777,7 @@ Public Function moveTo(destination As atPosition) As Boolean
 
 End Function
 
-Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Integer, totalCycles As Integer, dryRun As Boolean) As Integer
+Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Integer, totalCycles As Integer, Optional dryRun As Boolean = False) As Integer
     
     runTool = currentCycle
     
@@ -781,101 +786,153 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
     'If there is currently a move in progress, do not proceed. Else acknowledge prior move
     If myXY.checkMove Then Exit Function
 
+
+
+
+    'If the cycle is either the first or last, conduct additional operations
     Select Case currentCycle
-        'On the prep cycle, initialize the drill and coolant if it is not a dry run. Delay 1 second
+        'Initialize the drill/tap cycle
         Case 0
         
-            'Power drill & Coolant if it is not a dry run
-            If Not dryRun Then
-                'Enable the appropriate tool and increment the use counter
-                Select Case tool
-                    Case tDrill
-                        setDrillTap True, False, True
-                        myUI.increment (countDrill)
-                    Case tTap
-                        setDrillTap False, True, True
-                        myUI.increment (countTap)
-                End Select
-                
-            End If
+            'If the subCycle is not within the prep cycle number, an error has occurred and the subCycle variable needs to be reset
+            'This should be handled by the ESTOP algorithm, but this line acts as a redundant error check
+            If subCycle > 2 Then subCycle = 0
+        
             
-            runTool = 1
+            Select Case subCycle
+                
+                'On the first prep cycle, initialize the tool and coolant if it is not a dry run
+                Case 0
+                    'Power drill & Coolant if it is not a dry run
+                    If Not dryRun Then
+                        'Enable the appropriate tool and increment the use counter
+                        Select Case tool
+                            Case tDrill
+                                setDrillTap True, False, True
+                                myUI.increment (countDrill)
+                            Case tTap
+                                setDrillTap False, True, True
+                                myUI.increment (countTap)
+                        End Select
+                        
+                    End If
+                    
+                    subCycle = 1
+                
+                'Delay 1 second to allow tool & coolant pump to spool up
+                Case 1
+                
+                    If Not myXY.moveDelay(1) Then Exit Function
+                    
+                    subCycle = 2
+            
+                'Next, move the tool into position (by advancing through the standard offset to 1/16 from the part surface
+                Case 2
+                    
+                    myXY.setVel Axis_Y, V_Jog
+                    
+                    Select Case tool
+                        Case tDrill
+                            If myXY.moveTo(0, (goDrill.Y - stdOffset + 1 / 16), movY, True) Then
+                        Case tDrill
+                            If myXY.moveTo(0, (goDrill.Y - stdOffset + 1 / 16), movY, True) Then
+                    End Select
+                    
+                    subCycle = 3
+                    runTool = 1
+                    
+            End Select
+                        
+            Exit Function
         
         'Second to last cycle, go to the tool's default position
-        Case (totalCycles - 1)
-        
-            'Move to the default position for the selected tool
-            Select Case tool
-                Case tDrill
-                    If myXY.moveTo(0, goDrill.Y, movY, True) Then runTool = currentCycle + 1
-                Case tTap
-                    If myXY.moveTo(0, goTap.Y, movY, True) Then runTool = currentCycle + 1
-            End Select
-        
-        'If the last cycle has been reached, disable tool; delay for 1 second then exit
         Case totalCycles
-            
-            Static delayBool As Boolean
-            
-            If Not dryRun Then
-                setDrillTap False, False, False
-            End If
-            
-            'Delay for 1 second before proceeding
-            If Not delayBool Then
-                If myXY.moveDelay(1) Then delayBool = True
-                Exit Function
-            End If
-            
-            delayBool = False
-            runTool = currentCycle + 1
-            
-        'All Other Cycles
-        Case Else
+            Select Case subCycle
                 
-            'First cycle, delay before running
-            If currentCycle = 1 Then
-                If Not myXY.moveDelay(1) Then Exit Function
-                runTool = 2
-                Exit Function
-            End If
+                'Once the last cycle has been reached, first exit the select to run the final loop
+                Case 3
                 
-            'Compute the drill depth and send drill command. Cycles run from cycle 2 to total - 2 as cycle 1 is delay and final 2 cycles return to start
-            Dim cycleDeep As Double
-            Dim cycleRatio As Double
-            
-            'The current cycle / total cycles, corrected for starting and ending cycles.
-            cycleRatio = (currentCycle - 1) / (totalCycles - 3)
-            
-            'Determine the appropriate depth for the current cycle
-            Select Case tool
-                Case tDrill
-                
-                    'Drill is a simple ratio multiple of the total depth, plus the standard offset
-                    cycleDeep = -(cycleRatio * totalDeep + stdOffset)
-            
-                Case tTap
+                    subCycle = 4
                     
-                    'Tap total depth will be adjusted outside of this sub. For this section, the tap offset needs to be added.
-                    cycleDeep = -(cycleRatio * totalDeep + stdOffset) + goTap.Y
+                'On the next cycle, move the tool to its default position
+                Case 4
+                    
+                    myXY.setVel Axis_Y, V_Jog
+                
+                    Select Case tool
+                        Case tDrill
+                            If myXY.moveTo(0, goDrill.Y, movY, True) Then runTool = currentCycle + 1
+                        Case tTap
+                            If myXY.moveTo(0, goTap.Y, movY, True) Then runTool = currentCycle + 1
+                    End Select
+                    
+                    subCycle = 5
+                    
+                'Next disable the tool
+                Case 5
+                    If Not dryRun Then
+                        setDrillTap False, False, False
+                    End If
+                    
+                    subCycle = 6
+    
+                'Delay 1 second to allow tool & coolant pump to wind down
+                Case 6
+                
+                    If Not myXY.moveDelay(1) Then Exit Function
+                    
+                    subCycle = 7
+                    
+                'When the delay has been completed, clear the subCycle and return the completed value
+                Case 7
+                    
+                    subCycle = 0
+                    runTool = totalCycles + 1
+                    
+                End Select
+                
+                'Only cycle 3 (first run of last cycle) should procede to the main advance routine.
+                If subCycle <> 3 Then Exit Function
             
-            End Select
-            
-            Dim moveResult As Boolean
-            
-            Select Case tool
-                Case tDrill
-                    moveResult = myXY.movePeck(cycleDeep, 0.125, V_Drill, (1.5 * V_Drill), True)
-                Case tTap
-                    moveResult = myXY.movePeck(cycleDeep, 10, V_Tap, (1.25 * V_Tap), True)
-            End Select
-            
-            
-            'If the move is sucessfully initiated, increment cycle counter
-            If moveResult Then runTool = currentCycle + 1
-        
-        
     End Select
+            
+    'Main Advance Routine:
+        
+    'Compute the drill depth and send drill command
+    Dim cycleDeep As Double
+    Dim cycleRatio As Double
+    
+    'The current cycle / total cycles
+    cycleRatio = currentCycle / totalCycles
+    
+    'Determine the appropriate depth for the current cycle
+    Select Case tool
+        Case tDrill
+        
+            'Drill is a simple ratio multiple of the total depth, plus the standard offset
+            cycleDeep = -(cycleRatio * totalDeep + stdOffset)
+    
+        Case tTap
+            
+            'Tap total depth will be adjusted outside of this sub. For this section, the tap offset needs to be added.
+            cycleDeep = -(cycleRatio * totalDeep + stdOffset) + goTap.Y
+    
+    End Select
+    
+    Dim moveResult As Boolean
+    
+    Select Case tool
+        Case tDrill
+            moveResult = myXY.movePeck(cycleDeep, 0.125, V_Drill, (1.5 * V_Drill), True)
+        Case tTap
+            moveResult = myXY.movePeck(cycleDeep, 10, V_Tap, (1.25 * V_Tap), True)
+    End Select
+    
+    
+    'If the move is sucessfully initiated, increment cycle counter
+    If moveResult Then runTool = currentCycle + 1
+        
+
 
 End Function
 
