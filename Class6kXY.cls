@@ -37,15 +37,16 @@ Option Explicit
     Const x_Max = 7.1
     Const y_Min = -2.9
     
-    Const encCal = 218          'Calibration constant for the encoder, in pulses per inch. This ignores quatrature (i.e. a 56.4ppi encoder would be 225.6)
-    Const c6kCycleMax = 50      'Maximum number of cycles in which the 6k tries to reach the encoder position
+    Const encCal = 225.6            'Calibration constant for the encoder, in pulses per inch. This ignores quatrature (i.e. a 56.4ppi encoder would be 225.6)
+    Const encTol = 0.05             'Tolerance of the encoder, in +/- in
+    Const c6kCycleMax = 5           'Maximum number of cycles in which the 6k tries to reach the encoder position
 
     '6k Variables:
     'VAR1 - Stores Encoder Position
     'VAR2 - Stores Desired Position
     'VAR3 - Stores Number of Failed Cycles
     'VAR4 - Stores Number of Failed Moves (i.e. max cycles reached)
-    'VAR5 - Temporary variable for rounding of VAR1
+    'VAR5 - Temporary variable for comparison of VAR2 and VAR1
 
     Enum myMotors
         mNull
@@ -243,33 +244,7 @@ Option Explicit
     
     Private Sub initEncoder()
                 
-        'Define the Rounding function in the controller
-        rtnCmd = "DEL RND3V1: DEF RND3V1:"
-            
-            'VAR1 - stores the ENCODER VALUE, which is figured in pulses divided by a calibration constant
-            '       - The resulting number will always go out to 5 decimal places, while the desired position
-            '         will always be entered into the controller to 3 decimal places
-            'VAR5 - temporary variable to store computations related to rounding VAR1 to 3 decimal places
-            '       - As the 6k has no built-in round function, the following function serves that purpose
-            '       - Truncation is easy; rounding properly requires a more cohesive function
-            
-            
-            'Shift the decimal point of VAR1 left two places, then back right to eliminate the last two decimal places
-            'Then subtract the result from VAR1 to leave ONLY the final two decimal places, and multiply by 10,000
-            rtnCmd = rtnCmd & "VAR5=100*(VAR1/100):VAR5=VAR1-VAR5:VAR5=VAR5*10000:"
-            
-            'If the resulting value is greater than 5, round VAR1 up by adding 0.0005
-            rtnCmd = rtnCmd & "IF(VAR5>5):VAR1=VAR1+0.0005:NIF:"
-            
-            'Truncate the last two decimal places off of VAR1
-            rtnCmd = rtnCmd & "VAR1 = 100*(VAR1/100):"
-        
-        rtnCmd = rtnCmd & "END:"
-        
-        myCns.write6k rtnCmd
-        
-        
-            
+        Dim rtnCmd As String
         Dim goStr As String
         Dim wtStr As String
         
@@ -294,10 +269,13 @@ Option Explicit
                 rtnCmd = rtnCmd & "WAIT(MOV = b" & wtStr & "):"
                 
                 'Store the encoder position (corrected to reference inches) and the desired position as variables for comparison
-                rtnCmd = rtnCmd & "VAR1=" & CStr(motorY) & "PE:VAR1=VAR1/" & CStr(encCal) & ":RND3V1:VAR2=" & CStr(motorY) & "D:"
+                rtnCmd = rtnCmd & "VAR1=" & CStr(motorY) & "PE:VAR1=VAR1/" & CStr(encCal) & ":VAR2=" & CStr(motorY) & "D:"
                 
-                'Compare the encoder and commanded positions. If they differ
-                rtnCmd = rtnCmd & "IF(VAR1<>VAR2):"
+                'Create min/max criteria for an acceptable position
+                rtnCmd = rtnCmd & "VAR5=VAR2 + " & CStr(encTol) & ":VAR2 = VAR2 - " & CStr(encTol) & ":"
+                
+                'Compare the encoder and commanded positions. If the commanded position is outside the tolerance zone of the encoder
+                rtnCmd = rtnCmd & "IF((VAR1<VAR2) OR (VAR1>VAR5)):"
                 
                     'correct the stepper position in the controller
                     rtnCmd = rtnCmd & "PSET(VAR1):"
@@ -312,7 +290,7 @@ Option Explicit
                     rtnCmd = rtnCmd & "ELSE:"
                         
                         'Exit the repeat cycle and increment the failed cycle counter
-                        rtnCmd = rtnCmd & "VAR2=VAR1:VAR4 = VAR4+1:VAR3=0:"
+                        rtnCmd = rtnCmd & "VAR4 = VAR4+1:VAR3=0:BREAK:"
                         
                     rtnCmd = rtnCmd & "NIF:"
                     
@@ -320,12 +298,12 @@ Option Explicit
                 rtnCmd = rtnCmd & "ELSE:"
                 
                     'Reset the cycle counter before exiting
-                    rtnCmd = rtnCmd & "VAR3=0"
+                    rtnCmd = rtnCmd & "VAR3=0:BREAK:"
                     
                 rtnCmd = rtnCmd & "NIF:"
                 
             'Repeat the loop until the motor reaches the desired position or the cycle counter has been exceeded
-            rtnCmd = rtnCmd & "UNTIL(VAR1=VAR2):"
+            rtnCmd = rtnCmd & "UNTIL((VAR1<VAR2) OR (VAR1>VAR5)):"
             
         rtnCmd = rtnCmd & "END:"
         
@@ -353,10 +331,10 @@ Option Explicit
                 
         Select Case motor
             Case motorX
-                If globalPos < deadzoneX Then globalPos = deadzoneX
+                If globalPos < myDeadzoneX Then globalPos = myDeadzoneX
                 If globalPos > x_Max Then globalPos = x_Max
             Case motorY
-                If globalPos > deadzoneY Then globalPos = deadzoneY
+                If globalPos > myDeadzoneY Then globalPos = myDeadzoneY
                 If globalPos < y_Min Then globalPos = y_Min
         End Select
         
