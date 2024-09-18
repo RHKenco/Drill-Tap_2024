@@ -869,6 +869,8 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
                     
                     subCycle = 5
                     
+                    Exit Function
+                    
                 'Next disable the tool
                 Case 5
                     If Not dryRun Then
@@ -876,6 +878,8 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
                     End If
                     
                     subCycle = 6
+                    
+                    Exit Function
     
                 'Delay 1 second to allow tool & coolant pump to wind down
                 Case 6
@@ -884,16 +888,17 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
                     
                     subCycle = 7
                     
+                    Exit Function
+                    
                 'When the delay has been completed, clear the subCycle and return the completed value
                 Case 7
                     
                     subCycle = 0
                     runTool = totalCycles + 1
                     
+                    Exit Function
+                    
                 End Select
-                
-                'Only cycle 3 (first run of last cycle) should procede to the main advance routine.
-                If subCycle <> 3 Then Exit Function
             
     End Select
             
