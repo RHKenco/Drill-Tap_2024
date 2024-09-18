@@ -832,10 +832,11 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
                     myXY.setVel Axis_Y, V_Jog
                     
                     Select Case tool
+                    
                         Case tDrill
-                            If myXY.moveTo(0, (goDrill.Y - stdOffset + 1 / 16), movY, True) Then
-                        Case tDrill
-                            If myXY.moveTo(0, (goDrill.Y - stdOffset + 1 / 16), movY, True) Then
+                            If Not myXY.moveTo(0, (goDrill.Y - stdOffset + 1 / 16), movY, True) Then Exit Function
+                        Case tTap
+                            If Not myXY.moveTo(0, (goTap.Y - stdOffset + 1 / 16), movY, True) Then Exit Function
                     End Select
                     
                     subCycle = 3
@@ -923,7 +924,7 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
     
     Select Case tool
         Case tDrill
-            moveResult = myXY.movePeck(cycleDeep, 0.125, V_Drill, (1.5 * V_Drill), True)
+            moveResult = myXY.movePeck(cycleDeep, 0.25, V_Drill, (3 * V_Drill), True)
         Case tTap
             moveResult = myXY.movePeck(cycleDeep, 10, V_Tap, (1.25 * V_Tap), True)
     End Select

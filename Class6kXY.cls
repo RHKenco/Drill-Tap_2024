@@ -262,6 +262,9 @@ Option Explicit
             
             'For this function, it will be assumed that it will always be called directly after a "DXX:GOXX:WAIT(MOV=bXX)" command
             
+            'clear the failed cycle variable
+            rtnCmd = rtnCmd & "VAR3 = 0:"
+            
             'Repeat the following check
             rtnCmd = rtnCmd & "REPEAT:"
             
@@ -274,36 +277,32 @@ Option Explicit
                 'Create min/max criteria for an acceptable position
                 rtnCmd = rtnCmd & "VAR5=VAR2 + " & CStr(encTol) & ":VAR2 = VAR2 - " & CStr(encTol) & ":"
                 
-                'Compare the encoder and commanded positions. If the commanded position is outside the tolerance zone of the encoder
-                rtnCmd = rtnCmd & "IF((VAR1<VAR2) OR (VAR1>VAR5)):"
+                'Compare the encoder and commanded positions. If the commanded position is inside the tolerance zone of the encoder
+                rtnCmd = rtnCmd & "IF(VAR1>VAR2 AND VAR1<VAR5):"
                 
-                    'correct the stepper position in the controller
-                    rtnCmd = rtnCmd & "PSET(VAR1):"
-                    
-                    'If the 6k has not run through this cycle more times than the cycle max
-                    rtnCmd = rtnCmd & "IF(VAR3 < " & CStr(c6kCycleMax) & "):"
-                    
-                        'Repeat the Go command and increment the cycle counter
-                        rtnCmd = rtnCmd & "GO" & goStr & ":VAR3 = VAR3+1:"
-                        
-                    'If the 6k has reached the cycle maximum
-                    rtnCmd = rtnCmd & "ELSE:"
-                        
-                        'Exit the repeat cycle and increment the failed cycle counter
-                        rtnCmd = rtnCmd & "VAR4 = VAR4+1:VAR3=0:BREAK:"
-                        
-                    rtnCmd = rtnCmd & "NIF:"
-                    
-                'If the command position and the encoder position are the same
-                rtnCmd = rtnCmd & "ELSE:"
-                
-                    'Reset the cycle counter before exiting
-                    rtnCmd = rtnCmd & "VAR3=0:BREAK:"
+                    'Set the fail count to 0 and exit the program
+                    rtnCmd = rtnCmd & "VAR3 = 0:BREAK:"
                     
                 rtnCmd = rtnCmd & "NIF:"
                 
+                
+                'If the value is not inside the tolerance zone, correct the stepper position in the controller
+                rtnCmd = rtnCmd & "PSET(VAR1):"
+                    
+                'Repeat the Go command and increment the cycle counter
+                rtnCmd = rtnCmd & "GO" & goStr & ":VAR3 = VAR3+1:"
+                    
+                    
+                'If the 6k has exceeded the cycle maximum
+                rtnCmd = rtnCmd & "IF(VAR3 > " & CStr(c6kCycleMax) & "):"
+                    
+                    'increment the total program failure variable
+                    rtnCmd = rtnCmd & "VAR4 = VAR4+1:"
+                        
+                rtnCmd = rtnCmd & "NIF:"
+                
             'Repeat the loop until the motor reaches the desired position or the cycle counter has been exceeded
-            rtnCmd = rtnCmd & "UNTIL((VAR1<VAR2) OR (VAR1>VAR5)):"
+            rtnCmd = rtnCmd & "UNTIL(VAR3 > " & CStr(c6kCycleMax) & "):"
             
         rtnCmd = rtnCmd & "END:"
         

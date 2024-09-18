@@ -1,7 +1,7 @@
 terminal = 150, 150, 1100, 883, 
 frmMain = 45, 31, 1146, 819, C, -139, 543, 1202, 1311, C
-ClassDrillTap = 66, 70, 1412, 1209, 
-Class6kXY = 896, 100, 2098, 833, 
+ClassDrillTap = 86, 37, 1432, 834, 
+Class6kXY = 65, 35, 1267, 768, 
 frmUI = 75, 75, 1025, 808, , 54, 6, 902, 794, C
 ClassFSMDrillTap = 50, 50, 1130, 783, 
 ClassUI = 633, 119, 1583, 852, 
