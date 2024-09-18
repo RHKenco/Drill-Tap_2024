@@ -862,12 +862,10 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
                 
                     Select Case tool
                         Case tDrill
-                            If myXY.moveTo(0, goDrill.Y, movY, True) Then runTool = currentCycle + 1
+                            If myXY.moveTo(0, goDrill.Y, movY, True) Then subCycle = 5
                         Case tTap
-                            If myXY.moveTo(0, goTap.Y, movY, True) Then runTool = currentCycle + 1
+                            If myXY.moveTo(0, goTap.Y, movY, True) Then subCycle = 5
                     End Select
-                    
-                    subCycle = 5
                     
                     Exit Function
                     
@@ -936,7 +934,7 @@ Public Function runTool(tool As myTool, totalDeep As Double, currentCycle As Int
     
     
     'If the move is sucessfully initiated, increment cycle counter
-    If moveResult Then runTool = currentCycle + 1
+    If moveResult And (currentCycle <> totalCycles) Then runTool = currentCycle + 1
         
 
 
